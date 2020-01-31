@@ -21,11 +21,28 @@ kmer_folder = paste0(kmer_path,"/",study_name,"/")
 # load data
 sra_metadata = sra_file(kmer_folder,"SraRunTable.csv")
 kmer_data <- kmer_file(kmer_folder,7)
-otu_data <- otu_file(kmer_folder, "otu_v3v5.txt")
-otu_mapping
+otu_data <- otu_file(kmer_folder, "otu_table_psn_v35.txt")
+#otu_data = otu_table
+otu_mapping <- read.table(paste0(kmer_folder, "v35_map_uniquebyPSN.txt"),header=TRUE)
+row.names(otu_mapping) = paste0("X",otu_mapping$SampleID)
+otu_mapping$SampleID = paste0("X",otu_mapping$SampleID)
 
-sra_metadata %>% filter(sample_acc == 'SRS066188')
-table(sra_metadata$Center.Name)
+
+# find common samples and adjust data frames
+common_samples = intersect(row.names(otu_mapping), colnames(otu_data))
+data = list()
+data$df_otu = otu_data[,common_samples]
+data$df_meta = otu_mapping[common_samples,]
+
+new_center_name = sapply(sra_metadata$Center.Name,function(x){
+  if( x == "WUGC,JCVI"){
+    
+  }
+})
+table()
+
+#sra_metadata %>% filter(sample_acc == 'SRS066188')
+
 
 sra_metadata %>% filter(biospecimen_repository_sample_id == '700037171')
 

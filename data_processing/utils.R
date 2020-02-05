@@ -14,7 +14,7 @@ capitalize_first_letter <- function(c){
 }
 
 otu_file <- function(kmer_folder,filename){
-  filename = "otu_table_psn_v35.txt"
+  #filename = "otu_table_psn_v35.txt"
   file =paste0(kmer_folder,filename)
   otu_table = read.table(file,sep ="\t",header = TRUE)
   row.names(otu_table) = paste0(otu_table[,ncol(otu_table)],";",otu_table$OTU_ID)
@@ -22,3 +22,4 @@ otu_file <- function(kmer_folder,filename){
   
   return(otu_table)
 }
+?read.table

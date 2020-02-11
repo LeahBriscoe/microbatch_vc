@@ -35,17 +35,19 @@ portal_client --manifest /path/to/my/manifest.tsv
 1. [Commands](#agpcommands)
 2. [Deblur](#debluragp)
 3. [Bloom filter](#bloomfilter)
+4. [OTU tables](#otutables)
+5. [AGP Jellyfish kmer counting](#agpjelly)
+6. [AGP K-mer table creation](#agpkmertab)
 
 
-
-###<a name ="agpcommands">Commands</a>
+### <a name ="agpcommands">Commands</a>
 
 ```
 # fetching the fasta files
 qsub -cwd -V -N FetchSRAAGP -l h_data=8G,time=200:00:00,highp -M briscoel -m beas -b y "/u/home/b/briscoel/project-halperin/MicroBatch/sra_fetch.sh SRR_Acc_List.txt"
 ```
 
-###<a name ="debluragp">Deblur AGP</a>
+### <a name ="debluragp">Step 1: Deblur AGP</a>
 [guidelines](https://github.com/biocore/deblur)
 
 ```
@@ -67,7 +69,7 @@ do
     echo ${filename//.fastq.trim/} >> SRR_Acc_List2.txt; 
 done
 ```
-###<a name ="bloomfilter">Bloom Filter</a>
+### <a name ="bloomfilter">Step 2: Bloom Filter</a>
 ```
 pick_closed_reference_otus.py -i test.fastq.trim  -o qiime_pick_closed_ref/ -r /u/home/b/briscoel/project-halperin/MicroBatch/AGP_reprocessing_LB/BLOOM.fasta
 ```
@@ -75,11 +77,39 @@ pick_closed_reference_otus.py -i test.fastq.trim  -o qiime_pick_closed_ref/ -r /
 ```
 filter_fasta.py -f test.fastq.trim -m qiime_pick_closed_ref/uclust_ref_picked_otus/test.fastq_otus.txt -n -o qiime_bloom_filtered_seqs
 
-filter_fasta.py -f test.fastq.trim -b qiime_pick_closed_ref/otu_table.biom -n -o qiime_bloom_filtered_seqs2
+```
+
+My script run from AGP_reprocessing...
+
+```
+bloom_filter.sh SRR_Acc_list_fecal.txt
 ```
 
 [Guidelines](https://github.com/biocore/American-Gut/blob/68fd6d4b2fa6aeb5b4f5272c6f1006defe5b160e/ipynb/primary-processing/02-filter_sequences_for_blooms.md) and [Script](https://github.com/biocore/American-Gut/blob/68fd6d4b2fa6aeb5b4f5272c6f1006defe5b160e/ipynb/FilterAndPickOTUs.ipynb)
 
+### <a name ="otutables">Step 3: OTU tables</a>
+https://github.com/biocore/American-Gut/blob/68fd6d4b2fa6aeb5b4f5272c6f1006defe5b160e/ipynb/primary-processing/03-pick_otus.md
+
+### <a name ="agpjelly"> Jellyfish kmer counting </a>
+
+Run command from inside the main kmer counting dir
+
+```
+/u/home/b/briscoel/project-halperin/MicroBatch/AGP_reprocessing_LB/submit_jellyfish.sh /u/home/b/briscoel/project-halperin/MicroBatch/AGP_reprocessing_LB/SRR_Acc_List_fecal_bloom_filter.txt 5
+```
+
+### <a name ="agpkmertab"> Processing K-mer table </a>
+
+Run command from inside the main kmer counting dir
+
+```
+/u/home/b/briscoel/project-halperin/MicroBatch/AGP_reprocessing_LB/submit_jellyfish.sh /u/home/b/briscoel/project-halperin/MicroBatch/AGP_reprocessing_LB/SRR_Acc_List_fecal_bloom_filter.txt 5
+```
+
+
+
+### Alt Step 2.2 ###
+filter otu table for
 
 ##<a name ="hmp1">HMP data sources</a>
 1. [scripts](#hmp_scripts)
@@ -113,5 +143,9 @@ python /u/home/b/briscoel/project-halperin/MicroBatch/HMP/get_sample_name.py SRR
 merge_otu_tables.py -i otu_table1.biom,otu_table2.biom -o merged_otu_table.biom
 find /u/home/b/briscoel/project-halperin/deblurenv/qiime2-dev  -iname merge_otu_tables.py
 
-
+for file in SRA/*.fastq; 
+do 
+    filename=$(basename $file);
+    echo ${filename//.fastq/} >> SRR_Acc_List.txt; 
+done
 

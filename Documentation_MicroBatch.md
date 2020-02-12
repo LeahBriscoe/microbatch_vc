@@ -38,6 +38,7 @@ portal_client --manifest /path/to/my/manifest.tsv
 4. [OTU tables](#otutables)
 5. [AGP Jellyfish kmer counting](#agpjelly)
 6. [AGP K-mer table creation](#agpkmertab)
+7. [AGP data summary](#agpsummary)
 
 
 ### <a name ="agpcommands">Commands</a>
@@ -109,7 +110,25 @@ Run command from inside the main kmer counting dir
 
 
 ### Alt Step 2.2 ###
-filter otu table for
+filter otus from out table
+```
+[1] "6 months:1119"
+[1] "I have not taken antibiotics in the past year.:5954"
+[1] "Month:285"
+[1] "Not provided:244"
+[1] "Week:182"
+[1] "Year:1332"
+```
+
+[1] "Illumina HiSeq 2000:350"
+[1] "Illumina HiSeq 2500:824"
+[1] "Illumina MiSeq:7942"
+
+
+
+### <a name ="agpsummary"> AGP summary stats </a>
+
+
 
 ##<a name ="hmp1">HMP data sources</a>
 1. [scripts](#hmp_scripts)

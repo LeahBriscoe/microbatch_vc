@@ -13,7 +13,7 @@ folder = '/Users/leahbriscoe/Documents/KmerCounting/AGP_reprocessing/'
 otu_output_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/AGP_reprocess_otu'
 kmer_output_folder = paste0('/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/AGP_reprocess_k',kmer_len)
 dir.create(kmer_output_folder) 
-
+dir.create(otu_output_folder) 
 # ============================================================================== #
 # load data
 otu_table = read.csv(paste0(folder,'deblur_125nt_no_blooms.txt'),sep="\t")
@@ -68,21 +68,29 @@ otu_table = otu_table[,common_samples]
 otu_table_norm = otu_table_norm[,common_samples]
 
 # ============================================================================== #
+# formatting to standard
+total_metadata$Sample_ID = row.names(total_metadata)
+
+# ============================================================================== #
 # write data to RDS and flat file
 
-saveRDS(otu_table_norm,paste0(otu_output_folder,"otu_table_norm_processed.rds"))
-saveRDS(otu_table,paste0(otu_output_folder,"otu_table_processed.rds"))
-saveRDS(kmer_table_norm,paste0(kmer_output_folder,"kmer_table_norm_processed.rds"))
-saveRDS(kmer_table,paste0(kmer_output_folder,"kmer_table_processed.rds"))
+saveRDS(otu_table_norm,paste0(otu_output_folder,"/otu_table_norm.rds"))
+saveRDS(otu_table,paste0(otu_output_folder,"/otu_table.rds"))
+saveRDS(kmer_table_norm,paste0(kmer_output_folder,"/kmer_table_norm.rds"))
+saveRDS(kmer_table,paste0(kmer_output_folder,"/kmer_table.rds"))
 
-write.table(otu_table_norm,paste0(otu_output_folder,"otu_table_norm_processed.txt"),sep = "\t",quote = FALSE)
-write.table(otu_table,paste0(otu_output_folder,"otu_table_processed.txt"),sep="\t",quote=FALSE)
-write.table(kmer_table_norm,paste0(kmer_output_folder,"kmer_table_norm_processed.txt"),sep = "\t",quote = FALSE)
-write.table(kmer_table,paste0(kmer_output_folder,"kmer_table_processed.txt"),sep="\t",quote=FALSE)
+write.table(otu_table_norm,paste0(otu_output_folder,"/otu_table_norm.txt"),sep = "\t",quote = FALSE)
+write.table(otu_table,paste0(otu_output_folder,"/otu_table.txt"),sep="\t",quote=FALSE)
+write.table(kmer_table_norm,paste0(kmer_output_folder,"/kmer_table_norm.txt"),sep = "\t",quote = FALSE)
+write.table(kmer_table,paste0(kmer_output_folder,"/kmer_table.txt"),sep="\t",quote=FALSE)
 
-saveRDS(total_metadata,paste0(otu_output_folder,"metadata_processed.rds"))
-saveRDS(total_metadata,paste0(kmer_output_folder,"metadata_processed.rds"))
+saveRDS(total_metadata,paste0(otu_output_folder,"/metadata.rds"))
+saveRDS(total_metadata,paste0(kmer_output_folder,"/metadata.rds"))
 
-write.table(total_metadata,paste0(otu_output_folder,"metadata_processed.txt"),sep = "\t",quote = FALSE)
-write.table(total_metadata,paste0(kmer_output_folder,"metadata_processed.txt"),sep="\t",quote=FALSE)
+write.table(total_metadata,paste0(otu_output_folder,"/metadata.txt"),sep = "\t",quote = FALSE)
+write.table(total_metadata,paste0(kmer_output_folder,"/metadata.txt"),sep="\t",quote=FALSE)
 
+item = table(total_metadata$Instrument)
+for( i in names(item)){
+  print(paste0(i,":",item[i]))
+}

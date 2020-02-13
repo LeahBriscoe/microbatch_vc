@@ -19,17 +19,23 @@ otu_table = readRDS(paste0(otu_input_folder,"/otu_table.rds"))
 kmer_table_norm = readRDS(paste0(kmer_input_folder,"/kmer_table_norm.rds"))
 total_metadata = readRDS(paste0(otu_input_folder,"/metadata.rds"))
 
-otu_table_quant_norm = readRDS(paste0(otu_input_folder,"/otu_table_quant_norm.rds"))
+otu_table_norm_quant_norm = readRDS(paste0(otu_input_folder,"/otu_table_norm_quant_norm.rds"))
+kmer_table_norm_quant_norm = readRDS(paste0(kmer_input_folder,"/kmer_table_norm_quant_norm.rds"))
+
+
 # ============================================================================== #
 #scale
 
-otu_table_norm_scaled = scale(otu_table_norm)
-kmer_table_norm_scaled = scale(kmer_table_norm)
+#otu_table_norm_scaled = scale(otu_table_norm)
+#kmer_table_norm_scaled = scale(kmer_table_norm)
 
 #otu_table_norm_quant_norm = quantile_norm(otu_table_norm)
-#saveRDS(otu_table_norm,paste0(otu_input_folder,"/otu_table_norm_quant_norm.rds"))
+#kmer_table_norm_quant_norm = quantile_norm(kmer_table_norm)
 
+#saveRDS(otu_table_norm_quant_norm,paste0(otu_input_folder,"/otu_table_norm_quant_norm.rds"))
+#saveRDS(kmer_table_norm_quant_norm,paste0(kmer_input_folder,"/kmer_table_norm_quant_norm.rds"))
 
+rowRanges(otu_table_norm_quant_norm[1:4,])
 # ============================================================================== #
 # filteres for later
 
@@ -194,25 +200,39 @@ df_vars$bmi_corrected =scale(df_vars$bmi_corrected)
 
 
 #input_abundance_table_scaled = otu_table_norm_scaled[filter_at_least_two_samples_otu,]
-input_abundance_table = otu_table_norm_quant_norm #[1:1000,] #!is.na(rowSums(df_vars))
+
+input_abundance_table_otu = otu_table_norm_quant_norm #[1:1000,] #!is.na(rowSums(df_vars))
+input_abundance_table_kmer = kmer_table_norm_quant_norm #[1:1000,] #!is.na(rowSums(df_vars))
 input_metadata_table = df_vars#[!is.na(rowSums(df_vars)),]
 #dim(input_abundance_table)
 set.seed(0)
-collect_var_pars_mean = list()
-collect_var_pars_full = list()
+collect_var_pars_mean_otu = list()
+collect_var_pars_full_otu = list()
+
+collect_var_pars_mean_kmer = list()
+collect_var_pars_full_kmer = list()
+
 bootstrap_prop = 0.80
 
+#sum(rowSums(kmer_table_norm)==0)
 for(i in 1:1){
   t1= Sys.time()
   print(t1)
-  samples_picked = sample(1:ncol(input_abundance_table),as.integer(bootstrap_prop*ncol(input_abundance_table)))
-  sample_names_picked = colnames(input_abundance_table)[samples_picked]
-  sub_abundance_table = input_abundance_table[,samples_picked]
-  sub_abundance_table = sub_abundance_table[rowVars(as.matrix(sub_abundance_table)) > 10e-30,]
+  samples_picked = sample(1:ncol(input_abundance_table_otu),as.integer(bootstrap_prop*ncol(input_abundance_table_otu)))
+  sample_names_picked = colnames(input_abundance_table_otu)[samples_picked]
+  
+  sub_abundance_table_otu = input_abundance_table_otu[,samples_picked]
+  sub_abundance_table_otu = sub_abundance_table_otu[rowVars(as.matrix(sub_abundance_table_otu)) > 10e-10,]
+  
+  
+  sub_abundance_table_kmer = input_abundance_table_kmer[,samples_picked]
+
+  sub_abundance_table_kmer = sub_abundance_table_kmer[rowVars(as.matrix(sub_abundance_table_kmer)) > 10e-10,]
   #length(samples_picked)
   #dim(sub_abundance_table)
+  #quantile(rowVars(as.matrix(sub_abundance_table_otu)))
   sub_metadata_table = input_metadata_table[samples_picked,]
-  #dim(input_abundance_table)
+  #dim(input_abundance_table_otu)
   #dim(sub_abundance_table)
   #dim(sub_metadata_table)
   #dim(as.matrix(sub_metadata_table))
@@ -223,17 +243,22 @@ for(i in 1:1){
   #quantile(rowVars(sub_abundance_table))
   
   #sum(rowVars(as.matrix(sub_abundance_table)) == 0)
+  #row.names(sub_abundance_table_otu) = c(1:nrow(sub_abundance_table_otu))
+  #row.names(sub_abundance_table_kmer) = c(1:nrow(sub_abundance_table_kmer))
+  varPartMetaData_otu = fitExtractVarPartModel(formula = formula ,
+                                          exprObj = sub_abundance_table_otu, data = data.frame(sub_metadata_table))
   
-  varPartMetaData = fitExtractVarPartModel(formula = formula ,
-                                          exprObj = sub_abundance_table, data = data.frame(sub_metadata_table))
+  varPartMetaData_kmer = fitExtractVarPartModel(formula = formula ,
+                                               exprObj = sub_abundance_table_kmer, data = data.frame(sub_metadata_table))
   # varPartMetaData2 = fitExtractVarPartModel(formula = ~ (1| race.x) + (1|Instrument) + sex + bmi_corrected + librarysize , 
   #                                          exprObj = sub_abundance_table[1:100,], data = data.frame(sub_metadata_table))
   # 
   #   #colSums(sub_metadata_table,na.rm=TRUE)
   #sum(is.na(colSums(sub_abundance_table)))
   #sum(rowSums(sub_abundance_table) < 2)
-  collect_var_pars_mean [[i]] =colMeans(as.matrix(varPartMetaData))
-  collect_var_pars_full[[i]] =as.matrix(varPartMetaData)
+  #collect_var_pars_mean [[i]] =colMeans(as.matrix(varPartMetaData))
+  collect_var_pars_full_otu[[i]] =as.matrix(varPartMetaData_otu)
+  collect_var_pars_full_kmer[[i]] =as.matrix(varPartMetaData_kmer)
   
   t2= Sys.time()
   print(t2-t1)

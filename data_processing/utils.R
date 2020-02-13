@@ -26,7 +26,7 @@ otu_file <- function(kmer_folder,filename){
 #' @param provided_total_reads
 #' @param sample_column_true samples are in columns
 
-convert_to_rel_ab <- function(otu_table,metadata, sample_column_true = TRUE,provided_total_reads = TRUE){
+convert_to_rel_ab <- function(otu_table,metadata, sample_column_true = TRUE,provided_total_reads = FALSE){
   if(sample_column_true == FALSE){
     otu_table = t(otu_table)
   } 
@@ -78,4 +78,24 @@ pca_method <- function(input,clr_transform = FALSE,scale_logic =FALSE){
   
   row.names(pca_score) = colnames(orig_input)
   return(list(svd_result = svd_result,pca_score=pca_score,transformed_data = input))
+}
+
+quantile_norm <- function(df,normalize_within_features = TRUE){
+  if(normalize_within_features){
+    df = t(df)
+  }
+  
+  df_rank <- apply(df,2,rank,ties.method="min")
+  df_sorted <- data.frame(apply(df, 2, sort))
+  df_mean <- apply(df_sorted, 1, mean)
+  index_to_mean <- function(my_index, my_mean){
+    return(my_mean[my_index])
+  }
+  df_final <- apply(df_rank, 2, index_to_mean, my_mean=df_mean)
+  if(normalize_within_features){
+    return(t(df_final))
+  }else{
+    return(df_final)
+  }
+ 
 }

@@ -6,6 +6,9 @@ kmer_len = 5
 require(varhandle)
 library(variancePartition)
 require(matrixStats)
+
+script_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data_processing'
+source(paste0(script_folder,"/utils.R"))
 # ============================================================================== #
 # define folders
 otu_input_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/AGP_reprocess_otu'
@@ -14,7 +17,18 @@ kmer_input_folder = paste0('/Users/leahbriscoe/Documents/MicroBatch/microbatch_v
 otu_table_norm = readRDS(paste0(otu_input_folder,"/otu_table_norm.rds"))
 otu_table = readRDS(paste0(otu_input_folder,"/otu_table.rds"))
 kmer_table_norm = readRDS(paste0(kmer_input_folder,"/kmer_table_norm.rds"))
-total_metadata = readRDS(paste0(otu_output_folder,"/metadata.rds"))
+total_metadata = readRDS(paste0(otu_input_folder,"/metadata.rds"))
+
+otu_table_quant_norm = readRDS(paste0(otu_input_folder,"/otu_table_quant_norm.rds"))
+# ============================================================================== #
+#scale
+
+otu_table_norm_scaled = scale(otu_table_norm)
+kmer_table_norm_scaled = scale(kmer_table_norm)
+
+#otu_table_norm_quant_norm = quantile_norm(otu_table_norm)
+#saveRDS(otu_table_norm,paste0(otu_input_folder,"/otu_table_norm_quant_norm.rds"))
+
 
 # ============================================================================== #
 # filteres for later
@@ -42,37 +56,49 @@ total_metadata$collection_days = collection_days
 # ============================================================================== #
 # define fixed and random
 
-random_effects_tech = c("collection_days","Instrument") # "center_project_name",
+random_effects_tech = c("collection_days") # "center_project_name","collection_days")#"Instrument",
 random_effects_bio = c("race.x") #"diet_type.x","artificial_sweeteners"
 
-fixed_effects_tech = c("librarysize","collection_AM")
-fixed_effects_bio = c("sex","bmi_corrected","age_corrected")
+fixed_effects_tech = c("librarysize")#,"collection_AM")
+fixed_effects_bio = c("sex","bmi_corrected")#,"age_corrected")
 
 # ============================================================================== #
 # define variable types for recasting later
-
-numeric_vars = c("collection_days","librarysize","bmi_corrected","age_corrected")
-
+integer_vars = c("age_corrected")
+numeric_vars = c("librarysize","bmi_corrected")
+binary_vars = c("collection_AM","sex")
 categorical_vars = c("center_project_name","diet_type.x","artificial_sweeteners",
-                     "race.x","Instrument","collection_AM","sex")
+                     "race.x","Instrument","collection_days")
 
 
 # ============================================================================== #
 # recast
-
+for(b_v in binary_vars){
+  data_na_included = as.character(total_metadata[,b_v])
+  data_na_included[data_na_included == "Other" | data_na_included == "Not provided" | data_na_included == "other"] = NA
+  temp = to.dummy(as.factor(data_na_included),paste0(b_v,"_"))[,-1,drop=FALSE]
+  temp = as.integer(temp)
+  #print(colnames(temp))
+  assign(b_v ,temp)
+}
 for(c_v in categorical_vars){
   #print(table(total_metadata[,c_v]))
   data_na_included = as.character(total_metadata[,c_v])
   data_na_included[data_na_included == "Other" | data_na_included == "Not provided" | data_na_included == "other"] = NA
-  temp = to.dummy(as.factor(data_na_included),paste0(c_v,"_"))[,-1,drop=FALSE]
-  print(colnames(temp))
-  assign(c_v ,temp)
+  #temp = to.dummy(as.factor(data_na_included),paste0(c_v,"_"))[,-1,drop=FALSE]
+  #print(colnames(temp))
+  assign(c_v ,data_na_included)
 }
 
 
 for(n_v in numeric_vars){
   #print(sort(table(as.numeric(total_metadata[,n_v])),decreasing=TRUE)[1:3])
   assign(n_v ,as.numeric(total_metadata[,n_v]))
+}
+
+for(i_v in integer_vars){
+  #print(sort(table(as.numeric(total_metadata[,n_v])),decreasing=TRUE)[1:3])
+  assign(i_v ,as.integer(total_metadata[,i_v]))
 }
 
 # ============================================================================== #
@@ -123,53 +149,116 @@ for( i in c(random_effects_bio,fixed_effects_bio)){
   }
   
 }
+
+
+
 # ============================================================================== #
 # make formula and create design matrix
 formula_random = paste0('~ (1| ',paste(random_vars, collapse = ') + (1|'),")")
 formula_fixed =  paste(fixed_vars, collapse = ' + ')
 
-formula = paste0(formula_random, "+", formula_fixed)
+formula = paste0(formula_random, " + ", formula_fixed)
 
 list_vars = mget(c(random_effects_tech,random_effects_bio,fixed_effects_tech,fixed_effects_bio))#,
-df_vars = data.frame(do.call(cbind,list_vars))
+#df_vars = data.frame(do.call(cbind,list_vars))
+
+df_vars =data.frame(list_vars)
 
 # ============================================================================== #
+# convert all random effects to character, and fixed effects to int/numeric
+
+for(r_v in random_vars){
+  df_vars[,r_v] = as.character(df_vars[,r_v])
+}
+for(f_v in fixed_vars){
+  df_vars[,f_v] = as.numeric(df_vars[,f_v])
+}
+
+# = ============================================================================== #
+# scale extreme numbers like library size
+
+df_vars$librarysize = scale(df_vars$librarysize)
+
+df_vars$bmi_corrected =scale(df_vars$bmi_corrected)
+#range(df_vars$bmi_corrected,na.rm=TRUE)
+#hist(df_vars$bmi_corrected)
+#df_vars[1:4,]
+#test =  scale(df_vars$librarysize)
+#range(test)
+# = ============================================================================== #
 # variance partitioning with bootstrap prop = percentage sampled each time
 
 
-input_abundance_table_pre = otu_table_norm[filter_at_least_two_samples_otu,]
-hist(as.numeric(input_abundance_table_pre[1,]))
+#input_abundance_table_scaled = scale(otu_table_norm[filter_at_least_two_samples_otu,])
+#hist(as.numeric(input_abundance_table_scaled[1,]),breaks=100)
 
-input_abundance_table_scaled = scale(otu_table_norm[filter_at_least_two_samples_otu,])
-hist(as.numeric(input_abundance_table_scaled[1,]))
 
-input_metadata_table = df_vars
-  
-  
+#input_abundance_table_scaled = otu_table_norm_scaled[filter_at_least_two_samples_otu,]
+input_abundance_table = otu_table_norm_quant_norm #[1:1000,] #!is.na(rowSums(df_vars))
+input_metadata_table = df_vars#[!is.na(rowSums(df_vars)),]
+#dim(input_abundance_table)
 set.seed(0)
 collect_var_pars_mean = list()
 collect_var_pars_full = list()
 bootstrap_prop = 0.80
-for(i in 1:1){
-  samples_picked = sample(1:ncol(input_abundance_table),as.integer(bootstrap_prop*ncol(input_abundance_table)))
-  sub_abundance_table = input_abundance_table[,samples_picked]
-  sub_abundance_table = sub_abundance_table[rowVars(as.matrix(sub_abundance_table)) != 0,]
-  
-  sub_metadata_table = input_metadata_table[samples_picked,]
 
-  varPartMetaData=fitExtractVarPartModel(formula = formula , 
-                                         exprObj = sub_abundance_table, data = data.frame(sub_metadata_table))
-  colSums(sub_metadata_table,na.rm=TRUE)
-  sum(is.na(colSums(sub_abundance_table)))
-  sum(rowSums(sub_abundance_table) < 2)
+for(i in 1:1){
+  t1= Sys.time()
+  print(t1)
+  samples_picked = sample(1:ncol(input_abundance_table),as.integer(bootstrap_prop*ncol(input_abundance_table)))
+  sample_names_picked = colnames(input_abundance_table)[samples_picked]
+  sub_abundance_table = input_abundance_table[,samples_picked]
+  sub_abundance_table = sub_abundance_table[rowVars(as.matrix(sub_abundance_table)) > 10e-30,]
+  #length(samples_picked)
+  #dim(sub_abundance_table)
+  sub_metadata_table = input_metadata_table[samples_picked,]
+  #dim(input_abundance_table)
+  #dim(sub_abundance_table)
+  #dim(sub_metadata_table)
+  #dim(as.matrix(sub_metadata_table))
+  #colnames(sub_metadata_table)
+  #var(sub_abundance_table[1,])
+  
+  #rowVars(sub_abundance_table[1:10,])
+  #quantile(rowVars(sub_abundance_table))
+  
+  #sum(rowVars(as.matrix(sub_abundance_table)) == 0)
+  
+  varPartMetaData = fitExtractVarPartModel(formula = formula ,
+                                          exprObj = sub_abundance_table, data = data.frame(sub_metadata_table))
+  # varPartMetaData2 = fitExtractVarPartModel(formula = ~ (1| race.x) + (1|Instrument) + sex + bmi_corrected + librarysize , 
+  #                                          exprObj = sub_abundance_table[1:100,], data = data.frame(sub_metadata_table))
+  # 
+  #   #colSums(sub_metadata_table,na.rm=TRUE)
+  #sum(is.na(colSums(sub_abundance_table)))
+  #sum(rowSums(sub_abundance_table) < 2)
   collect_var_pars_mean [[i]] =colMeans(as.matrix(varPartMetaData))
   collect_var_pars_full[[i]] =as.matrix(varPartMetaData)
   
+  t2= Sys.time()
+  print(t2-t1)
+  
 }
 
-hist(as.numeric(input_abundance_table[2,]))
+dim(varPartMetaData)
 
-fixed_eff_vars = df_vars[,fixed_vars]
+varPartMetaData = varPartMetaData1
+#plotVarPart(varPartMetaData1)
+#saveRDS(varPartMetaData1,paste0(otu_input_folder,"otu_norm_quant_norm_var_par.rds"))
+
+
+as.matrix(varPartMetaData)
+
+plot(rowSums(as.matrix(varPartMetaData)[,biological_vars]),rowSums(as.matrix(varPartMetaData)[,technical_vars]))
+
+#plotVarPart(varPartMetaData)
+#df_vars$Instrument_.Illumina_HiSeq_2500
+#table(df_vars$race.x_.Asian_or_Pacific_Islander)
+
+#hist(as.numeric(input_abundance_table[2,]))
+
+#random_eff_vars = sub_metadata_table[,random_vars]
+fixed_eff_vars = sub_metadata_table[,fixed_vars]
 # dim(test)
 cor(fixed_eff_vars,use = "pairwise.complete")
 # 

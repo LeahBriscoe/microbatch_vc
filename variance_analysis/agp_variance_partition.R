@@ -6,8 +6,11 @@ kmer_len = 5
 require(varhandle)
 library(variancePartition)
 require(matrixStats)
+require(dplyr)
 
 script_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data_processing'
+plot_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/plots/'
+dir.create(plot_folder)
 source(paste0(script_folder,"/utils.R"))
 # ============================================================================== #
 # define folders
@@ -22,7 +25,8 @@ total_metadata = readRDS(paste0(otu_input_folder,"/metadata.rds"))
 otu_table_norm_quant_norm = readRDS(paste0(otu_input_folder,"/otu_table_norm_quant_norm.rds"))
 kmer_table_norm_quant_norm = readRDS(paste0(kmer_input_folder,"/kmer_table_norm_quant_norm.rds"))
 
-
+colnames(otu_table_norm_quant_norm) = colnames(otu_table_norm)
+colnames(kmer_table_norm_quant_norm) = colnames(kmer_table_norm)
 # ============================================================================== #
 #scale
 
@@ -186,25 +190,45 @@ for(f_v in fixed_vars){
 df_vars$librarysize = scale(df_vars$librarysize)
 
 df_vars$bmi_corrected =scale(df_vars$bmi_corrected)
-#range(df_vars$bmi_corrected,na.rm=TRUE)
-#hist(df_vars$bmi_corrected)
-#df_vars[1:4,]
-#test =  scale(df_vars$librarysize)
-#range(test)
+
+
+
+
+
 # = ============================================================================== #
-# variance partitioning with bootstrap prop = percentage sampled each time
-
-
-#input_abundance_table_scaled = scale(otu_table_norm[filter_at_least_two_samples_otu,])
-#hist(as.numeric(input_abundance_table_scaled[1,]),breaks=100)
-
-
-#input_abundance_table_scaled = otu_table_norm_scaled[filter_at_least_two_samples_otu,]
+# variance partitioning data input preparation
 
 input_abundance_table_otu = otu_table_norm_quant_norm #[1:1000,] #!is.na(rowSums(df_vars))
 input_abundance_table_kmer = kmer_table_norm_quant_norm #[1:1000,] #!is.na(rowSums(df_vars))
+row.names(df_vars) = colnames(input_abundance_table_kmer)
 input_metadata_table = df_vars#[!is.na(rowSums(df_vars)),]
-#dim(input_abundance_table)
+
+
+# remove any samples with NA metadata
+get_na_samples = apply(input_metadata_table,1,function(x){
+  any(is.na(x))
+})
+non_na_samples = row.names(input_metadata_table)[!get_na_samples]
+input_abundance_table_otu = input_abundance_table_otu[,non_na_samples]
+input_abundance_table_kmer = input_abundance_table_kmer[,non_na_samples]
+input_metadata_table = input_metadata_table[non_na_samples,]
+input_metadata_table$Sample_ID = row.names(input_metadata_table)
+
+# additional filtering
+
+# remove african american
+
+input_metadata_table= input_metadata_table %>% filter(race.x != "African American")
+row.names(input_metadata_table) = input_metadata_table$Sample_ID 
+input_abundance_table_otu = input_abundance_table_otu[,row.names(input_metadata_table)]
+input_abundance_table_kmer = input_abundance_table_kmer[,row.names(input_metadata_table)]
+
+dim(input_abundance_table_kmer)
+dim(input_abundance_table_otu)
+
+# = ============================================================================== #
+# variance partitioning with bootstrap prop = percentage sampled each time
+
 set.seed(0)
 collect_var_pars_mean_otu = list()
 collect_var_pars_full_otu = list()
@@ -221,35 +245,31 @@ for(i in 1:1){
   samples_picked = sample(1:ncol(input_abundance_table_otu),as.integer(bootstrap_prop*ncol(input_abundance_table_otu)))
   sample_names_picked = colnames(input_abundance_table_otu)[samples_picked]
   
+  # subsample
   sub_abundance_table_otu = input_abundance_table_otu[,samples_picked]
-  sub_abundance_table_otu = sub_abundance_table_otu[rowVars(as.matrix(sub_abundance_table_otu)) > 10e-10,]
-  
-  
   sub_abundance_table_kmer = input_abundance_table_kmer[,samples_picked]
-
-  sub_abundance_table_kmer = sub_abundance_table_kmer[rowVars(as.matrix(sub_abundance_table_kmer)) > 10e-10,]
-  #length(samples_picked)
-  #dim(sub_abundance_table)
-  #quantile(rowVars(as.matrix(sub_abundance_table_otu)))
   sub_metadata_table = input_metadata_table[samples_picked,]
-  #dim(input_abundance_table_otu)
-  #dim(sub_abundance_table)
-  #dim(sub_metadata_table)
-  #dim(as.matrix(sub_metadata_table))
-  #colnames(sub_metadata_table)
-  #var(sub_abundance_table[1,])
   
-  #rowVars(sub_abundance_table[1:10,])
-  #quantile(rowVars(sub_abundance_table))
   
-  #sum(rowVars(as.matrix(sub_abundance_table)) == 0)
-  #row.names(sub_abundance_table_otu) = c(1:nrow(sub_abundance_table_otu))
-  #row.names(sub_abundance_table_kmer) = c(1:nrow(sub_abundance_table_kmer))
+  # remove any features with 0 variance
+  sub_abundance_table_otu = sub_abundance_table_otu[rowVars(as.matrix(sub_abundance_table_otu)) !=0 ,]
+  sub_abundance_table_kmer = sub_abundance_table_kmer[rowVars(as.matrix(sub_abundance_table_kmer)) != 0,]
+  
+  filter_at_least_two_samples_otu_sub = (rowSums(sub_abundance_table_otu  > 0 ) > 2)
+  sub_abundance_table_otu = sub_abundance_table_otu[filter_at_least_two_samples_otu_sub,]
+  #sum(!filter_at_least_two_samples_otu_sub)
+  #filter_at_least_two_samples_kmer = (rowSums(kmer_table_norm > 0 ) > 2)
+  
+  
   varPartMetaData_otu = fitExtractVarPartModel(formula = formula ,
                                           exprObj = sub_abundance_table_otu, data = data.frame(sub_metadata_table))
   
+  
+  
   varPartMetaData_kmer = fitExtractVarPartModel(formula = formula ,
                                                exprObj = sub_abundance_table_kmer, data = data.frame(sub_metadata_table))
+  
+  
   # varPartMetaData2 = fitExtractVarPartModel(formula = ~ (1| race.x) + (1|Instrument) + sex + bmi_corrected + librarysize , 
   #                                          exprObj = sub_abundance_table[1:100,], data = data.frame(sub_metadata_table))
   # 
@@ -257,13 +277,15 @@ for(i in 1:1){
   #sum(is.na(colSums(sub_abundance_table)))
   #sum(rowSums(sub_abundance_table) < 2)
   #collect_var_pars_mean [[i]] =colMeans(as.matrix(varPartMetaData))
-  collect_var_pars_full_otu[[i]] =as.matrix(varPartMetaData_otu)
-  collect_var_pars_full_kmer[[i]] =as.matrix(varPartMetaData_kmer)
+  collect_var_pars_full_otu[[i]] =varPartMetaData_otu
+  collect_var_pars_full_kmer[[i]] =varPartMetaData_kmer
   
   t2= Sys.time()
   print(t2-t1)
   
 }
+t2= Sys.time()
+print(t2-t1)
 
 dim(varPartMetaData)
 
@@ -271,20 +293,50 @@ varPartMetaData = varPartMetaData1
 #plotVarPart(varPartMetaData1)
 #saveRDS(varPartMetaData1,paste0(otu_input_folder,"otu_norm_quant_norm_var_par.rds"))
 
+# = ============================================================================== #
+# plot results
 
-as.matrix(varPartMetaData)
 
-plot(rowSums(as.matrix(varPartMetaData)[,biological_vars]),rowSums(as.matrix(varPartMetaData)[,technical_vars]))
+i = 1
+input_plot1 = as.matrix(collect_var_pars_full_otu[[i]])
+input_plot2 = as.matrix(collect_var_pars_full_kmer[[i]])
 
-#plotVarPart(varPartMetaData)
-#df_vars$Instrument_.Illumina_HiSeq_2500
-#table(df_vars$race.x_.Asian_or_Pacific_Islander)
+#plot(rowSums(as.matrix(input_plot1)[,biological_vars]),rowSums(as.matrix(input_plot1)[,technical_vars]),pch=16)
+#points(rowSums(as.matrix(input_plot2)[,biological_vars]),rowSums(as.matrix(input_plot2)[,technical_vars]),col = "red",pch=16)
 
-#hist(as.numeric(input_abundance_table[2,]))
+require(reshape2)
+melt_frame_otu = data.frame(bio_variability_explained = rowSums(as.matrix(input_plot1)[,biological_vars]),
+                      tech_variability_explained = rowSums(as.matrix(input_plot1)[,technical_vars]),type = "otu")
 
-#random_eff_vars = sub_metadata_table[,random_vars]
-fixed_eff_vars = sub_metadata_table[,fixed_vars]
-# dim(test)
-cor(fixed_eff_vars,use = "pairwise.complete")
-# 
-# table(total_metadata$Instrument)
+
+melt_frame_kmer = data.frame(bio_variability_explained = rowSums(as.matrix(input_plot2)[,biological_vars]),
+                      tech_variability_explained = rowSums(as.matrix(input_plot2)[,technical_vars]),type = "kmer")
+melt_frame =rbind(melt_frame_otu,melt_frame_kmer)
+
+p<-ggplot(melt_frame,aes(x=bio_variability_explained,y= tech_variability_explained,color=type)) + ggtitle("Variance") 
+p<-p + geom_point() + theme_bw() + scale_color_manual(values=c("#999999", "#56B4E9"))
+
+
+
+# = ============================================================================== #
+# Plot per category
+
+varPart = collect_var_pars_full_otu[[1]]
+study_name = 'AGP_reprocess_otu'
+# sort variables (i.e. columns) by median fraction 
+# of variance explained 
+vp <- sortCols( varPart ) 
+# Figure 1a 
+# Bar plot of variance fractions for the first 10 genes 
+dim(vp)
+row.names(vp) = paste0("OTU",1:nrow(vp))
+
+dir.create(paste0(plot_folder,study_name,'/'))
+pdf(paste0(plot_folder,study_name,'/barplots_otu_variance_',study_name,'.pdf'))
+plotPercentBars( vp[1:20,]) 
+dev.off()
+# Figure 1b 
+# violin plot of contribution of each variable to total 
+pdf(paste0(plot_folder,study_name,'/plot_otu_variance_partition_',study_name,'.pdf'))
+plotVarPart( vp )
+dev.off()

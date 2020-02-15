@@ -1,0 +1,151 @@
+
+run_ComBat <- function(mat, batch_labels){
+  require(sva)
+  
+  
+  #mat <- data$df_otu_corrected
+  #range(mat)
+  # make continuous
+  combat_predata = mat #log(mat + 1) #mat #
+  input = ComBat( dat=combat_predata, batch = batch_labels)
+  return(input)
+}
+
+run_ComBat_mle <- function(mat,batch_labels){
+  source(paste0(script_folder,"CBX/combatx_helper.R"))
+  source(paste0(script_folder,"CBX/combat_mle.R"))
+  input = ComBat_mle( dat = mat , batch = batch_labels,estimation_method="MLE")
+}
+#' @param mat matrix you want to batch correct
+#' @param data object containing $df_meta 
+run_sva <- function(mat,data){
+  require(SmartSVA)
+  
+  
+  mat <- data$df_otu_corrected
+  mat_scaled = t(scale(t(mat))) 
+  Y.r <- t(resid(lm(t( mat_scaled) ~ DiseaseState, data=data$df_meta)))
+  n.sv <- EstDimRMT(Y.r, FALSE)$dim + 1 # Very important: Add one extra dimension to compensate potential loss of 1 degree of freedom in confounded scenarios !!!
+  
+  # Run SVA
+  mod <- model.matrix( object = ~ DiseaseState, data = data$df_meta)
+  sv.obj <- smartsva.cpp(dat =  mat_scaled, mod = mod, mod0=NULL, n.sv=n.sv, B = 200, alpha = 1, epsilon = 0.001, VERBOSE = T) 
+  # Make sure that this converges! This happens when you do not reach max number of iterations (B) If it does not, increase B or decrease alpha
+
+  #To get corrected data run: 
+  mat_scaled_corrected<- t(resid(lm(t(mat_scaled) ~ ., data=data.frame(sv.obj$sv))))
+  return( mat_scaled_corrected)
+}
+
+run_percentile_norm <- function(mat,data,case_class, control_class){
+  source(paste0(script_folder,"percentile_norm.R"))
+  pernorm = percentile_norm(mat,df_meta = data$df_meta,replace_zeroes=TRUE,case_class = case_class, control_class=control_class)
+  return(pernorm)
+}
+
+#' @param mat matrix you want to batch correct
+#' @param data object containing $df_meta 
+#' @param ref_study Reference study to align remaining samples to
+run_slope_correction <- function(mat,data,ref_study){
+  source(paste0(script_folder,"slope_correction.R"))
+  slope_data= slope_correction_pooled(mat,data$df_meta,ref_study = ref_study)
+  return(slope_data$df_otu)
+}
+run_limma <- function(mat,batch_labels){
+  require(limma)
+  input = removeBatchEffect( x=mat , batch= batch_labels)
+  return(input)
+}
+run_bmc <- function(mat,data){
+  
+  
+  require(dplyr)
+  corrected_mat = mat
+  df_meta = data$df_meta
+  unique_batches= unique(df_meta$batch_numbers)
+  for( b in 1:length(unique_batches)){
+    samples = df_meta %>% filter(batch_numbers == unique_batches[b]) %>% pull(Sample_ID)
+    batch_mat = mat[,samples]
+    corrected_mat[,samples] = sweep(mat[,samples],MARGIN = 1, rowMeans(batch_mat))
+  }
+  
+  return(corrected_mat)
+  
+}
+
+# run_dim_red_combat <- function(){
+#   require(compositions)
+#   ilr()
+# }
+
+pca_method <- function(input,clr_transform = FALSE,center_scale_transform =TRUE){
+  #input = otu_data$df_otu_rel_ab
+  orig_input = input
+  require(compositions)
+  require("bigstatsr")
+  if(clr_transform){
+    input = t(clr(t(input)))
+  }
+  if(center_scale_transform){
+    input = t(scale(t(input)))
+  }
+  #dim(input)
+  #dim(orig_input)
+  
+  myFBM = as_FBM(t(input), type = c("double"))
+  
+  
+  t1 = Sys.time()
+  
+  #svd_result = big_SVD(myFBM,k=20,fun.scaling = big_scale())
+  
+  svd_result = big_SVD(myFBM,k=20)
+
+  
+  print(Sys.time()-t1)
+  
+  pca_score <-  svd_result$u %*% diag(svd_result$d)
+  
+  row.names(pca_score) = colnames(orig_input)
+  return(list(svd_result = svd_result,pca_score=pca_score,transformed_data = input))
+}
+
+regress_out <- function(pc_scores,data,pc_index){
+  
+  model_residuals<-lm(as.matrix(data) ~ pc_scores[,pc_index] ) 
+  extracted_residuals <- residuals(model_residuals)
+  return(t(extracted_residuals))
+  
+}
+
+run_smart_sva <- function(mat, batch_labels){
+  mat = input_abundance_table
+  
+  mat_scale = t(scale(t(mat)))
+  
+  mat = mat_scale
+  
+  require(SmartSVA)
+  t1 = Sys.time()
+  Y.r <- t(resid(lm(t(mat) ~ batch_labels)))
+  n.sv <- EstDimRMT(Y.r, FALSE)$dim + 1
+  print(n.sv)
+  t2= Sys.time()
+
+  mod <- model.matrix( ~ batch_labels)
+  sv.obj <- smartsva.cpp(input_abundance_table, mod, mod0=NULL, n.sv=n.sv)
+  t2= Sys.time()
+  print(t3 -t2)
+  out_mat <- t(sv.obj$sv)
+  #row.names(out_mat) = row.names(mat)
+  colnames(out_mat) = colnames(mat)
+  
+  return(out_mat)
+  
+  out_mat[1:4,1:4]
+  dim(out_mat)
+  dim(out_mat_no_scaling)
+  out_mat_no_scaling[1:4,1:4]
+  
+  out_mat_no_scaling = out_mat
+}

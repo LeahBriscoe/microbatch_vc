@@ -43,9 +43,6 @@ rowRanges(otu_table_norm_quant_norm[1:4,])
 # ============================================================================== #
 # filteres for later
 
-filter_at_least_two_samples_otu = (rowSums(otu_table_norm > 0 ) > 2)
-filter_at_least_two_samples_kmer = (rowSums(kmer_table_norm > 0 ) > 2)
-
 # ============================================================================== #
 # define additional variables of interest
 
@@ -236,7 +233,8 @@ collect_var_pars_full_otu = list()
 collect_var_pars_mean_kmer = list()
 collect_var_pars_full_kmer = list()
 
-bootstrap_prop = 0.80
+bootstrap_prop = 1
+
 
 #sum(rowSums(kmer_table_norm)==0)
 for(i in 1:1){

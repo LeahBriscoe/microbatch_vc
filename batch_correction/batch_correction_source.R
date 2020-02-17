@@ -56,15 +56,14 @@ run_limma <- function(mat,batch_labels){
   input = removeBatchEffect( x=mat , batch= batch_labels)
   return(input)
 }
-run_bmc <- function(mat,data){
+run_bmc <- function(mat,batch_labels){
   
   
   require(dplyr)
   corrected_mat = mat
-  df_meta = data$df_meta
-  unique_batches= unique(df_meta$batch_numbers)
+  unique_batches= unique(batch_labels)
   for( b in 1:length(unique_batches)){
-    samples = df_meta %>% filter(batch_numbers == unique_batches[b]) %>% pull(Sample_ID)
+    samples = colnames(mat)[batch_labels == unique_batches[b]]
     batch_mat = mat[,samples]
     corrected_mat[,samples] = sweep(mat[,samples],MARGIN = 1, rowMeans(batch_mat))
   }
@@ -119,7 +118,9 @@ regress_out <- function(pc_scores,data,pc_index){
 }
 
 run_smart_sva <- function(mat, batch_labels){
-  mat = input_abundance_table
+  require(SmartSVA)
+  
+  #mat = input_abundance_table
   
   mat_scale = t(scale(t(mat)))
   

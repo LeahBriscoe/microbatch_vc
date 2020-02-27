@@ -4,7 +4,7 @@
 
 # ============================================================================== #
 # user input
-kmer_len = 5
+kmer_len = 6
 # ============================================================================== #
 # load packages and functions
 require(varhandle)
@@ -20,11 +20,11 @@ source(paste0(script_folder,"/utils.R"))
 source(paste0(batch_script_folder,"/batch_correction_source.R"))
 # ============================================================================== #
 # define folders
-otu_input_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/AGP_reprocess_otu'
+otu_input_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/AGP_reprocess_otu/'
 kmer_input_folder = paste0('/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/AGP_reprocess_k',kmer_len)
 
-otu_table_norm = readRDS(paste0(otu_input_folder,"/otu_table_norm.rds"))
-otu_table = readRDS(paste0(otu_input_folder,"/otu_table.rds"))
+#otu_table_norm = readRDS(paste0(otu_input_folder,"/otu_table_norm.rds"))
+#otu_table = readRDS(paste0(otu_input_folder,"/otu_table.rds"))
 kmer_table_norm = readRDS(paste0(kmer_input_folder,"/kmer_table_norm.rds"))
 total_metadata = readRDS(paste0(otu_input_folder,"/metadata.rds"))
 
@@ -45,36 +45,47 @@ batch_labels = as.integer(as.factor(total_metadata[,batch_column]))
 require(varhandle)
 batch_labels_dummy = to.dummy(batch_labels,"batch")
 #table(batch_labels)
-
-methods_list = c("bmc","ComBat","limma","pca_regress_out","clr_pca_regress_out_no_scale","clr_pca_regress_out_scale")
-
+#"bmc","ComBat","limma",
+methods_list = c("pca_regress_out_scale","clr_pca_regress_out_no_scale","clr_pca_regress_out_scale") #)#,
 num_pcs = 5
 
-#batch_corrected_outputs = list()
+batch_corrected_outputs = list()
 #names(batch_corrected_outputs)
 for(m in 1:length(methods_list)){
+  #m=1
   batch_corrected_output  = c()
   if(methods_list[m] == "bmc"){
     batch_corrected_output = run_bmc(mat = input_abundance_table, batch_labels)
   }
   else if(methods_list[m] == "ComBat"){
     batch_corrected_output = run_ComBat(mat = input_abundance_table, batch_labels)
-  }else if(methods_list[m] == "pca_regress_out"){
+  }else if(methods_list[m] == "pca_regress_out_scale"){
     set.seed(0)
+    pca_res = 0
     pca_res = pca_method(input_abundance_table_scale,clr_transform = FALSE,center_scale_transform = FALSE)
-    #dim(pca_res$pca_score)
-    #test = cor(as.matrix(pca_res$pca_score),batch_labels_dummy)
+    if(save_PC_scores == TRUE){
+      saveRDS(pca_res$pca_score, paste0(kmer_input_folder ,"/PC_scores_",methods_list[m],".rds"))
+    }
     batch_corrected_output = regress_out(pca_res$pca_score,data=t(input_abundance_table_scale),pc_index = c(1:num_pcs))
-
-    #batch_corrected_outputs[["pca_regress_out"]] = batch_corrected_output 
+    batch_corrected_outputs[["pca_regress_out"]] = batch_corrected_output 
   }else if(methods_list[m] == "clr_pca_regress_out_no_scale"){
+    set.seed(0)
+    pca_res = 0
     pca_res = pca_method(input_abundance_table,clr_transform = TRUE,center_scale_transform =FALSE)
+    if(save_PC_scores == TRUE){
+      saveRDS(pca_res$pca_score, paste0(kmer_input_folder ,"/PC_scores_",methods_list[m],".rds"))
+    }
     batch_corrected_output = regress_out(pca_res$pca_score,data=t(input_abundance_table),pc_index = c(1:num_pcs))
-    #batch_corrected_outputs[["clr_pca_regress_out_no_scale"]] = batch_corrected_output 
+    batch_corrected_outputs[["clr_pca_regress_out_no_scale"]] = batch_corrected_output 
   }else if(methods_list[m] == "clr_pca_regress_out_scale"){
+    set.seed(0)
+    pca_res = 0
     pca_res = pca_method(input_abundance_table_scale,clr_transform = TRUE,center_scale_transform = FALSE)
+    if(save_PC_scores == TRUE){
+      saveRDS(pca_res$pca_score, paste0(kmer_input_folder ,"/PC_scores_",methods_list[m],".rds"))
+    }
     batch_corrected_output = regress_out(pca_res$pca_score,data=t(input_abundance_table_scale),pc_index = c(1:num_pcs))
-    #batch_corrected_outputs[["clr_pca_regress_out_scale"]] = batch_corrected_output
+    batch_corrected_outputs[["clr_pca_regress_out_scale"]] = batch_corrected_output
   }else if(methods_list[m] == "limma"){
     
     batch_corrected_output = run_limma(mat = input_abundance_table, batch_labels)
@@ -95,9 +106,17 @@ methods_list_total = names(batch_corrected_outputs)
 for(m in 1:length(methods_list_total)){
   print(m)
   if(grepl("kmer",data_type)){
-    write.table(batch_corrected_outputs[[methods_list_total[m]]], paste0(kmer_input_folder ,"/BatchCorrected_",methods_list_total[m],".txt"),
-                sep = "\t",quote = FALSE)
-    saveRDS(batch_corrected_outputs[[methods_list_total[m]]], paste0(kmer_input_folder ,"/BatchCorrected_",methods_list_total[m],".rds"))
+    if(grepl("pca",methods_list_total[m])){
+      write.table(batch_corrected_outputs[[methods_list_total[m]]], paste0(kmer_input_folder ,"/BatchCorrected_",methods_list_total[m],"_first",num_pcs,".txt"),
+                  sep = "\t",quote = FALSE)
+      saveRDS(batch_corrected_outputs[[methods_list_total[m]]], paste0(kmer_input_folder ,"/BatchCorrected_",methods_list_total[m],"_first",num_pcs,".rds"))
+      
+    }else{
+      write.table(batch_corrected_outputs[[methods_list_total[m]]], paste0(kmer_input_folder ,"/BatchCorrected_",methods_list_total[m],".txt"),
+                  sep = "\t",quote = FALSE)
+      saveRDS(batch_corrected_outputs[[methods_list_total[m]]], paste0(kmer_input_folder ,"/BatchCorrected_",methods_list_total[m],".rds"))
+      
+    }
   }else{
     write.table(batch_corrected_outputs[[methods_list_total[m]]], paste0(otu_input_folder ,"/BatchCorrected_",methods_list_total[m],".txt"),
                 sep = "\t",quote = FALSE)
@@ -105,9 +124,11 @@ for(m in 1:length(methods_list_total)){
   }
 }
 
+#write.table(input_abundance_table ,paste0(kmer_input_folder ,"/BatchCorrected_raw.txt"),sep = "\t",quote = FALSE)
 
   
-
+#smartsva = readRDS("~/Downloads/batch_correction_outputs.rds")
+#smartsva$smartsva_no_scale
 # 
 # data$df_meta$S = as.integer(as.factor(data$df_meta$study))
 # data$df_meta$DS = as.integer(as.factor(data$df_meta$DiseaseState))

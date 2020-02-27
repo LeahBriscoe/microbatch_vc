@@ -1,9 +1,11 @@
 # Table of contents
 
+
 1. [Starting commands](#hoffman)
 1. [AGP processing](#agp_processing)
+2. [AGP re-processing](#agp_reprocessing)
 2. [HMP 1](#hmp1)
-3. [](#github)
+3. [iHMP feces](#ihmp_feces)
 4. [](#bashoneline)
 
 ##<a name ="hoffman">Hoffman Starting Commands</a>
@@ -29,9 +31,17 @@ portal_client --manifest /path/to/my/manifest.tsv
 ```
 
 
-
-
 ##<a name ="agp_processing">AGP Processing</a>
+
+"Illumina HiSeq 2000:359"
+
+"Illumina HiSeq 2500:868"
+
+"Illumina MiSeq:8094"
+
+
+
+##<a name ="agp_reprocessing">AGP Re-Processing</a>
 1. [Commands](#agpcommands)
 2. [Deblur](#debluragp)
 3. [Bloom filter](#bloomfilter)
@@ -91,7 +101,7 @@ bloom_filter.sh SRR_Acc_list_fecal.txt
 ### <a name ="otutables">Step 3: OTU tables</a>
 https://github.com/biocore/American-Gut/blob/68fd6d4b2fa6aeb5b4f5272c6f1006defe5b160e/ipynb/primary-processing/03-pick_otus.md
 
-### <a name ="agpjelly"> Jellyfish kmer counting </a>
+### <a name ="agpjelly"> Step 4: Jellyfish kmer counting </a>
 
 Run command from inside the main kmer counting dir
 
@@ -99,7 +109,7 @@ Run command from inside the main kmer counting dir
 /u/home/b/briscoel/project-halperin/MicroBatch/AGP_reprocessing_LB/submit_jellyfish.sh /u/home/b/briscoel/project-halperin/MicroBatch/AGP_reprocessing_LB/SRR_Acc_List_fecal_bloom_filter.txt 5
 ```
 
-### <a name ="agpkmertab"> Processing K-mer table </a>
+### <a name ="agpkmertab"> Step 5: Processing K-mer table </a>
 
 Run command from inside the main kmer counting dir
 
@@ -128,6 +138,7 @@ filter otus from out table
 
 ### <a name ="agpsummary"> AGP summary stats </a>
 
+### Alt Step: Deblur trim to jellyfish
 
 
 ##<a name ="hmp1">HMP data sources</a>
@@ -157,7 +168,10 @@ python /u/home/b/briscoel/project-halperin/MicroBatch/HMP/get_sample_name.py SRR
 4. [](#bashoneline)
 
 
-## iHMP feces
+##<a name = "iHMP_feces"> iHMP Feces </a>
+
+
+
 
 merge_otu_tables.py -i otu_table1.biom,otu_table2.biom -o merged_otu_table.biom
 find /u/home/b/briscoel/project-halperin/deblurenv/qiime2-dev  -iname merge_otu_tables.py
@@ -167,4 +181,30 @@ do
     filename=$(basename $file);
     echo ${filename//.fastq/} >> SRR_Acc_List.txt; 
 done
+
+## For BIOM file 
+```
+/u/scratch/b/briscoel/KmerCounting/feces_biom
+```
+
+### Write all files to comma sep
+
+```
+ls *biom -p | grep -v / | tr '\n' ',' > files_comma_sep.txt
+module load qiime
+
+merge_otu_tables.py -i $(cat files_comma_sep.txt) -o merged_otu_table.biom
+
+merge_otu_tables.py -i `cat files_comma_sep.txt` -o merged_otu_table.biom
+
+
+ls *K40* -p | grep -v / | tr '\n' ',' > files_comma_sep_k40.txt
+
+merge_otu_tables.py -i $(cat files_comma_sep_k40.txt) -o merged_otu_table.biom
+
+
+
+merge_otu_tables.py -i EP871285_K40_BSTD.otu_table.biom,EP891353_K40_BS1D.otu_table.biom,EP909375_K40_BS1D.otu_table.biom,EP992349_K40_BS1D.otu_table.biom -o merged_otu_table.biom
+
+```
 

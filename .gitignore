@@ -41,3 +41,5 @@ vignettes/*.pdf
 
 # My custom specifications
 data/*
+plots/*
+

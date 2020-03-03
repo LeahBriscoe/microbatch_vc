@@ -1,6 +1,6 @@
 # ============================================================================== #
 # user input
-kmer_len = 6
+kmer_len = 5
 # ============================================================================== #
 # load packages and functions
 script_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data_processing'
@@ -8,10 +8,10 @@ source(paste0(script_folder,"/utils.R"))
 require(dplyr)
 # ============================================================================== #
 # define folders
-
 folder = '/Users/leahbriscoe/Documents/KmerCounting/AGP_reprocessing/'
-otu_output_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/AGP_reprocess_otu'
-kmer_output_folder = paste0('/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/AGP_reprocess_k',kmer_len)
+kmer_input_folder = '/Users/leahbriscoe/Documents/KmerCounting/AGP_trim_only/'
+otu_output_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/AGP_trim_only_otu'
+kmer_output_folder = paste0('/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/AGP_trim_only_k',kmer_len)
 dir.create(kmer_output_folder) 
 dir.create(otu_output_folder) 
 # ============================================================================== #
@@ -31,7 +31,7 @@ row.names(custom_metadata) = custom_metadata$sample_name
 row.names(custom_metadata) = paste0('X',row.names(custom_metadata))
 custom_metadata = custom_metadata[colnames(otu_table),]
 
-metadata_tech = read.csv('/Users/leahbriscoe/Documents/KmerCounting/AGP/SraRunTable.csv',header =TRUE,stringsAsFactors = FALSE)
+metadata_tech = read.csv('/Users/leahbriscoe/Documents/KmerCounting/AGP_paper_data/SraRunTable.csv',header =TRUE,stringsAsFactors = FALSE)
 custom_metadata_tech = metadata_tech %>% filter(Library.Name %in% gsub('X','',colnames(otu_table)))
 custom_metadata_tech = custom_metadata_tech %>% distinct(Library.Name, .keep_all = TRUE)
 row.names(custom_metadata_tech) = custom_metadata_tech$Library.Name
@@ -43,7 +43,7 @@ dim(total_metadata)
 
 # ============================================================================== #
 # load kmer_data
-kmer_table = read.table(paste0(folder,"kmer_matrix_6.csv"),header=TRUE,stringsAsFactors=FALSE,sep=",",as.is=TRUE,row.names = 1,check.names = FALSE)
+kmer_table = read.table(paste0(kmer_input_folder,"kmer_matrix_6.csv"),header=TRUE,stringsAsFactors=FALSE,sep=",",as.is=TRUE,row.names = 1,check.names = FALSE)
 # convert na to 0
 kmer_table[is.na(kmer_table)] = 0
 kmer_table = kmer_table[,colSums(kmer_table)!=0] 

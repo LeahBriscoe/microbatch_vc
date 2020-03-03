@@ -5,12 +5,14 @@
 # ============================================================================== #
 # user input
 kmer_len = 6
+save_PC_scores = FALSE
 # ============================================================================== #
 # load packages and functions
 require(varhandle)
 library(variancePartition)
 require(matrixStats)
 require(dplyr)
+require(varhandle)
 
 script_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data_processing'
 batch_script_folder ='/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/batch_correction'
@@ -30,7 +32,8 @@ total_metadata = readRDS(paste0(otu_input_folder,"/metadata.rds"))
 
 data_type = "kmer"
 batch_column = "Instrument"
-install.packages('SmartSVA')
+
+#install.packages('SmartSVA')
 
 # ============================================================================== #
 # cleaning of data
@@ -42,23 +45,45 @@ input_abundance_table = input_abundance_table[rowVars(as.matrix(input_abundance_
 input_abundance_table_scale = t(scale(t(input_abundance_table)))
 
 batch_labels = as.integer(as.factor(total_metadata[,batch_column]))
-require(varhandle)
 batch_labels_dummy = to.dummy(batch_labels,"batch")
+
 #table(batch_labels)
 #"bmc","ComBat","limma",
-methods_list = c("pca_regress_out_scale","clr_pca_regress_out_no_scale","clr_pca_regress_out_scale") #)#,
+methods_list = c("ComBat_with_batch2")#"pca_regress_out_scale","clr_pca_regress_out_no_scale","clr_pca_regress_out_scale") #)#,
 num_pcs = 5
 
 batch_corrected_outputs = list()
+collection_date=as.Date(total_metadata$collection_date, format="%m/%d/%Y")
+collection_days = collection_date - min(collection_date,na.rm=TRUE)
+batch_labels2 = collection_days
 #names(batch_corrected_outputs)
 for(m in 1:length(methods_list)){
   #m=1
   batch_corrected_output  = c()
   if(methods_list[m] == "bmc"){
     batch_corrected_output = run_bmc(mat = input_abundance_table, batch_labels)
-  }
-  else if(methods_list[m] == "ComBat"){
+  }else if(methods_list[m] == "ComBat"){
     batch_corrected_output = run_ComBat(mat = input_abundance_table, batch_labels)
+    
+  }else if(methods_list[m] == "ComBat_with_batch2"){
+    batch_corrected_output = run_ComBat(mat = input_abundance_table, batch_labels = batch_labels2)
+  
+  }else if(methods_list[m] == "ComBat_with_biocovariates"){
+
+    total_metadata_mod = process_model_matrix(total_metadata = total_metadata,binary_vars="sex",categorical_vars ="race.x",numeric_vars = "bmi_corrected")
+    #"bmi_cat"))#,
+    sum(is.na(total_metadata_mod))
+    total_metadata_mod= total_metadata[!apply(is.na(total_metadata_mod),1,any),]
+    #row.names(total_metadata_mod)
+    model_matrix_input  = model.matrix(~as.factor(sex) + as.numeric(bmi_corrected) + as.factor(race.x), data=total_metadata_mod) #as.factor(bmi_cat) ) + 
+    
+    sub_input_abundance_table = input_abundance_table[,row.names(model_matrix_input)]
+    sub_total_metadata = total_metadata[row.names(model_matrix_input),]
+    sub_batch_labels = as.integer(as.factor(sub_total_metadata[,batch_column]))
+   
+    batch_corrected_output = run_ComBat(mat = sub_input_abundance_table, sub_batch_labels,mod = model_matrix_input)
+    head(model_matrix_input)
+    
   }else if(methods_list[m] == "pca_regress_out_scale"){
     set.seed(0)
     pca_res = 0
@@ -67,7 +92,7 @@ for(m in 1:length(methods_list)){
       saveRDS(pca_res$pca_score, paste0(kmer_input_folder ,"/PC_scores_",methods_list[m],".rds"))
     }
     batch_corrected_output = regress_out(pca_res$pca_score,data=t(input_abundance_table_scale),pc_index = c(1:num_pcs))
-    batch_corrected_outputs[["pca_regress_out"]] = batch_corrected_output 
+
   }else if(methods_list[m] == "clr_pca_regress_out_no_scale"){
     set.seed(0)
     pca_res = 0
@@ -76,7 +101,7 @@ for(m in 1:length(methods_list)){
       saveRDS(pca_res$pca_score, paste0(kmer_input_folder ,"/PC_scores_",methods_list[m],".rds"))
     }
     batch_corrected_output = regress_out(pca_res$pca_score,data=t(input_abundance_table),pc_index = c(1:num_pcs))
-    batch_corrected_outputs[["clr_pca_regress_out_no_scale"]] = batch_corrected_output 
+
   }else if(methods_list[m] == "clr_pca_regress_out_scale"){
     set.seed(0)
     pca_res = 0
@@ -85,11 +110,20 @@ for(m in 1:length(methods_list)){
       saveRDS(pca_res$pca_score, paste0(kmer_input_folder ,"/PC_scores_",methods_list[m],".rds"))
     }
     batch_corrected_output = regress_out(pca_res$pca_score,data=t(input_abundance_table_scale),pc_index = c(1:num_pcs))
-    batch_corrected_outputs[["clr_pca_regress_out_scale"]] = batch_corrected_output
   }else if(methods_list[m] == "limma"){
     
     batch_corrected_output = run_limma(mat = input_abundance_table, batch_labels)
     #batch_corrected_outputs[["limma"]] = batch_corrected_output
+  }else if(methods_list[m] == "limma_batch2"){
+    
+    #dim(total_metadata)
+    #dim(input_abundance_table)
+    #length(batch_labels)
+    #length(collection_days)
+    batch_corrected_output = run_limma(mat = input_abundance_table, batch_labels = batch_labels,batch_labels2 = collection_days)
+    #input = removeBatchEffect( x=input_abundance_table , batch= batch_labels,batch2 = collection_days,covariates = )
+    #cbind()
+    
   }else if(methods_list[m] == "smartsva_no_scale"){
     batch_corrected_output= run_smart_sva(mat = input_abundance_table, batch_labels)
   }else if(methods_list[m] == "smartsva_scale"){

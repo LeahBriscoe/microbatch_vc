@@ -1,5 +1,5 @@
 
-run_ComBat <- function(mat, batch_labels){
+run_ComBat <- function(mat, batch_labels,model_matrix=NULL){
   require(sva)
   
   
@@ -7,7 +7,7 @@ run_ComBat <- function(mat, batch_labels){
   #range(mat)
   # make continuous
   combat_predata = mat #log(mat + 1) #mat #
-  input = ComBat( dat=combat_predata, batch = batch_labels)
+  input = ComBat( dat=combat_predata, batch = batch_labels,mod = model_matrix)
   return(input)
 }
 
@@ -20,9 +20,7 @@ run_ComBat_mle <- function(mat,batch_labels){
 #' @param data object containing $df_meta 
 run_sva <- function(mat,data){
   require(SmartSVA)
-  
-  
-  mat <- data$df_otu_corrected
+
   mat_scaled = t(scale(t(mat))) 
   Y.r <- t(resid(lm(t( mat_scaled) ~ DiseaseState, data=data$df_meta)))
   n.sv <- EstDimRMT(Y.r, FALSE)$dim + 1 # Very important: Add one extra dimension to compensate potential loss of 1 degree of freedom in confounded scenarios !!!
@@ -51,9 +49,9 @@ run_slope_correction <- function(mat,data,ref_study){
   slope_data= slope_correction_pooled(mat,data$df_meta,ref_study = ref_study)
   return(slope_data$df_otu)
 }
-run_limma <- function(mat,batch_labels){
+run_limma <- function(mat,batch_labels,batch_labels2 = NULL){
   require(limma)
-  input = removeBatchEffect( x=mat , batch= batch_labels)
+  input = removeBatchEffect( x=mat , batch= batch_labels,batch2 = batch_labels2)
   return(input)
 }
 run_bmc <- function(mat,batch_labels){
@@ -127,6 +125,7 @@ run_smart_sva <- function(mat, batch_labels){
   mat = mat_scale
   
   require(SmartSVA)
+  
   t1 = Sys.time()
   Y.r <- t(resid(lm(t(mat) ~ batch_labels)))
   n.sv <- EstDimRMT(Y.r, FALSE)$dim + 1

@@ -1,7 +1,8 @@
 # ============================================================================== #
 # user input
-kmer_len = 6
+kmer_len = 5
 data_type = "kmer"
+study_name = "AGP_reprocess_k5"
 # ============================================================================== #
 # load packages and functions
 require(varhandle)
@@ -15,8 +16,8 @@ dir.create(plot_folder)
 source(paste0(script_folder,"/utils.R"))
 # ============================================================================== #
 # define folders
-otu_input_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/AGP_otu'
-kmer_input_folder = paste0('/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/AGP_k',kmer_len)
+otu_input_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/AGP_reprocess_otu'
+kmer_input_folder = paste0('/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/AGP_reprocess_k',kmer_len)
 
 if( data_type == "kmer"){
   kmer_table_norm = readRDS(paste0(kmer_input_folder,"/kmer_table_norm.rds"))
@@ -80,11 +81,11 @@ fixed_effects_bio = c("sex","bmi_corrected")#,"age_corrected")
 
 # ============================================================================== #
 # define variable types for recasting later
-integer_vars = c("age_corrected")
+integer_vars = c("age_corrected","collection_days")
 numeric_vars = c("librarysize","bmi_corrected")
 binary_vars = c("collection_AM","sex")
 categorical_vars = c("center_project_name","diet_type.x","artificial_sweeteners",
-                     "race.x","Instrument","collection_days")
+                     "race.x","Instrument")
 
 
 # ============================================================================== #
@@ -196,15 +197,20 @@ df_vars$bmi_corrected =scale(df_vars$bmi_corrected)
 
 # = ============================================================================== #
 # Correlation of metadata and PCs too? 
-pc_scores = readRDS(paste0(kmer_input_folder,"/PC_scores_pca_regress_out_scale.rds"))
-colnames(pc_scores) = paste0("PC",1:20)
-df_vars_pc = data.frame(df_vars,pc_scores)
-
-form <- paste0("~",paste(colnames(df_vars_pc), collapse = "+"))
-C = canCorPairs(formula = form, data = df_vars_pc)
-plotCorrMatrix(C)
-
-
+pc_correlation = FALSE
+if( pc_correlation){
+  pc_scores = readRDS(paste0(kmer_input_folder,"/PC_scores_pca_regress_out_scale.rds"))
+  colnames(pc_scores) = paste0("PC",1:20)
+  df_vars_pc = data.frame(df_vars,pc_scores)
+  
+  form <- paste0("~",paste(colnames(df_vars_pc), collapse = "+"))
+  C = canCorPairs(formula = form, data = df_vars_pc)
+  dir.create(paste0(plot_folder,study_name))
+  pdf(paste0(plot_folder,study_name,"/","correlation_pcs_collectiondayint.pdf"))
+  plotCorrMatrix(C[1:5,6:ncol(C)],sort=FALSE)  
+  dev.off()
+  
+}
 
 # = ============================================================================== #
 # variance partitioning data input preparation
@@ -260,15 +266,15 @@ bootstrap_prop = 1
 
 # for each batch correction
 
-kmer_methods1  = paste0(c("pca_regress_out_scale_first","clr_pca_regress_out_no_scale_first","clr_pca_regress_out_scale_first"),1)
-kmer_methods2  = paste0(c("pca_regress_out_scale_first","clr_pca_regress_out_no_scale_first","clr_pca_regress_out_scale_first"),2)
-kmer_methods3  = paste0(c("pca_regress_out_scale_first","clr_pca_regress_out_no_scale_first","clr_pca_regress_out_scale_first"),3)
-kmer_methods4  = paste0(c("pca_regress_out_scale_first","clr_pca_regress_out_no_scale_first","clr_pca_regress_out_scale_first"),4)
+#kmer_methods1  = paste0(c("pca_regress_out_scale_first","clr_pca_regress_out_no_scale_first","clr_pca_regress_out_scale_first"),1)
+#kmer_methods2  = paste0(c("pca_regress_out_scale_first","clr_pca_regress_out_no_scale_first","clr_pca_regress_out_scale_first"),2)
+#kmer_methods3  = paste0(c("pca_regress_out_scale_first","clr_pca_regress_out_no_scale_first","clr_pca_regress_out_scale_first"),3)
+#kmer_methods4  = paste0(c("pca_regress_out_scale_first","clr_pca_regress_out_no_scale_first","clr_pca_regress_out_scale_first"),4)
 kmer_methods5  = paste0(c("pca_regress_out_scale_first","clr_pca_regress_out_no_scale_first","clr_pca_regress_out_scale_first"),5)
-
-methods_list = c(kmer_methods1,kmer_methods2,kmer_methods3, kmer_methods4,kmer_methods5,
+#kmer_methods1,kmer_methods2,kmer_methods3, kmer_methods4,
+methods_list = c(kmer_methods5,
                  "pca_regress_out_scale_first5","clr_pca_regress_out_no_scale_first5","clr_pca_regress_out_scale_first5",
-                 "bmc","ComBat","limma")
+                 "bmc","ComBat","limma","ComBat_with_biocovariates")
 
 
 for(m in 1:length(methods_list)){
@@ -371,22 +377,22 @@ to_plot = melt(collect_var_pars_full_BC_tech_bio,id.vars = c("bio_variability_ex
 head(to_plot)
 p<-ggplot(to_plot ,aes(x=bio_variability_explained,y= tech_variability_explained,color=L1)) + ggtitle("Variance") 
 p<-p + geom_point() + theme_bw() + stat_ellipse()#+ scale_color_manual(values=c("#999999", "#56B4E9"))
-
+p
 p<-ggplot(to_plot ,aes(x=bio_variability_explained,y=L1)) + ggtitle("Bio") 
 p<-p + geom_boxplot() + theme_bw() #+ scale_color_manual(values=c("#999999", "#56B4E9"))
-
-p<-ggplot(to_plot ,aes(x=bio_variability_explained,y=L1)) + ggtitle("Tech") 
+p
+p<-ggplot(to_plot ,aes(x=tech_variability_explained,y=L1)) + ggtitle("Tech") 
 p<-p + geom_boxplot() + theme_bw() #+ scale_color_manual(values=c("#999999", "#56B4E9"))
-
+p
 #sub_methods_list = c("bmc","ComBat","limma","pca_regress_out","clr_pca_regress_out_no_scale","clr_pca_regress_out_scale")
 collect_var_pars_full_BC_change = list()
 for( m in 1:length(methods_list)){
 
   bio_correct = rowSums(as.matrix(collect_var_pars_full_BC[[methods_list[m]]])[,biological_vars])
-  bio_correct_change = bio_correct - rowSums(as.matrix(collect_var_pars_full[["raw"]])[,biological_vars])[names(bio_correct)] 
+  bio_correct_change = bio_correct - rowSums(as.matrix(collect_var_pars_full_BC[["raw"]])[,biological_vars])[names(bio_correct)] 
   
   tech_correct = rowSums(as.matrix(collect_var_pars_full_BC[[methods_list[m]]])[,technical_vars])
-  tech_correct_change =tech_correct - rowSums(as.matrix(collect_var_pars_full[["raw"]])[,technical_vars])[names(tech_correct)] 
+  tech_correct_change =tech_correct - rowSums(as.matrix(collect_var_pars_full_BC[["raw"]])[,technical_vars])[names(tech_correct)] 
   
   collect_var_pars_full_BC_change[[methods_list[m]]] = data.frame(bio_variability_explained = bio_correct_change,
                                                                     tech_variability_explained = tech_correct_change)
@@ -397,7 +403,7 @@ to_plot = melt(collect_var_pars_full_BC_change,id.vars = c("bio_variability_expl
 head(to_plot)
 p<-ggplot(to_plot ,aes(x=bio_variability_explained,y= tech_variability_explained,color=L1)) + ggtitle("Variance") 
 p<-p + geom_point() + theme_bw() + stat_ellipse()#+ scale_color_manual(values=c("#999999", "#56B4E9"))
-
+p
 
 ## plot intervals
 collect_var_pars_full_BC_ellipse = list()
@@ -458,29 +464,34 @@ ggplot(to_plot, aes(x=tech_mean, y=bio_mean, color = L1)) + geom_point() +
 
 # = ============================================================================== #
 # Plot per category
-methods_list = names(collect_var_pars_full_BC_tech_bio)
+#methods_list = names(collect_var_pars_full_BC_tech_bio)
 for( m in 1:length(methods_list)){
   varPart = collect_var_pars_full_BC[[methods_list[m]]]
   #varPart = collect_var_pars_full[["raw"]]
   #study_name = 'AGP_reprocess_kmer'
-  study_name = paste0('AGP_reprocess_kmer_',methods_list[m])
+  #study_name = paste0('AGP_reprocess_kmer_',methods_list[m])
   # sort variables (i.e. columns) by median fraction 
   # of variance explained 
-  vp <- sortCols( varPart ) 
+  
+  #head(varPart)
+  vp <- varPart[,c(technical_vars,biological_vars,"Residuals")]#[#sortCols( varPart ) 
+  vp = vp[order(vp$bmi_corrected,decreasing = TRUE),]
+  #?sortCols
+  # sort by BMI
   #head(vp)
   # Figure 1a 
   # Bar plot of variance fractions for the first 10 genes 
-  row.names(vp) = paste0("KMER",1:nrow(vp))
+  #row.names(vp) = paste0("KMER",1:nrow(vp))
   
   dir.create(paste0(plot_folder,study_name,'/'))
   #pdf()
-  ggsave(filename = paste0(plot_folder,study_name,'/barplots_kmer_variance_',study_name,'.pdf'), 
+  ggsave(filename = paste0(plot_folder,study_name,'/barplots_kmer_variance_',methods_list[m],"_",study_name,'.pdf'), 
          plot = plotPercentBars( vp[1:20,]) )
   #dev.off()
   # Figure 1b 
   # violin plot of contribution of each variable to total 
   #pdf(paste0(plot_folder,study_name,'/plot_kmer_variance_partition_',study_name,'.pdf'))
-  ggsave(filename = paste0(plot_folder,study_name,'/plot_kmer_variance_partition_',study_name,'.pdf'),
+  ggsave(filename = paste0(plot_folder,study_name,'/plot_kmer_variance_partition_',methods_list[m],"_",study_name,'.pdf'),
          plot = plotVarPart( vp ))
   #dev.off()
 }

@@ -28,6 +28,9 @@ deblur workflow --help
 
 ```
 portal_client --manifest /path/to/my/manifest.tsv
+
+# fixed the problem with asperas
+portal_client --manifest hmp_manifest_3523275bd8.tsv --user briscoel --endpoint-priority=FASP
 ```
 
 
@@ -140,6 +143,10 @@ filter otus from out table
 
 ### Alt Step: Deblur trim to jellyfish
 
+~/project-halperin/MicroBatch/AGP_trim_only/submit_jellyfish.sh ~/project-halperin/MicroBatch/AGP_trim_only/SRR_Acc_List.txt 6
+
+python ~/project-halperin/MicroBatch/ProcessKmerTable.py ~/project-halperin/MicroBatch/AGP_trim_only/SRR_Acc_List.txt 6
+
 
 ##<a name ="hmp1">HMP data sources</a>
 1. [scripts](#hmp_scripts)
@@ -161,6 +168,9 @@ Realized sample names are in header of fasta files:
 python /u/home/b/briscoel/project-halperin/MicroBatch/HMP/get_sample_name.py SRR_Acc_List_V3-V5.txt V3-V5
 ```
 
+## iHMP overall
+projects PRJNA398089, PRJNA430481, PRJNA430482, PRJNA326441, phs001719, phs000256, phs001626, phs001523, and others)
+
 ###<a name ="hmpdatafiles">HMP Data Files</a>
 1. [scripts](#hmp_scripts)
 2. [Data files](#hmpdatafiles)
@@ -168,10 +178,53 @@ python /u/home/b/briscoel/project-halperin/MicroBatch/HMP/get_sample_name.py SRR
 4. [](#bashoneline)
 
 
-##<a name = "iHMP_feces"> iHMP Feces </a>
+##<a name = "ihmpfeces"> iHMP FEces </a>
+Inflammatory Bowel Disease Multi-omics Database (IBDMDB)  :103   
+
+momspi :774                                               
+
+prediabetes: 1209
 
 
+                                                                                                                                                           
+### Tasks
+1. Merge metadata together
+2. 
 
+### Table of contents
+2. [Data files](#t2ddatafiles)
+3. [T2D Analysis](#t2danalysis)
+4. [Reading ](#readingihmp)
+
+###<a name ="ihmpdatafiles">iHMP Data Files</a>
+
+#### 1. For T2D
+[NCBI](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA281230)
+WHere did you get OTU table?
+
+[data tree](http://hmp2-data.stanford.edu/)
+
+General info about study?
+[General info](http://med.stanford.edu/ipop/publications.html)
+
+#### 2. For IBD
+
+[metadata](https://ibdmdb.org/tunnel/public/summary.html)
+
+###<a name ="#t2danalysis"> T2D Analysis </a>
+3 year study in 60 males and females at high risk for T2D. Meausring changes in the microboe during periods of respiratory stress
+
+Study start date: (03/01/2013)
+
+
+###<a name ="#readingihmp"> Reading </a>
+
+- 109 person cohort
+- capture transitions from normoglycemic to preDM and from preDM to DM
+
+### For Merging OTU tables later
+
+```
 
 merge_otu_tables.py -i otu_table1.biom,otu_table2.biom -o merged_otu_table.biom
 find /u/home/b/briscoel/project-halperin/deblurenv/qiime2-dev  -iname merge_otu_tables.py
@@ -181,6 +234,9 @@ do
     filename=$(basename $file);
     echo ${filename//.fastq/} >> SRR_Acc_List.txt; 
 done
+```
+
+
 
 ## For BIOM file 
 ```
@@ -207,4 +263,55 @@ merge_otu_tables.py -i $(cat files_comma_sep_k40.txt) -o merged_otu_table.biom
 merge_otu_tables.py -i EP871285_K40_BSTD.otu_table.biom,EP891353_K40_BS1D.otu_table.biom,EP909375_K40_BS1D.otu_table.biom,EP992349_K40_BS1D.otu_table.biom -o merged_otu_table.biom
 
 ```
+
+
+# Brooks 2015
+"The reads were not trimmed"
+
+# Hispanic
+2. [Data files](#hispanicdata)
+3. [Processing Code](#hispaniccode)
+4. [Reading ](#readingihmp)
+
+
+
+##<a name = "hispanicdata"> Data source </a>
+
+### Used qiita
+
+https://qiita.ucsd.edu/study/description/11666#
+
+|                           | trimmed demultiplexed 150 | Picked Closed Ref OTU table |
+|---------------------------|---------------------------|-----------------------------|
+| prep 3-8 rerun - ID 4571  | 49640                     | 49922                       |
+| prep 9-14 rerun - ID 4574 | 49546                     | 49919                       |
+| prep 2, 15-19 - ID 4461   | 47656                     | 52050                       |
+| prep 1, 20 - ID 4463      | 47602                     | 52059                       |
+
+
+Chicago, IL; Miami, FL; Bronx, NY; San Diego, CA
+
+##<a name = "hispaniccode"> Processing </a>
+
+```
+for i in 47602 47656 49546 49640
+do
+	for k in 4 5 6 7 8 9
+	do
+		qsub -cwd -V -N Jel"$i"_"$k" -l h_data=8G,time=24:00:00,highp -pe shared 4 -M briscoel -m beas -b y "/u/home/b/briscoel/project-halperin/MicroBatch/Hispanic_Health/submit_jellyfish.sh /u/home/b/briscoel/project-halperin/MicroBatch/Hispanic_Health/SRR_Acc_List_$i.txt $k split_lib_$i"
+	done
+done
+
+for file in JF_COUNTS_9/*.fa; 
+do 
+    filename=$(basename $file);
+    echo ${filename//_counts.fa/} >> ~/project-halperin/MicroBatch/Hispanic_Health/SRR_Acc_List_qiita.txt; 
+done
+
+for i in 5 6 7 8 9
+do
+	python ~/project-halperin/MicroBatch/ProcessKmerTable.py ~/project-halperin/MicroBatch/Hispanic_Health/SRR_Acc_List_qiita.txt $i
+done
+```
+
 

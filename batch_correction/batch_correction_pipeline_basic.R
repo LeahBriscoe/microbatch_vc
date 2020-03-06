@@ -81,7 +81,7 @@ bio_signal_formula <- as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod)
 #names(batch_corrected_outputs)
 
 
-for(m in 1:length(methods_list)){
+for(m in 12:length(methods_list)){
   
   batch_corrected_output  = c()
   
@@ -181,7 +181,14 @@ for(m in 1:length(methods_list)){
     
   }else if(methods_list[m] == "smartsva"){
     
-    batch_corrected_output= run_sva(mat = input_abundance_table, metadata_mod=total_metadata_mod,bio_signal_formula = bio_signal_formula)
+    sva_result= run_sva(mat = input_abundance_table, metadata_mod=total_metadata_mod,bio_signal_formula = bio_signal_formula)
+    
+    svobj = sva_result$sv.obj
+    if(save_PC_scores == TRUE){
+      saveRDS( svobj, paste0(kmer_input_folder ,"/svobj_",methods_list[m],".rds"))
+    }
+    batch_corrected_output = sva_result$corrected_data
+   
     #dim(batch_corrected_output)
   }else if(methods_list[m ] == "refactor"){
     source(paste0(batch_script_folder,"/refactor-master/R/refactor.R"))
@@ -215,7 +222,7 @@ for(m in 1:length(methods_list)){
   }
   #names(batch_corrected_outputs)
   batch_corrected_outputs[[methods_list[m]]] =  batch_corrected_output
-  
+  #names(batch_corrected_outputs)
   #batch_corrected_outputs[["smartsva_no_scale"]] = out_mat_no_scaling
   #batch_corrected_outputs[["smartsva_scale"]] = out_mat
   if(grepl("kmer",data_type)){

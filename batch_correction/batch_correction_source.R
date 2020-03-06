@@ -142,7 +142,8 @@ regress_out <- function(pc_scores,data,pc_index){
 run_sva <- function(mat,metadata_mod,bio_signal_formula){
   #mat = input_abundance_table
   #metadata_mod = total_metadata_mod
-  
+  #mat = input_abundance_table
+  #metadata_mod=total_metadata_mod
   
   mat = mat[,rowSums(is.na(metadata_mod)) == 0]
   metadata_mod= metadata_mod[rowSums(is.na(metadata_mod)) == 0,]
@@ -164,10 +165,12 @@ run_sva <- function(mat,metadata_mod,bio_signal_formula){
   # Run SVA
   mod <- model.matrix( object = bio_signal_formula, data =  metadata_mod)
   #mod <- model.matrix( object = ~ DiseaseState, data = data$df_meta)
-  sv.obj <- smartsva.cpp(dat =  mat_scaled, mod = mod, mod0=NULL, n.sv=n.sv, B = 200, alpha = 1, epsilon = 0.001, VERBOSE = T) 
+  sv.obj <- smartsva.cpp(dat =  mat_scaled, mod = mod, mod0=NULL, n.sv=n.sv, B = 2, alpha = 1, epsilon = 0.001, VERBOSE = T) 
   # Make sure that this converges! This happens when you do not reach max number of iterations (B) If it does not, increase B or decrease alpha
   t3= Sys.time()
-  message(t3 -t2)
+  #message(t3 -t2)
+  #dim(sv.obj$sv)
+  #dim(mat_scaled)
   #To get corrected data run: 
   mat_scaled_corrected<- t(resid(lm(t(mat_scaled) ~ ., data=data.frame(sv.obj$sv))))
   return( list(corrected_data = mat_scaled_corrected, sv.obj=sv.obj))

@@ -6,7 +6,8 @@ def load_data(data_folder,methods,data_type):
     
     method_dict = dict()
     for m in methods:
-        batch_corrected_matrix = pd.read_csv(str(data_folder +"/" + "kmer_BatchCorrected_" + m +".txt"),delimiter="\t")
+        print(m)
+        batch_corrected_matrix = pd.read_csv(str(data_folder +"/" + "BatchCorrected_" + m +".txt"),delimiter="\t")
         method_dict[m] = batch_corrected_matrix
     return method_dict
 

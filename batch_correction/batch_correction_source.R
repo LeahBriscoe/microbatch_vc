@@ -11,28 +11,11 @@ run_ComBat <- function(mat, batch_labels,model_matrix=NULL){
   return(input)
 }
 
+
 run_ComBat_mle <- function(mat,batch_labels){
   source(paste0(script_folder,"CBX/combatx_helper.R"))
   source(paste0(script_folder,"CBX/combat_mle.R"))
   input = ComBat_mle( dat = mat , batch = batch_labels,estimation_method="MLE")
-}
-#' @param mat matrix you want to batch correct
-#' @param data object containing $df_meta 
-run_sva <- function(mat,data){
-  require(SmartSVA)
-
-  mat_scaled = t(scale(t(mat))) 
-  Y.r <- t(resid(lm(t( mat_scaled) ~ DiseaseState, data=data$df_meta)))
-  n.sv <- EstDimRMT(Y.r, FALSE)$dim + 1 # Very important: Add one extra dimension to compensate potential loss of 1 degree of freedom in confounded scenarios !!!
-  
-  # Run SVA
-  mod <- model.matrix( object = ~ DiseaseState, data = data$df_meta)
-  sv.obj <- smartsva.cpp(dat =  mat_scaled, mod = mod, mod0=NULL, n.sv=n.sv, B = 200, alpha = 1, epsilon = 0.001, VERBOSE = T) 
-  # Make sure that this converges! This happens when you do not reach max number of iterations (B) If it does not, increase B or decrease alpha
-
-  #To get corrected data run: 
-  mat_scaled_corrected<- t(resid(lm(t(mat_scaled) ~ ., data=data.frame(sv.obj$sv))))
-  return( mat_scaled_corrected)
 }
 
 run_percentile_norm <- function(mat,data,case_class, control_class){
@@ -115,37 +98,77 @@ regress_out <- function(pc_scores,data,pc_index){
   
 }
 
-run_smart_sva <- function(mat, batch_labels){
-  require(SmartSVA)
-  
-  #mat = input_abundance_table
-  
-  mat_scale = t(scale(t(mat)))
-  
-  mat = mat_scale
-  
-  require(SmartSVA)
-  
-  t1 = Sys.time()
-  Y.r <- t(resid(lm(t(mat) ~ batch_labels)))
-  n.sv <- EstDimRMT(Y.r, FALSE)$dim + 1
-  print(n.sv)
-  t2= Sys.time()
+# run_smart_sva <- function(mat, batch_labels){
+#   mat = input_abundance_table
+#   
+#   require(SmartSVA)
+#   ?EstDimRMT
+#   
+#   #mat = input_abundance_table
+#   
+#   mat_scale = t(scale(t(mat)))
+#   
+#   mat = mat_scale
+#   
+#   require(SmartSVA)
+#   
+#   t1 = Sys.time()
+#   Y.r <- t(resid(lm(t(mat) ~ batch_labels)))
+#   n.sv <- EstDimRMT(Y.r, FALSE)$dim + 1
+#   print(n.sv)
+#   t2= Sys.time()
+# 
+#   mod <- model.matrix( ~ batch_labels)
+#   sv.obj <- smartsva.cpp(input_abundance_table, mod, mod0=NULL, n.sv=n.sv)
+#   t2= Sys.time()
+#   print(t3 -t2)
+#   out_mat <- t(sv.obj$sv)
+#   #row.names(out_mat) = row.names(mat)
+#   colnames(out_mat) = colnames(mat)
+#   
+#   return(out_mat)
+#   
+#   out_mat[1:4,1:4]
+#   dim(out_mat)
+#   dim(out_mat_no_scaling)
+#   out_mat_no_scaling[1:4,1:4]
+#   
+#   out_mat_no_scaling = out_mat
+# }
 
-  mod <- model.matrix( ~ batch_labels)
-  sv.obj <- smartsva.cpp(input_abundance_table, mod, mod0=NULL, n.sv=n.sv)
+
+#' @param mat matrix you want to batch correct
+#' @param data object containing $df_meta 
+run_sva <- function(mat,metadata_mod,bio_signal_formula){
+  #mat = input_abundance_table
+  #metadata_mod = total_metadata_mod
+  
+  
+  mat = mat[,rowSums(is.na(metadata_mod)) == 0]
+  metadata_mod= metadata_mod[rowSums(is.na(metadata_mod)) == 0,]
+
+  #bio_signal_formula <- paste0("~",paste(colnames(metadata_mod), collapse = "+"))
+  bio_signal_formula_resid = as.formula(paste0("t( mat_scaled)", paste0(as.character(bio_signal_formula),collapse = '')))
+  
+  require(SmartSVA)
+  #Determine number of SVs
+  mat_scaled = t(scale(t(mat))) 
+  Y.r <- t(resid(lm(bio_signal_formula_resid,data = metadata_mod)))
+  
+  message("estimating RT")
+  t1 = Sys.time()
+  n.sv <- EstDimRMT(Y.r, FALSE)$dim + 1 # Very important: Add one extra dimension to compensate potential loss of 1 degree of freedom in confounded scenarios !!!
   t2= Sys.time()
-  print(t3 -t2)
-  out_mat <- t(sv.obj$sv)
-  #row.names(out_mat) = row.names(mat)
-  colnames(out_mat) = colnames(mat)
-  
-  return(out_mat)
-  
-  out_mat[1:4,1:4]
-  dim(out_mat)
-  dim(out_mat_no_scaling)
-  out_mat_no_scaling[1:4,1:4]
-  
-  out_mat_no_scaling = out_mat
+  message(t2 -t1)
+
+  # Run SVA
+  mod <- model.matrix( object = bio_signal_formula, data =  metadata_mod)
+  #mod <- model.matrix( object = ~ DiseaseState, data = data$df_meta)
+  sv.obj <- smartsva.cpp(dat =  mat_scaled, mod = mod, mod0=NULL, n.sv=n.sv, B = 200, alpha = 1, epsilon = 0.001, VERBOSE = T) 
+  # Make sure that this converges! This happens when you do not reach max number of iterations (B) If it does not, increase B or decrease alpha
+  t3= Sys.time()
+  message(t3 -t2)
+  #To get corrected data run: 
+  mat_scaled_corrected<- t(resid(lm(t(mat_scaled) ~ ., data=data.frame(sv.obj$sv))))
+  return( list(corrected_data = mat_scaled_corrected, sv.obj=sv.obj))
 }

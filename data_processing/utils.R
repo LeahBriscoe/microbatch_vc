@@ -104,7 +104,8 @@ process_model_matrix <- function(total_metadata =NULL,binary_vars=NULL,categoric
   #,
   for(b_v in binary_vars){
     data_na_included = as.character(total_metadata[,b_v])
-    data_na_included[data_na_included == "Other" | data_na_included == "Not provided" | data_na_included == "other"] = NA
+    data_na_included[data_na_included == "Other" | data_na_included == "Not provided" | data_na_included == "other" 
+                     | data_na_included == '' | data_na_included == 'not applicable' | data_na_included == 'not provided'] = NA
     temp = to.dummy(as.factor(data_na_included),paste0(b_v,"_"))[,-1,drop=FALSE]
     temp = as.integer(temp)
     #print(colnames(temp))
@@ -113,7 +114,8 @@ process_model_matrix <- function(total_metadata =NULL,binary_vars=NULL,categoric
   for(c_v in categorical_vars){
     #print(table(total_metadata[,c_v]))
     data_na_included = as.character(total_metadata[,c_v])
-    data_na_included[data_na_included == "Other" | data_na_included == "Not provided" | data_na_included == "other"] = NA
+    data_na_included[data_na_included == "Other" | data_na_included == "Not provided" | data_na_included == "other" 
+                     | data_na_included == '' | data_na_included == 'not applicable' | data_na_included == 'not provided'] = NA
     #temp = to.dummy(as.factor(data_na_included),paste0(c_v,"_"))[,-1,drop=FALSE]
     #print(colnames(temp))
     assign(c_v ,data_na_included)

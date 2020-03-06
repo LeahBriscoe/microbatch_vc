@@ -52,6 +52,7 @@ portal_client --manifest hmp_manifest_3523275bd8.tsv --user briscoel --endpoint-
 5. [AGP Jellyfish kmer counting](#agpjelly)
 6. [AGP K-mer table creation](#agpkmertab)
 7. [AGP data summary](#agpsummary)
+8. [Batch correction pipe](#agpcorrection)
 
 
 ### <a name ="agpcommands">Commands</a>
@@ -146,6 +147,31 @@ filter otus from out table
 ~/project-halperin/MicroBatch/AGP_trim_only/submit_jellyfish.sh ~/project-halperin/MicroBatch/AGP_trim_only/SRR_Acc_List.txt 6
 
 python ~/project-halperin/MicroBatch/ProcessKmerTable.py ~/project-halperin/MicroBatch/AGP_trim_only/SRR_Acc_List.txt 6
+
+### <a name ="agpcorrection"> AGP batch correction </a>
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 5 -arg "/u/home/b/briscoel/project-halperin/MicroBatch/" -arg AGP_reprocess -arg "bmc&ComBat&ComBat_with_batch2&ComBat_with_biocovariates&ComBat_with_biocovariates_with_batch2&limma&limma_batch2&pca_regress_out_scale&clr_pca_regress_out_no_scal&clr_pca_regress_out_scale&smartsva&refactor&refactor_shift1" -arg 5 -arg 1
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 5 -arg "/u/home/b/briscoel/project-halperin/MicroBatch/" -arg AGP_reprocess -arg "refactor&refactor_shift1" -arg 5 -arg 1
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch/" -arg AGP -arg "bmc&ComBat&ComBat_with_batch2&ComBat_with_biocovariates&ComBat_with_biocovariates_with_batch2&limma&limma_batch2&pca_regress_out_scale&clr_pca_regress_out_no_scal&clr_pca_regress_out_scale&refactor&refactor_shift1&smartsva" -arg 5 -arg 1
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 5 -arg "/u/home/b/briscoel/project-halperin/MicroBatch/" -arg AGP_trim_only -arg "bmc&ComBat&ComBat_with_batch2&ComBat_with_biocovariates&ComBat_with_biocovariates_with_batch2&limma&limma_batch2&pca_regress_out_scale&clr_pca_regress_out_no_scal&clr_pca_regress_out_scale&refactor&refactor_shift1&smartsva" -arg 5 -arg 1
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 5 -arg "/u/home/b/briscoel/project-halperin/MicroBatch/" -arg AGP_trim_only -arg "clr_pca_regress_out_no_scale" -arg 5 -arg 1
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 5 -arg "/u/home/b/briscoel/project-halperin/MicroBatch/" -arg AGP_trim_only -arg "pca_regress_out_scale&clr_pca_regress_out_no_scale&clr_pca_regress_out_scale" -arg 2 -arg 1
+
+
+|                           | Purpose                 | Nature of batch effect      |
+|---------------------------|-------------------------|-----------------------------|
+| AGP                       | Prediction of phenotype | instrument, collection date |
+| Hispanic Community Health | Prediction of phenotype | protocol, collection date   |
+| Brooks 2015               | Simulation              |                             |
+local run
+
+```
+Rscript batch_correction_pipeline_basic.R kmer 5 /u/home/b/briscoel/project-halperin/MicroBatch/ AGP_reprocess "bmc&ComBat&ComBat_with_batch2&ComBat_with_biocovariates&ComBat_with_biocovariates_with_batch2&limma&limma_batch2&pca_regress_out_scale&clr_pca_regress_out_no_scal&clr_pca_regress_out_scale&smartsva&refactor&refactor_shift1" 5 1
+```
 
 
 ##<a name ="hmp1">HMP data sources</a>
@@ -312,6 +338,33 @@ for i in 5 6 7 8 9
 do
 	python ~/project-halperin/MicroBatch/ProcessKmerTable.py ~/project-halperin/MicroBatch/Hispanic_Health/SRR_Acc_List_qiita.txt $i
 done
+
+for i in 8 9
+do
+	python ~/project-halperin/MicroBatch/ProcessKmerTable.py ~/project-halperin/MicroBatch/Hispanic_Health/SRR_Acc_List_qiita.txt $i
+done
 ```
 
+python 
 
+
+## General
+age : 23 83
+
+
+## Summary
+|                       | Category 1     | Category 2      | Category 3    |              |          |          |           |           |
+|-----------------------|----------------|-----------------|---------------|--------------|----------|----------|-----------|-----------|
+| sex                   | F:1132         | M:635           |               |              |          |          |           |           |
+| antibiotic last 6 mo. | 1:512          | 2:1253          |               |              |          |          |           |           |
+| birthplace            | DomRep: 127    | Mex: 762        | PuerRi:149    | Cuba:212     | SouA:122 | CenA:162 | USEast:62 | USWest:76 |
+| Extraction Robot      | HOWE_KF1: 468  | HOWE_KF2:472    | HOWE_KF3: 381 | HOWE_KF4:570 |          |          |           |           |
+| Extraction Kit        | 157022405: 850 | 157022406: 1041 |               |              |          |          |           |           |
+| Processing Robot      | LUCY: 665      | RIKE:284        | ROBE:954      |              |          |          |           |           |
+
+
+## Bugs
+
+**refactor**
+Error in prcomp.default(scale(t(O[sites, ]))) : 
+ cannot rescale a constant/zero column to unit variance 

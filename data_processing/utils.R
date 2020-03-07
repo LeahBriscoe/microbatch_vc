@@ -99,15 +99,38 @@ quantile_norm <- function(df,normalize_within_features = TRUE){
   }
  
 }
-
+categorize_metadata <- function(labels,wanted_partial_label1=NULL,wanted_partial_label2=NULL,wanted_partial_label3=NULL){
+  sapply(labels,function(x){
+    if(grepl(wanted_partial_label1,x)){
+      return(wanted_partial_label1)
+    }else if(grepl(wanted_partial_label2,x)){
+      return(wanted_partial_label2)
+    }else if(grepl(wanted_partial_label3,x)){
+      return(wanted_partial_label3)
+    }else{
+      return(NA)
+    }
+  })
+}
+binarize_metadata <- function(labels,pos_labels, neg_labels,pos_indicator,neg_indicator){
+  sapply(labels,function(x){
+    if(x %in% pos_labels){
+      return(pos_indicator)
+    }else if(x %in% neg_labels){
+      return(neg_indicator)
+    }else{
+      return(NA)
+    }
+  })
+}
 process_model_matrix <- function(total_metadata =NULL,binary_vars=NULL,categorical_vars = NULL,numeric_vars = NULL,integer_vars = NULL){
   #,
   for(b_v in binary_vars){
     data_na_included = as.character(total_metadata[,b_v])
     data_na_included[data_na_included == "Other" | data_na_included == "Not provided" | data_na_included == "other" 
                      | data_na_included == '' | data_na_included == 'not applicable' | data_na_included == 'not provided'] = NA
-    temp = to.dummy(as.factor(data_na_included),paste0(b_v,"_"))[,-1,drop=FALSE]
-    temp = as.integer(temp)
+    #temp = to.dummy(as.factor(data_na_included),paste0(b_v,"_"))[,-1,drop=FALSE]
+    temp = as.integer(as.factor(data_na_included))
     #print(colnames(temp))
     assign(b_v ,temp)
   }
@@ -115,7 +138,8 @@ process_model_matrix <- function(total_metadata =NULL,binary_vars=NULL,categoric
     #print(table(total_metadata[,c_v]))
     data_na_included = as.character(total_metadata[,c_v])
     data_na_included[data_na_included == "Other" | data_na_included == "Not provided" | data_na_included == "other" 
-                     | data_na_included == '' | data_na_included == 'not applicable' | data_na_included == 'not provided'] = NA
+                     | data_na_included == '' | data_na_included == 'not applicable' | data_na_included == 'not provided'
+                     | data_na_included == 'Not applicable'| data_na_included == 'Unspecified'] = NA
     #temp = to.dummy(as.factor(data_na_included),paste0(c_v,"_"))[,-1,drop=FALSE]
     #print(colnames(temp))
     assign(c_v ,data_na_included)

@@ -6,7 +6,8 @@
 2. [AGP re-processing](#agp_reprocessing)
 2. [HMP 1](#hmp1)
 3. [iHMP feces](#ihmp_feces)
-4. [](#bashoneline)
+4. [Hispanic Community Health](#bashoneline)
+5. [PCA experiment](#pcaexperiment)
 
 ##<a name ="hoffman">Hoffman Starting Commands</a>
 1. [Running deblur](#deblur)
@@ -368,3 +369,16 @@ age : 23 83
 **refactor**
 Error in prcomp.default(scale(t(O[sites, ]))) : 
  cannot rescale a constant/zero column to unit variance 
+
+
+## <a name = pcaexperiment> PCA Experiment  </a>
+
+###Step 1
+Regress out healthy PC - get a baseline
+
+
+
+
+
+
+

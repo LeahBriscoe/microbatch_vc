@@ -2,7 +2,7 @@
 # user input
 kmer_len = 5
 data_type = "kmer"
-study_name = "AGP_reprocess_k5"
+study_name = "Hispanic_k7"
 # ============================================================================== #
 # load packages and functions
 require(varhandle)

@@ -373,8 +373,23 @@ Error in prcomp.default(scale(t(O[sites, ]))) :
 
 ## <a name = pcaexperiment> PCA Experiment  </a>
 
+
+### Focus on Antibiotic prediction
+
 ###Step 1
-Regress out healthy PC - get a baseline
+PCA healthy  only those who haven't taken antibiotic. and only middle antibiotic
+
+### Step 2
+
+Calculate  PC scores for antibiotics too
+### Step 3
+Do classification with all the data
+
+
+### Focus on BMI prediction
+Step1: all data
+Step 2: Regress BMI out of the 
+
 
 
 

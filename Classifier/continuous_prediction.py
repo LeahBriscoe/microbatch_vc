@@ -35,19 +35,19 @@ import sys
 args = sys.argv
 print(args)
 print(len(args))
-study_data_name = args[1]
-study_name = args[2]
+study_name = args[1]
+prefix_name = args[2]
 column_of_interest = args[3]
 methods = args[4].split("&")
 n_cvs = int(args[5])
 data_type = "kmer"
 
 
-data_folder = "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/" + study_data_name + "_"  
+data_folder = "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/" + study_name + "/"
 plot_folder = "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/plots/" + study_name + "/" #+ 
-methods_dict = utils_bmi.load_data(data_folder,methods,data_type)
+methods_dict = utils_bmi.load_data(data_folder,prefix_name,methods,data_type)
 
-metadata = pd.read_csv(data_folder + "/metadata.txt",delimiter="\t")
+metadata = pd.read_csv(data_folder + "metadata.txt",delimiter="\t")
 metadata["continuous_var"] = [float('Nan') if i == 'not applicable' or i == 'not provided' or 
                               i == "Not provided" or i== "Unspecified" or i == "Not applicable" 
                               else float(i) for i in list(metadata[column_of_interest])]

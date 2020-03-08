@@ -2,12 +2,12 @@ import pandas as pd
 import numpy as np
 import scipy.stats
 
-def load_data(data_folder,methods,data_type):
+def load_data(data_folder,prefix_name, methods,data_type):
     
     method_dict = dict()
     for m in methods:
         print(m)
-        batch_corrected_matrix = pd.read_csv(str(data_folder +"/BatchCorrected_" + m +".txt"),delimiter="\t")
+        batch_corrected_matrix = pd.read_csv(str(data_folder +prefix_name + "_" + m +".txt"),delimiter="\t")
         method_dict[m] = batch_corrected_matrix
     return method_dict
 
@@ -28,3 +28,14 @@ def mean_confidence_interval(data, confidence=0.95):
     m, se = np.mean(a), scipy.stats.sem(a)
     h = se * scipy.stats.t.ppf((1 + confidence) / 2., n-1)
     return m, m-h, m+h
+
+def binarize_labels_mod(labels,pos_labels,none_labels):
+    new_labels = []
+    for lab in labels:
+        if lab in pos_labels:
+            new_labels.append(1)
+        elif lab in none_labels:
+            new_labels.append(None)
+        else:
+            new_labels.append(0)
+    return new_labels

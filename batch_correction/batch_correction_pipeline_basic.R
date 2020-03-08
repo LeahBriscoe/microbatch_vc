@@ -1,8 +1,7 @@
 args = commandArgs(trailingOnly=TRUE)
 #args = c("otu", "WR_AD","~/Documents/MicroBatch/", "0-0.5","1-2","01/07/2016","DiseaseState","study")
-# args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_reprocess",
-#          "bmc&ComBat&ComBat_with_batch2&ComBat_with_biocovariates&ComBat_with_biocovariates_with_batch2&limma&limma_batch2&pca_regress_out_scale&clr_pca_regress_out_no_scal&clr_pca_regress_out_scale&smartsva&refactor&refactor_shift1",
-#          5,1)
+# args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
+#          "bmc&ComBat",10,1)
 
 # ============================================================================== #
 # user input
@@ -41,6 +40,8 @@ kmer_input_folder = paste0(microbatch_folder,'data/',study_name,'_k',kmer_len)
 
 batch_column = "Instrument"
 
+dir.create(paste0(kmer_input_folder,"/",batch_column))
+
 if(data_type == "kmer"){
   input_folder = kmer_input_folder
   kmer_table_norm = readRDS(paste0(kmer_input_folder,"/kmer_table_norm.rds"))
@@ -72,8 +73,9 @@ batch_corrected_outputs = list()
 collection_date=as.Date(total_metadata$collection_date, format="%m/%d/%Y")
 collection_days = collection_date - min(collection_date,na.rm=TRUE)
 collection_month = format(as.Date(total_metadata$collection_date, format="%m/%d/%Y"), "%Y-%m")
+collection_year = as.integer(format(as.Date(collection_date, format="%m/%d/%Y"), "%Y"))
 
-batch_labels2 = as.character(collection_month)
+batch_labels2 = as.character(collection_year)
 
 #total_metadata_mod = process_model_matrix(total_metadata = total_metadata,binary_vars="sex",categorical_vars ="race.x",numeric_vars = "bmi_corrected")
 total_metadata_mod = process_model_matrix(total_metadata = total_metadata,binary_vars="sex",categorical_vars ="race.x")
@@ -81,7 +83,7 @@ bio_signal_formula <- as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod)
 #names(batch_corrected_outputs)
 
 
-for(m in 12:length(methods_list)){
+for(m in 1:length(methods_list)){
   
   batch_corrected_output  = c()
   
@@ -139,27 +141,36 @@ for(m in 12:length(methods_list)){
     pca_res = 0
     pca_res = pca_method(input_abundance_table_scale,clr_transform = FALSE,center_scale_transform = FALSE)
     if(save_PC_scores == TRUE){
-      saveRDS(pca_res$pca_score, paste0(kmer_input_folder ,"/PC_scores_",methods_list[m],".rds"))
+      saveRDS(pca_res$pca_score, paste0(kmer_input_folder ,"/",batch_column,"/PC_scores_",methods_list[m],".rds"))
     }
     batch_corrected_output = regress_out(pca_res$pca_score,data=t(input_abundance_table_scale),pc_index = c(1:num_pcs))
+    
+  }else if(methods_list[m] == "pca_regress_out_no_scale"){
+    set.seed(0)
+    pca_res = 0
+    pca_res = pca_method(input_abundance_table,clr_transform = FALSE,center_scale_transform = FALSE)
+    if(save_PC_scores == TRUE){
+      saveRDS(pca_res$pca_score, paste0(kmer_input_folder ,"/",batch_column,"/PC_scores_",methods_list[m],".rds"))
+    }
+    batch_corrected_output = regress_out(pca_res$pca_score,data=t(input_abundance_table),pc_index = c(1:num_pcs))
     
   }else if(methods_list[m] == "clr_pca_regress_out_no_scale"){
     set.seed(0)
     pca_res = 0
     pca_res = pca_method(input_abundance_table,clr_transform = TRUE,center_scale_transform =FALSE)
     if(save_PC_scores == TRUE){
-      saveRDS(pca_res$pca_score, paste0(kmer_input_folder ,"/PC_scores_",methods_list[m],".rds"))
+      saveRDS(pca_res$pca_score, paste0(kmer_input_folder ,"/",batch_column,"/PC_scores_",methods_list[m],".rds"))
     }
-    batch_corrected_output = regress_out(pca_res$pca_score,data=t(input_abundance_table),pc_index = c(1:num_pcs))
+    batch_corrected_output = regress_out(pca_res$pca_score,data=t(pca_res$transformed_data),pc_index = c(1:num_pcs))
     
   }else if(methods_list[m] == "clr_pca_regress_out_scale"){
     set.seed(0)
     pca_res = 0
     pca_res = pca_method(input_abundance_table_scale,clr_transform = TRUE,center_scale_transform = FALSE)
     if(save_PC_scores == TRUE){
-      saveRDS(pca_res$pca_score, paste0(kmer_input_folder ,"/PC_scores_",methods_list[m],".rds"))
+      saveRDS(pca_res$pca_score, paste0(kmer_input_folder ,"/",batch_column,"/PC_scores_",methods_list[m],".rds"))
     }
-    batch_corrected_output = regress_out(pca_res$pca_score,data=t(input_abundance_table_scale),pc_index = c(1:num_pcs))
+    batch_corrected_output = regress_out(pca_res$pca_score,data=t(pca_res$transformed_data),pc_index = c(1:num_pcs))
   }else if(methods_list[m] == "limma"){
     
     batch_corrected_output = run_limma(mat = input_abundance_table, batch_labels)
@@ -185,7 +196,7 @@ for(m in 12:length(methods_list)){
     
     svobj = sva_result$sv.obj
     if(save_PC_scores == TRUE){
-      saveRDS( svobj, paste0(kmer_input_folder ,"/svobj_",methods_list[m],".rds"))
+      saveRDS( svobj, paste0(kmer_input_folder ,"/",batch_column, "/svobj_",methods_list[m],".rds"))
     }
     batch_corrected_output = sva_result$corrected_data
    
@@ -197,19 +208,19 @@ for(m in 12:length(methods_list)){
     refactor_table =  t(scale(t(refactor_pretable))) 
     refactor_table_covar = total_metadata_mod
     
-    write.table(refactor_table,paste0(input_folder,"/refactor_file.txt"),quote = FALSE,sep = "\t")
-    write.table(refactor_table_covar,paste0(input_folder,"/refactor_covar_file.txt"),quote=FALSE,sep = "\t")
+    write.table(refactor_table,paste0(input_folder,"/",batch_column,"/refactor_file.txt"),quote = FALSE,sep = "\t")
+    write.table(refactor_table_covar,paste0(input_folder,"/",batch_column,"/refactor_covar_file.txt"),quote=FALSE,sep = "\t")
     
     
-    refactor_file = paste0(kmer_input_folder,"/refactor_file.txt")
-    refactor_covar_file = paste0(kmer_input_folder,"/refactor_covar_file.txt")
+    refactor_file = paste0(kmer_input_folder,"/",batch_column,"/refactor_file.txt")
+    refactor_covar_file = paste0(kmer_input_folder,"/",batch_column,"/refactor_covar_file.txt")
     
     results <- refactor(refactor_file,k=3,numcomp = num_pcs,stdth=0.01 )
     #all(row.names(refactor_table_covar) == colnames(refactor_table))
     
     RC <- results$refactor_components 
     if(save_PC_scores == TRUE){
-      saveRDS(RC, paste0(kmer_input_folder ,"/Refactor_scores_",methods_list[m],".rds"))
+      saveRDS(RC, paste0(kmer_input_folder ,"/",batch_column,"/Refactor_scores_",methods_list[m],".rds"))
     }
     refactor_table_shift_front = refactor_table[,-1]
     mat_scaled_corrected<- t(resid(lm(t(refactor_table_shift_front ) ~ ., data=data.frame(RC))))
@@ -227,20 +238,20 @@ for(m in 12:length(methods_list)){
   #batch_corrected_outputs[["smartsva_scale"]] = out_mat
   if(grepl("kmer",data_type)){
     if(grepl("pca",methods_list[m])){
-      write.table(batch_corrected_outputs[[methods_list[m]]], paste0(kmer_input_folder ,"/BatchCorrected_",methods_list[m],"_first",num_pcs,".txt"),
+      write.table(batch_corrected_outputs[[methods_list[m]]], paste0(kmer_input_folder,"/",batch_column,"/BatchCorrected_",methods_list[m],"_first",num_pcs,".txt"),
                   sep = "\t",quote = FALSE)
-      saveRDS(batch_corrected_outputs[[methods_list[m]]], paste0(kmer_input_folder ,"/BatchCorrected_",methods_list[m],"_first",num_pcs,".rds"))
+      saveRDS(batch_corrected_outputs[[methods_list[m]]], paste0(kmer_input_folder ,"/",batch_column,"/BatchCorrected_",methods_list[m],"_first",num_pcs,".rds"))
       
     }else{
-      write.table(batch_corrected_outputs[[methods_list[m]]], paste0(kmer_input_folder ,"/BatchCorrected_",methods_list[m],".txt"),
+      write.table(batch_corrected_outputs[[methods_list[m]]], paste0(kmer_input_folder ,"/",batch_column,"/BatchCorrected_",methods_list[m],".txt"),
                   sep = "\t",quote = FALSE)
-      saveRDS(batch_corrected_outputs[[methods_list[m]]], paste0(kmer_input_folder ,"/BatchCorrected_",methods_list[m],".rds"))
+      saveRDS(batch_corrected_outputs[[methods_list[m]]], paste0(kmer_input_folder ,"/",batch_column,"/BatchCorrected_",methods_list[m],".rds"))
       
     }
   }else{
-    write.table(batch_corrected_outputs[[methods_list[m]]], paste0(otu_input_folder ,"/BatchCorrected_",methods_list[m],".txt"),
+    write.table(batch_corrected_outputs[[methods_list[m]]], paste0(otu_input_folder ,"/",batch_column,"/BatchCorrected_",methods_list[m],".txt"),
                 sep = "\t",quote = FALSE)
-    saveRDS(batch_corrected_outputs[[methods_list[m]]], paste0(otu_input_folder ,"/BatchCorrected_",methods_list[m],".rds"))
+    saveRDS(batch_corrected_outputs[[methods_list[m]]], paste0(otu_input_folder ,"/",batch_column,"/BatchCorrected_",methods_list[m],".rds"))
   }
 }
 

@@ -6,6 +6,7 @@ study_name = "AGP_max"
 match_to_otu = FALSE
 fecal_tissue = TRUE
 filter_healthy = TRUE
+bmi_corr = FALSE
 # ============================================================================== #
 # load packages and functions
 script_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data_processing'
@@ -16,7 +17,7 @@ require(dplyr)
 microbatch_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/'
 script_folder = paste0(microbatch_folder,'data_processing')
 batch_script_folder = paste0(microbatch_folder, 'batch_correction')
-plot_folder = paste0(microbatch_folder,'plots/',study_name)
+plot_folder = paste0(microbatch_folder,'plots/',study_name,"_k",kmer_len)
 dir.create(plot_folder)
 
 dir.create(plot_folder)
@@ -29,7 +30,7 @@ source(paste0(batch_script_folder,"/batch_correction_source.R"))
 folder = '/Users/leahbriscoe/Documents/KmerCounting/AGP/'
 kmer_input_folder = '/Users/leahbriscoe/Documents/KmerCounting/AGP/'
 otu_output_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/AGP_otu'
-kmer_output_folder = paste0('/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/',study,"_k_",kmer_len)
+kmer_output_folder = paste0('/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/',study,"_k",kmer_len)
 dir.create(kmer_output_folder) 
 dir.create(otu_output_folder) 
 
@@ -154,7 +155,7 @@ write.table(total_metadata,paste0(kmer_output_folder,"/metadata.txt"),sep="\t",q
 
 # ============================================================================== #
 # make model matrix
-
+table(total_metadata$bowel_movement_quality)
 binary_vars = c("collection_AM","bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year")
 categorical_vars = c("race.x","bin_bowel_movement",
                      "collection_year","Instrument")
@@ -227,6 +228,7 @@ for(pc_method in c("no_scale_no_clr","scale_no_clr","no_scale_clr","scale_clr"))
     input_abundance_table_scale_clr = pca_res_clr_scale$transformed_data
   }
   
+
   
   colnames(pc_data) = paste0("PC",1:ncol(pc_data))
   input_metadata_pc = data.frame(input_metadata,pc_data)
@@ -240,34 +242,53 @@ for(pc_method in c("no_scale_no_clr","scale_no_clr","no_scale_clr","scale_clr"))
   
   num_pcs = 10
   
-  bmi_matrix = matrix(input_metadata_pc$bmi_corrected,nrow =length(input_metadata_pc$bmi_corrected))
-  corrected_pc = regress_out(pc_scores = bmi_matrix,data=pc_data[,1:num_pcs],pc_index = 1)
-  corrected_pc = t(corrected_pc)
-  
-  print("corrected pcs with bmi")
-  print( pc_data[1,1:4])
-  if(pc_method == "no_scale_no_clr"){
+  if(bmi_corr){
+    bmi_matrix = matrix(input_metadata_pc$bmi_corrected,nrow =length(input_metadata_pc$bmi_corrected))
+    corrected_pc = regress_out(pc_scores = bmi_matrix,data=pc_data[,1:num_pcs],pc_index = 1)
+    corrected_pc = t(corrected_pc)
     
-    input_abundance_table_subset = input_abundance_table[,row.names(corrected_pc)]
-    corrected_input_abundance_table = regress_out(pc_scores = corrected_pc,data=t(input_abundance_table_subset),pc_index = c(1:num_pcs))
-  }else if(pc_method == "scale_no_clr"){
-    input_abundance_table_subset = input_abundance_table_scale[,row.names(corrected_pc)]
-    corrected_input_abundance_table = regress_out(pc_scores = corrected_pc,data=t(input_abundance_table_subset),pc_index = c(1:num_pcs))
+    print("corrected pcs with bmi")
+    print( pc_data[1,1:4])
+    if(pc_method == "no_scale_no_clr"){
+      
+      input_abundance_table_subset = input_abundance_table[,row.names(corrected_pc)]
+      corrected_input_abundance_table = regress_out(pc_scores = corrected_pc,data=t(input_abundance_table_subset),pc_index = c(1:num_pcs))
+    }else if(pc_method == "scale_no_clr"){
+      input_abundance_table_subset = input_abundance_table_scale[,row.names(corrected_pc)]
+      corrected_input_abundance_table = regress_out(pc_scores = corrected_pc,data=t(input_abundance_table_subset),pc_index = c(1:num_pcs))
+      
+      
+    }else if(pc_method == "no_scale_clr"){
+      input_abundance_table_subset = input_abundance_table_clr[,row.names(corrected_pc)]
+      corrected_input_abundance_table = regress_out(pc_scores = corrected_pc,data=t(input_abundance_table_subset),pc_index = c(1:num_pcs))
+      
+    }else if(pc_method == "scale_clr"){
+      input_abundance_table_subset = input_abundance_table_scale_clr[,row.names(corrected_pc)]
+      corrected_input_abundance_table = regress_out(pc_scores = corrected_pc,data=t(input_abundance_table_subset),pc_index = c(1:num_pcs))
+      
+    }
     
+    saveRDS(corrected_input_abundance_table,paste0(kmer_output_folder,"/kmer_table_", pc_method,".rds"))
+    write.table(corrected_input_abundance_table,paste0(kmer_output_folder,"/kmer_table_",pc_method,".txt"),sep = "\t",quote = FALSE)
+    corrected_input_abundance_table[1:4,1:4]
     
-  }else if(pc_method == "no_scale_clr"){
-    input_abundance_table_subset = input_abundance_table_clr[,row.names(corrected_pc)]
-    corrected_input_abundance_table = regress_out(pc_scores = corrected_pc,data=t(input_abundance_table_subset),pc_index = c(1:num_pcs))
+  }else{
+    if(pc_method == "no_scale_no_clr"){
+      corrected_data = regress_out(pc_scores =pc_data,data=t(input_abundance_table),pc_index = c(1:num_pcs))
+    }else if(pc_method == "scale_no_clr"){
+      corrected_data = regress_out(pc_scores =pc_data,data=t(input_abundance_table_scale),pc_index = c(1:num_pcs))
+    }else if(pc_method == "no_scale_clr"){
+      corrected_data = regress_out(pc_scores =pc_data,data=t(input_abundance_table_clr),pc_index = c(1:num_pcs))
+    }else if(pc_method == "scale_clr"){
+      corrected_data = regress_out(pc_scores =pc_data,data=t(input_abundance_table_scale_clr),pc_index = c(1:num_pcs))
+    }
+    saveRDS(corrected_input_abundance_table,paste0(kmer_output_folder,"/kmer_table_", pc_method,".rds"))
+    write.table(corrected_input_abundance_table,paste0(kmer_output_folder,"/kmer_table_",pc_method,".txt"),sep = "\t",quote = FALSE)
     
-  }else if(pc_method == "scale_clr"){
-    input_abundance_table_subset = input_abundance_table_scale_clr[,row.names(corrected_pc)]
-    corrected_input_abundance_table = regress_out(pc_scores = corrected_pc,data=t(input_abundance_table_subset),pc_index = c(1:num_pcs))
     
   }
   
-  saveRDS(corrected_input_abundance_table,paste0(kmer_output_folder,"/kmer_table_", pc_method,".rds"))
-  write.table(corrected_input_abundance_table,paste0(kmer_output_folder,"/kmer_table_",pc_method,".txt"),sep = "\t",quote = FALSE)
-  corrected_input_abundance_table,[1:4,1:4]
+  
 }
 
 # feces

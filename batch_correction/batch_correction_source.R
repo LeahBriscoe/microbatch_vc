@@ -165,7 +165,7 @@ run_sva <- function(mat,metadata_mod,bio_signal_formula){
   # Run SVA
   mod <- model.matrix( object = bio_signal_formula, data =  metadata_mod)
   #mod <- model.matrix( object = ~ DiseaseState, data = data$df_meta)
-  sv.obj <- smartsva.cpp(dat =  mat_scaled, mod = mod, mod0=NULL, n.sv=n.sv, B = 2, alpha = 1, epsilon = 0.001, VERBOSE = T) 
+  sv.obj <- smartsva.cpp(dat =  mat_scaled, mod = mod, mod0=NULL, n.sv=n.sv, B = 100, alpha = 1, epsilon = 0.001, VERBOSE = T) 
   # Make sure that this converges! This happens when you do not reach max number of iterations (B) If it does not, increase B or decrease alpha
   t3= Sys.time()
   #message(t3 -t2)

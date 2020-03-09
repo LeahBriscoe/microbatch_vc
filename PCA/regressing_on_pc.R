@@ -1,12 +1,32 @@
 # ============================================================================== #
 # user input
-kmer_len = 6
-study = "AGP_max"
+data_type = args[1]#"kmer"
+kmer_len = args[2]#6
+microbatch_folder = args[3]#'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/'
+study_name = args[4]
+methods_list = unlist(strsplit(args[5],"&"))#c("ComBat_with_batch2")#"pca_regress_out_scale","clr_pca_regress_out_no_scale","clr_pca_regress_out_scale") #)#,
+num_pcs = as.integer(args[6])#5
+save_PC_scores = as.logical(as.integer(args[7]))#TRUE
+
+# ============================================================================== #
+
+
+
+
+
+
+
+# ============================================================================== #
+# user input
+kmer_len = 5
 study_name = "AGP_max"
 match_to_otu = FALSE
+
 fecal_tissue = TRUE
 filter_healthy = TRUE
 bmi_corr = FALSE
+projection_transfer = TRUE
+save_files = TRUE
 # ============================================================================== #
 # load packages and functions
 script_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data_processing'
@@ -29,8 +49,10 @@ source(paste0(batch_script_folder,"/batch_correction_source.R"))
 # define folders
 folder = '/Users/leahbriscoe/Documents/KmerCounting/AGP/'
 kmer_input_folder = '/Users/leahbriscoe/Documents/KmerCounting/AGP/'
-otu_output_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/AGP_otu'
-kmer_output_folder = paste0('/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/',study,"_k",kmer_len)
+otu_input_folder = '/Users/leahbriscoe/Documents/KmerCounting/AGP_paper_data/'
+
+otu_output_folder = paste0('/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/',study_name ,"_otu")
+kmer_output_folder = paste0('/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/',study_name,"_k",kmer_len)
 dir.create(kmer_output_folder) 
 dir.create(otu_output_folder) 
 
@@ -41,7 +63,7 @@ kmer_table = read.table(paste0(kmer_input_folder,"kmer_matrix_6.csv"),header=TRU
 kmer_table[is.na(kmer_table)] = 0
 kmer_table = kmer_table[,colSums(kmer_table)!=0] 
 if(match_to_otu){
-  otu_table = read.csv(paste0(folder,'deblur_125nt_no_blooms.txt'),sep="\t")
+  otu_table = read.csv(paste0(otu_input_folder,'deblur_125nt_no_blooms.txt'),sep="\t")
   # process row names
   row.names(otu_table) = otu_table$OTU_ID
   otu_table = otu_table[,-1]
@@ -56,6 +78,17 @@ metadata_qiita = read.csv('/Users/leahbriscoe/Documents/KmerCounting/AGP_paper_d
 total_metadata <- dplyr::left_join(metadata_qiita,metadata_tech,  by=c("sample_name" = "Library.Name"))
 total_metadata = total_metadata %>% filter(!is.na(Run))
 row.names(total_metadata) = total_metadata$Run
+
+# ============================================================================== #
+# refine otu data
+
+unique_samples = total_metadata %>% distinct(sample_name,.keep_all = TRUE)
+
+row.names(unique_samples) = unique_samples$sample_name
+unique_samples
+new_otu_samples = unique_samples[gsub ("X","",colnames(otu_table)),"Run"]
+colnames(otu_table) = new_otu_samples
+
 # ============================================================================== #
 # subset common
 common_samples = intersect(row.names(total_metadata),colnames(kmer_table))
@@ -65,6 +98,7 @@ if(match_to_otu){
   
 }
 kmer_table = kmer_table[,common_samples]
+
 total_metadatal = total_metadata[common_samples,]
 
 # ============================================================================== #
@@ -101,12 +135,23 @@ total_metadata$collection_AM =(collection_hour  <12)
 
 # ============================================================================== #
 # save data
-saveRDS(kmer_table_norm,paste0(kmer_output_folder,"/kmer_table_norm.rds"))
-saveRDS(kmer_table,paste0(kmer_output_folder,"/kmer_table.rds"))
-
-write.table(kmer_table_norm,paste0(kmer_output_folder,"/kmer_table_norm.txt"),sep = "\t",quote = FALSE)
-write.table(kmer_table,paste0(kmer_output_folder,"/kmer_table.txt"),sep="\t",quote=FALSE)
-
+if(save_files){
+  saveRDS(kmer_table_norm,paste0(kmer_output_folder,"/kmer_table_norm.rds"))
+  saveRDS(kmer_table,paste0(kmer_output_folder,"/kmer_table.rds"))
+  
+  write.table(kmer_table_norm,paste0(kmer_output_folder,"/kmer_table_norm.txt"),sep = "\t",quote = FALSE)
+  write.table(kmer_table,paste0(kmer_output_folder,"/kmer_table.txt"),sep="\t",quote=FALSE)
+  
+  if(match_to_otu){
+    saveRDS(otu_table,paste0(otu_output_folder,"/otu_table.rds"))
+    saveRDS(otu_table_norm,paste0(otu_output_folder,"/otu_table_norm.rds"))
+    
+    write.table(otu_table_norm,paste0(otu_output_folder,"/otu_table_norm.txt"),sep = "\t",quote = FALSE)
+    write.table(otu_table,paste0(otu_output_folder,"/otu_table.txt"),sep="\t",quote=FALSE)
+    
+    
+  }
+}
 
 # ============================================================================== #
 # metadata model matrix
@@ -148,15 +193,21 @@ total_metadata$bin_antibiotic_last_year = binarize_metadata(total_metadata$antib
                                                       pos_indicator = "Yes",neg_indicator = "No")
 
 # ============================================================================== #
-
-# save metadta
-saveRDS(total_metadata,paste0(kmer_output_folder,"/metadata.rds"))
-write.table(total_metadata,paste0(kmer_output_folder,"/metadata.txt"),sep="\t",quote=FALSE)
+if(save_files){
+  # save metadta
+  saveRDS(total_metadata,paste0(kmer_output_folder,"/metadata.rds"))
+  write.table(total_metadata,paste0(kmer_output_folder,"/metadata.txt"),sep="\t",quote=FALSE)
+  if(match_to_otu){
+    saveRDS(total_metadata,paste0(otu_output_folder,"/metadata.rds"))
+    write.table(total_metadata,paste0(otu_output_folder,"/metadata.txt"),sep="\t",quote=FALSE)
+    
+  }
+}
 
 # ============================================================================== #
 # make model matrix
 table(total_metadata$bowel_movement_quality)
-binary_vars = c("collection_AM","bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year")
+binary_vars = c("collection_AM","bin_alcohol_consumption","bin_omnivore_diet")#,"bin_antibiotic_last_year")
 categorical_vars = c("race.x","bin_bowel_movement",
                      "collection_year","Instrument")
 numeric_vars = c("bmi_corrected","age_corrected")
@@ -165,7 +216,8 @@ total_metadata_mod = process_model_matrix(total_metadata = total_metadata,
                                           categorical_vars =categorical_vars,
                                           numeric_vars = numeric_vars)
 
-
+hist(total_metadata_mod$age_corrected)
+range(total_metadata_mod$age_corrected,na.rm=TRUE)
 total_metadata_mod_formula = as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod), collapse = " + ")))
 require(variancePartition)
 
@@ -188,23 +240,39 @@ selected_samples = total_metadata
 if(fecal_tissue){
   selected_samples = selected_samples %>% filter(body_site.x =="UBERON:feces" )
 }
-filter_healthy = FALSE
-if(filter_healthy){
-  test = selected_samples %>% filter( bmi < 0 & bmi > 0)
-}
 
+if(filter_healthy){
+  
+  selected_samples = selected_samples %>% filter( bmi_corrected < 30 & bmi_corrected > 18.5, 
+                                                  ibd_diagnosis != "Ulcerative colitis" &  ibd_diagnosis != "Crohn's disease",
+                                                  !grepl("Diagnosed",diabetes), 
+                                                  antibiotic_history == "I have not taken antibiotics in the past year.") # HOW ABOUT NO ANTIBIOTIC! YOU FORGOT
+}
+table(input_metadata$)
+sum(!is.na(input_metadata$age_corrected))
+sum(!is.na(input_metadata$bin_alcohol_consumption))
 # ============================================================================== #
 # pca
 input_abundance_table = kmer_table_norm[,selected_samples$Run]
 input_abundance_table_scale = t(scale(t(input_abundance_table)))
 input_metadata = total_metadata_mod[selected_samples$Run,]
+input_abundance_table_center = t(scale(t(input_abundance_table),scale =FALSE))
 
+#table(input_metadata$Instrument)
 
+kmer_table_norm_scale = t(scale(t(kmer_table_norm)))
+kmer_table_norm_clr= t(clr(t(kmer_table_norm)))
+kmer_table_norm_scale_clr = t(clr(t(kmer_table_norm_scale)))
+kmer_table_norm_center = t(scale(t(kmer_table_norm),scale =FALSE))
+kmer_table_norm_center_clr = t(clr(t(kmer_table_norm_center )))
 
+dim(input_abundance_table)
 pca_res = pca_method(input_abundance_table,clr_transform = FALSE,center_scale_transform = FALSE)
 pca_res_scale = pca_method(input_abundance_table_scale,clr_transform = FALSE,center_scale_transform = FALSE)
 pca_res_clr = pca_method(input_abundance_table,clr_transform = TRUE,center_scale_transform = FALSE)
 pca_res_clr_scale = pca_method(input_abundance_table_scale,clr_transform = TRUE,center_scale_transform = FALSE)
+pca_res_center = pca_method(input_abundance_table_center,clr_transform = FALSE,center_scale_transform = FALSE)
+pca_res_clr_center = pca_method(input_abundance_table_center,clr_transform = TRUE,center_scale_transform = FALSE)
 
 
 input_abundance_table_orig = input_abundance_table
@@ -212,7 +280,8 @@ input_abundance_table_orig = input_abundance_table
 # correlation between metadata and pcs
 
 #pc_method = "no_scale_no_clr" # res_scale # "res_clr
-for(pc_method in c("no_scale_no_clr","scale_no_clr","no_scale_clr","scale_clr")){
+#"no_scale_no_clr","scale_no_clr","no_scale_clr","scale_clr"
+for(pc_method in c("no_scale_no_clr","scale_no_clr","no_scale_clr","scale_clr","center_no_clr","center_clr")){
   print(pc_method)
   if(pc_method == "no_scale_no_clr"){
     pc_data = pca_res$pca_score
@@ -226,6 +295,12 @@ for(pc_method in c("no_scale_no_clr","scale_no_clr","no_scale_clr","scale_clr"))
   }else if(pc_method == "scale_clr"){
     pc_data = pca_res_clr_scale$pca_score
     input_abundance_table_scale_clr = pca_res_clr_scale$transformed_data
+  }else if(pc_method == "center_no_clr"){
+    pc_data = pca_res_center$pca_score
+   
+  }else if(pc_method == "center_clr"){
+    pc_data = pca_res_clr_center$pca_score
+    input_abundance_table_center_clr = pca_res_clr_center$transformed_data
   }
   
 
@@ -239,6 +314,7 @@ for(pc_method in c("no_scale_no_clr","scale_no_clr","no_scale_clr","scale_clr"))
   pdf(paste0(plot_folder,"/","allAGP_", pc_method, ".pdf"))
   plotCorrMatrix(C[1:(nrow(C)-20),((nrow(C)-20)+1):ncol(C)],sort=FALSE)
   dev.off()
+
   
   num_pcs = 10
   
@@ -272,6 +348,35 @@ for(pc_method in c("no_scale_no_clr","scale_no_clr","no_scale_clr","scale_clr"))
     write.table(corrected_input_abundance_table,paste0(kmer_output_folder,"/kmer_table_",pc_method,".txt"),sep = "\t",quote = FALSE)
     corrected_input_abundance_table[1:4,1:4]
     
+  }else if(projection_transfer){
+    
+    if(pc_method == "no_scale_no_clr"){
+      all_pc_scores = t(kmer_table_norm) %*% pca_res$svd_result$v
+      corrected_data = regress_out(pc_scores =all_pc_scores,data=t(kmer_table_norm),pc_index = c(1:num_pcs))
+    }else if(pc_method == "scale_no_clr"){
+      
+      all_pc_scores = t(kmer_table_norm_scale) %*% pca_res_scale$svd_result$v
+      corrected_data = regress_out(pc_scores =all_pc_scores,data=t(kmer_table_norm_scale),pc_index = c(1:num_pcs))
+    }else if(pc_method == "no_scale_clr"){
+      all_pc_scores = t(kmer_table_norm_clr) %*% pca_res_clr$svd_result$v
+      corrected_data = regress_out(pc_scores =all_pc_scores,data=t(kmer_table_norm_clr),pc_index = c(1:num_pcs))
+    }else if(pc_method == "scale_clr"){
+      
+      all_pc_scores = t(kmer_table_norm_scale_clr) %*% pca_res_clr_scale$svd_result$v
+      corrected_data = regress_out(pc_scores =all_pc_scores,data=t(kmer_table_norm_scale_clr),pc_index = c(1:num_pcs))
+    }else if(pc_method == "center_no_clr"){
+      all_pc_scores = t(kmer_table_norm_center) %*% pca_res_center$svd_result$v
+      corrected_data = regress_out(pc_scores =all_pc_scores,data=t(kmer_table_norm_center),pc_index = c(1:num_pcs))
+    }else if(pc_method == "center_clr"){
+      
+      all_pc_scores = t(kmer_table_norm_center_clr) %*% pca_res_clr_center$svd_result$v
+      corrected_data = regress_out(pc_scores =all_pc_scores,data=t(kmer_table_norm_center_clr),pc_index = c(1:num_pcs))
+    }
+    saveRDS(corrected_data,paste0(kmer_output_folder,"/kmer_table_", pc_method,".rds"))
+    write.table(corrected_data,paste0(kmer_output_folder,"/kmer_table_",pc_method,".txt"),sep = "\t",quote = FALSE)
+    
+   
+    
   }else{
     if(pc_method == "no_scale_no_clr"){
       corrected_data = regress_out(pc_scores =pc_data,data=t(input_abundance_table),pc_index = c(1:num_pcs))
@@ -282,10 +387,10 @@ for(pc_method in c("no_scale_no_clr","scale_no_clr","no_scale_clr","scale_clr"))
     }else if(pc_method == "scale_clr"){
       corrected_data = regress_out(pc_scores =pc_data,data=t(input_abundance_table_scale_clr),pc_index = c(1:num_pcs))
     }
-    saveRDS(corrected_input_abundance_table,paste0(kmer_output_folder,"/kmer_table_", pc_method,".rds"))
-    write.table(corrected_input_abundance_table,paste0(kmer_output_folder,"/kmer_table_",pc_method,".txt"),sep = "\t",quote = FALSE)
+    saveRDS(corrected_data,paste0(kmer_output_folder,"/kmer_table_", pc_method,".rds"))
+    write.table(corrected_data,paste0(kmer_output_folder,"/kmer_table_",pc_method,".txt"),sep = "\t",quote = FALSE)
     
-    
+   
   }
   
   
@@ -312,17 +417,4 @@ for(pc_method in c("no_scale_no_clr","scale_no_clr","no_scale_clr","scale_clr"))
 # C = canCorPairs(formula = form, data = df_vars_pc)
 
 # ============================================================================== #
-# pc analysis
-
-set.seed(0)
-pca_res = 0
-pca_res = pca_method(input_abundance_table_scale,clr_transform = FALSE,center_scale_transform = FALSE)
-if(save_PC_scores == TRUE){
-  saveRDS(pca_res$pca_score, paste0(kmer_input_folder ,"/PC_scores_",methods_list[m],".rds"))
-}
-batch_corrected_output = regress_out(pca_res$pca_score,data=t(input_abundance_table_scale),pc_index = c(1:num_pcs))
-
-set.seed(0)
-pca_res = 0
-pca_res = pca_method(input_abundance_table_scale,clr_transform = FALSE,center_scale_transform = FALSE)
 

@@ -8,6 +8,7 @@
 3. [iHMP feces](#ihmp_feces)
 4. [Hispanic Community Health](#bashoneline)
 5. [PCA experiment](#pcaexperiment)
+6. [Classification](#classification)
 
 ##<a name ="hoffman">Hoffman Starting Commands</a>
 1. [Running deblur](#deblur)
@@ -162,11 +163,22 @@ refactor&refactor_shift1
 
 /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch/" -arg AGP_max -arg "limma&limma_batch2&pca_regress_out_scale&pca_regress_out_no_scale&clr_pca_regress_out_no_scale&clr_pca_regress_out_scale&smartsva" -arg 10 -arg 1
 
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch/" -arg AGP_healthymax -arg "limma&limma_batch2&pca_regress_out_scale&pca_regress_out_no_scale&clr_pca_regress_out_no_scale&clr_pca_regress_out_scale&smartsva" -arg 10 -arg 1
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch/" -arg AGP_healthymax -arg "bmc&ComBat&ComBat_with_batch2&ComBat_with_biocovariates&ComBat_with_biocovariates_with_batch2" -arg 10 -arg 1
+
 
 params:
 c("kmer",6,"/u/home/b/briscoel/project-halperin/MicroBatch/","AGP_max", "bmc&ComBat&ComBat_with_batch2&ComBat_with_biocovariates&ComBat_with_biocovariates_with_batch2&limma&limma_batch2&pca_regress_out_scale&pca_regress_out_no_scale&clr_pca_regress_out_no_scale&clr_pca_regress_out_scale&smartsva" ,10 , 1)
 ```
 
+
+#local
+```
+Rscript batch_correction_pipeline_basic.R kmer 7 /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/ AGP_otumatch "bmc&ComBat&ComBat_with_batch2&ComBat_with_biocovariates&ComBat_with_biocovariates_with_batch2&limma&limma_batch2&pca_regress_out_scale&pca_regress_out_no_scale&clr_pca_regress_out_no_scale&clr_pca_regress_out_scale&smartsva" 10 1
+
+Rscript batch_correction_pipeline_basic.R kmer 7 /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/ AGP_otumatch "limma&limma_batch2&pca_regress_out_scale&pca_regress_out_no_scale&clr_pca_regress_out_no_scale&clr_pca_regress_out_scale&smartsva" 10 1
+```
 |                           | Purpose                 | Nature of batch effect      |
 |---------------------------|-------------------------|-----------------------------|
 | AGP                       | Prediction of phenotype | instrument, collection date |
@@ -396,7 +408,66 @@ Step 2: Regress BMI out of the
 
 
 
+## <a name=classification> Class </a>
 
+
+continuous prediction
+
+```
+python continuous_prediction.py /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc AGP_healthymax_k7 kmer_table bmi_corrected "norm&no_scale_no_clr&scale_no_clr&no_scale_clr&scale_clr&center_no_clr&center_clr" 10 kmer
+
+['continuous_prediction.py', '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc', 'AGP_healthymax_k7', 'kmer_table', 'bmi_corrected', 'norm&no_scale_no_clr&scale_no_clr&no_scale_clr&scale_clr', '10', 'kmer']
+
+#k7
+python continuous_prediction.py /u/home/b/briscoel/project-halperin/MicroBatch AGP_healthymax_k7 BatchCorrected bmi_corrected "bmc&ComBat&ComBat_with_batch2&ComBat_with_biocovariates&limma" 10 kmer
+
+
+#otumatch k
+
+python continuous_prediction.py /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc AGP_otumatch_k7 kmer_table bmi_corrected "norm&no_scale_no_clr&scale_no_clr&no_scale_clr&scale_clr&center_no_clr&center_clr" 10 kmer
+
+python continuous_prediction.py /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc AGP_otumatch_k7 BatchCorrected bmi_corrected "bmc&ComBat&ComBat_with_biocovariates&limma&clr_pca_regress_out_no_scale_first10&smartsva" 10 kmer
+
+python continuous_prediction.py /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc AGP_otumatch_otu BatchCorrected bmi_corrected "bmc&ComBat&ComBat_with_biocovariates&limma&clr_pca_regress_out_no_scale_first10&smartsva" 10 otu
+
+
+python continuous_prediction.py /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc AGP_otumatch_k7 BatchCorrected bmi_corrected "raw&bmc&ComBat&limma&clr_pca_regress_out_scale_first10&clr_pca_regress_out_no_scale_first10" 10 kmer
+
+
+python continuous_prediction.py /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc AGP_otumatch_k7 kmer_table bmi_corrected "norm&no_scale_no_clr&scale_no_clr&no_scale_clr&scale_clr&center_no_clr&center_clr" 10 kmer
+
+```
+
+ clasification
+ 
+ ```
+ python classification_CI.py /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k6 BatchCorrected antibiotic "bmc&ComBat&ComBat_with_batch2&ComBat_with_biocovariates&limma" 4 kmer
+ 
+ 
+ python classification_CI.py /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc AGP_healthymax_k6 kmer_table antibiotic "no_scale_clr&no_scale_no_clr&scale_clr&scale_no_clr" 4 kmer
+
+
+python classification_CI.py /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc AGP_otumatch_k7 kmer_table antibiotic "no_scale_clr&no_scale_no_clr&scale_clr&scale_no_clr&center_no_clr&center_clr" 4 kmer
+ 
+ 
+ 
+ #k7
+ python classification_CI.py /u/home/b/briscoel/project-halperin/MicroBatch AGP_healthymax_k7 BatchCorrected antibiotic "bmc&ComBat&ComBat_with_batch2&ComBat_with_biocovariates&limma" 4 kmer
+ 
+ 
+ python classification_CI.py /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc AGP_otumatch_noabx_k7 kmer_table antibiotic "no_scale_clr&no_scale_no_clr&scale_clr&scale_no_clr&center_no_clr&center_clr" 4 kmer
+ 
+
+
+ ```
+ 
+ batch correction
+ 
+ ```
+ Rscript batch_correction_pipeline_basic.R otu 7 /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/ AGP_otumatch "limma&limma_batch2&pca_regress_out_scale&pca_regress_out_no_scale&clr_pca_regress_out_no_scale&clr_pca_regress_out_scale&smartsva" 10 1
+ 
+ Rscript batch_correction_pipeline_basic.R otu 7 /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/ AGP_otumatch "bmc&ComBat" 10 1
+ ```
 
 
 

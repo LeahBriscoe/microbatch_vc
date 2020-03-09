@@ -35,17 +35,19 @@ import sys
 args = sys.argv
 print(args)
 print(len(args))
-study_name = args[1]
-prefix_name = args[2]
-column_of_interest = args[3]
-methods = args[4].split("&")
-n_cvs = int(args[5])
-data_type = "kmer"
+greater_folder = args[1]
+study_name = args[2]
+prefix_name = args[3]
+column_of_interest = args[4]
+methods = args[5].split("&")
+n_cvs = int(args[6])
+data_type = args[7]
+batch_def_folder = args[8]
 
 
-data_folder = "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/" + study_name + "/"
-plot_folder = "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/plots/" + study_name + "/" #+ 
-methods_dict = utils_bmi.load_data(data_folder,prefix_name,methods,data_type)
+data_folder = greater_folder + "/data/" + study_name + "/"
+plot_folder = greater_folder + "/plots/" + study_name + "/" #+ 
+methods_dict = utils_bmi.load_data(data_folder + batch_def_folder + "/",prefix_name,methods,data_type)
 
 metadata = pd.read_csv(data_folder + "metadata.txt",delimiter="\t")
 metadata["continuous_var"] = [float('Nan') if i == 'not applicable' or i == 'not provided' or 
@@ -61,18 +63,27 @@ print("loaded and cleaned metadata")
 n_splits = 5
 
 bootstrap_prop = 0.80
+# FIX THE SEED
 
 for cv in range(n_cvs):
+    
     for method in methods:
-        random.seed(30)
+        
+        random.seed(cv)
+        if cv == 0:
+            all_methods_stats[method] = dict()
+            all_methods_stats[method]['pearson'] = []
+            all_methods_stats[method]['mse'] = []
+            
+        
         print(method)
         X = []
         y = []
 
 
-        all_methods_stats[method] = dict()
+        
         bootstrap_sample_size = int(bootstrap_prop * methods_dict[method].shape[1])
-        sampled_comlumns = random.sample(list(methods_dict[method].columns), bootstrap_sample_size)
+        sampled_columns = random.sample(list(methods_dict[method].columns), bootstrap_sample_size)
         X = np.array(methods_dict[method][sampled_columns].transpose())
         y = np.array(metadata.loc[sampled_columns]["continuous_var"])
         y = [float("nan") if y_i == "Not provided" else float(y_i) for y_i in y]
@@ -83,9 +94,10 @@ for cv in range(n_cvs):
 
         #rskf = model_selection.RepeatedStratifiedKFold(n_splits= n_splits, n_repeats=n_repeats, random_state=123)
         rskf = model_selection.KFold(n_splits=5, random_state=123)
-
+        
         cv_pearson = []
         cv_mse = []
+        
         for train_index, test_index in rskf.split(X, y):
             #print(cv_it)
             X_train, X_test = X[train_index,], X[test_index,]
@@ -93,14 +105,16 @@ for cv in range(n_cvs):
 
             reg = LinearRegression().fit(X_train, y_train)
             pred = reg.predict(X_test)
-            cv_pearson.append(np.corrcoef(x=list(y_test),y=list(pred))[0,1])
-            cv_mse.append(mean_squared_error(list(y_test),list(pred) ))
+            all_methods_stats[method]['pearson'].append(np.corrcoef(x=list(y_test),y=list(pred))[0,1])
+            all_methods_stats[method]['mse'].append(mean_squared_error(list(y_test),list(pred) ))
 
 
-        all_methods_stats[method]['pearson'] = cv_pearson
-        all_methods_stats[method]['mse'] = cv_mse
+        #all_methods_stats[method]['pearson'] = cv_pearson
+        #all_methods_stats[method]['mse'] = cv_mse
         
-pickle.dump( all_methods_stats, open( data_folder + "/" + column_of_interest + "_pearson_and_mse.pkl", "wb" ) )
+        pickle.dump( all_methods_stats, open( data_folder + "/" + data_type + "_" + prefix_name + "_" + column_of_interest + "_pearson_and_mse.pkl", "wb" ) )
+        
+
 
 
 

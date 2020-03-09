@@ -1,6 +1,6 @@
 from sklearn import model_selection 
 import pandas as pd
-import utils_bmi
+import utils
 import numpy as np
 from scipy import interpolate
 import os
@@ -43,28 +43,27 @@ prefix_name = args[3]
 column_of_interest = args[4]
 methods = args[5].split("&")
 n_repeats = int(args[6])
-data_type = "kmer"
+data_type = args[7]
 
 
-data_folder = greater_folder + "/data/" + study_name + "/" + prefix_name + "_"  
+data_folder = greater_folder + "/data/" + study_name + "/"   
 plot_folder = greater_folder + "/plots/" + study_name + "/" #+ 
-methods_dict = utils.load_data(data_folder,methods,data_type)
+methods_dict = utils.load_data(data_folder,prefix_name,methods,data_type)
 
-metadata = pd.read_csv(data_folder + "/metadata.txt",delimiter="\t")
+metadata = pd.read_csv(data_folder + "metadata.txt",delimiter="\t")
 
 
-if column_of_interest == "antibiotic" & "AGP" in study_name:
-    bin_antibiotic = binarize_labels_mod(metadata["antibiotic_history"],pos_labels =['Year','Month','6 months','Week'],none_labels = ["Not provided",float("Nan"),'not provided'])
+if column_of_interest == "antibiotic" and "AGP" in study_name:
+    bin_antibiotic = utils.binarize_labels_mod(metadata["antibiotic_history"],pos_labels =['Year','Month','6 months','Week'],none_labels = ["Not provided",float("Nan"),'not provided'])
 
     #Counter(metadata["antibiotic"])
-    metadata[feat] = bin_antibiotic
-    column_of_interest = feat
+    metadata[column_of_interest] = bin_antibiotic
     pos_label = 1 #"Healthy"#'1-2' #'0-0.5'#'Omnivore' # '0-1.5'
 elif column_of_interest == "age_of_reloc":
-    bin_feat = binarize_labels_mod(metadata["agegroup_c6_v2.x"],pos_labels =['1','2','3','4'],none_labels = ["not applicable",float("Nan"),'not provided'])
+    bin_column_of_interest = binarize_labels_mod(metadata["agegroup_c6_v2.x"],pos_labels =['1','2','3','4'],none_labels = ["not applicable",float("Nan"),'not provided'])
 
-    metadata[feat] = bin_feat
-    column_of_interest = feat
+    metadata[column_of_interest] = bin_column_of_interest
+    column_of_interest = column_of_interest
     pos_label = 1 #"Healthy"#'1-2' #'0-0.5'#'Omnivore' # '0-1.5'
     
 
@@ -75,7 +74,7 @@ all_methods_means = pd.DataFrame(index = methods, columns= names)
 all_methods_auc_stats = dict()
 
 
-n_splits = 5
+n_splits = 3
 bootstrap_prop = 0.80
 
 
@@ -86,9 +85,23 @@ for method in methods:
     
     all_methods_auc_stats[method] = dict()
     
-    bootstrap_sample_size = int(bootstrap_prop * methods_dict[method].shape[1])
     
-    sampled_comlumns = random.sample(list(methods_dict[method].columns), bootstrap_sample_size)
+    #bootstrap_sample_size = int(bootstrap_prop * methods_dict[method].shape[1])
+    #sampled_columns = random.sample(list(methods_dict[method].columns), bootstrap_sample_size)
+    
+    
+    
+    # class respective subsampling
+    sampled_columns = []
+    for i in range(2):
+        eligible_columns_all = metadata[column_of_interest][metadata[column_of_interest] == i].index.values
+        eligible_columns = [col for col in eligible_columns_all if col in methods_dict[method].columns]
+        
+        
+        bootstrap_sample_size = int(bootstrap_prop * len(eligible_columns))
+        sampled_columns += random.sample(list(eligible_columns), bootstrap_sample_size)
+        print(len(sampled_columns))
+    
     X = np.array(methods_dict[method][sampled_columns].transpose())
     y = np.array(metadata.loc[sampled_columns][column_of_interest])
         
@@ -205,11 +218,11 @@ for method in methods:
     
     all_methods_means.loc[method,:] = np.array(pd.DataFrame.mean(metric_classifier,axis =0))
           
-pickle.dump(all_methods_metrics , open( data_folder + "/" + column_of_interest + "_classification_metrics.pkl", "wb" ) )
+    pickle.dump(all_methods_metrics , open( data_folder + "/" + data_type + "_" + prefix_name + "_" + column_of_interest + "_classification_metrics.pkl", "wb" ) )
 
-pickle.dump(all_methods_auc_stats , open( data_folder + "/" + column_of_interest + "_classification_auc.pkl", "wb" ) )
+    pickle.dump(all_methods_auc_stats , open( data_folder + "/" + data_type + "_" + prefix_name + "_" + column_of_interest + "_classification_auc.pkl", "wb" ) )
 
-pickle.dump(all_methods_means , open( data_folder + "/" + column_of_interest + "_classification_means.pkl", "wb" ) )
+    pickle.dump(all_methods_means , open( data_folder + "/" + data_type + "_" + prefix_name + "_" + column_of_interest + "_classification_means.pkl", "wb" ) )
 
 
 

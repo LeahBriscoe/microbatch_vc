@@ -3,6 +3,10 @@ args = commandArgs(trailingOnly=TRUE)
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
 #          "bmc&ComBat",10,1)
 
+# args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/", "AGP_otumatch",
+#          "limma&limma_batch2&pca_regress_out_scale&pca_regress_out_no_scale&clr_pca_regress_out_no_scale&clr_pca_regress_out_scale&smartsva",
+#          10,1)
+
 # ============================================================================== #
 # user input
 data_type = args[1]#"kmer"
@@ -23,8 +27,7 @@ require(varhandle)
 
 script_folder = paste0(microbatch_folder,'data_processing')
 batch_script_folder = paste0(microbatch_folder, 'batch_correction')
-plot_folder = paste0(microbatch_folder,'plots/')
-dir.create(plot_folder)
+
 source(paste0(script_folder,"/utils.R"))
 source(paste0(batch_script_folder,"/batch_correction_source.R"))
 # ============================================================================== #
@@ -40,12 +43,15 @@ kmer_input_folder = paste0(microbatch_folder,'data/',study_name,'_k',kmer_len)
 
 batch_column = "Instrument"
 
-dir.create(paste0(kmer_input_folder,"/",batch_column))
 
 if(data_type == "kmer"){
+  dir.create(paste0(kmer_input_folder,"/",batch_column))
+  
   input_folder = kmer_input_folder
   kmer_table_norm = readRDS(paste0(kmer_input_folder,"/kmer_table_norm.rds"))
 }else{
+  dir.create(paste0(otu_input_folder,"/",batch_column))
+  
   input_folder = otu_input_folder
   otu_table_norm = readRDS(paste0(otu_input_folder,"/otu_table_norm.rds"))
 }
@@ -54,6 +60,7 @@ total_metadata = readRDS(paste0(input_folder,"/metadata.rds"))
 
 # ============================================================================== #
 # cleaning of data
+
 
 input_abundance_table = get(paste0(data_type,"_table_norm"))
 filter_at_least_two_samples_per_feature = (rowSums(input_abundance_table  > 0 ) > 2)
@@ -70,7 +77,8 @@ batch_labels_dummy = to.dummy(batch_labels,"batch")
 
 batch_corrected_outputs = list()
 
-collection_date=as.Date(total_metadata$collection_date, format="%m/%d/%Y")
+collection_date=as.Date(total_metadata$collection_timestamp, format="%Y-%m-%d")
+total_metadata$collection_date = collection_date
 collection_days = collection_date - min(collection_date,na.rm=TRUE)
 collection_month = format(as.Date(total_metadata$collection_date, format="%m/%d/%Y"), "%Y-%m")
 collection_year = as.integer(format(as.Date(collection_date, format="%m/%d/%Y"), "%Y"))
@@ -172,7 +180,7 @@ for(m in 1:length(methods_list)){
     }
     batch_corrected_output = regress_out(pca_res$pca_score,data=t(pca_res$transformed_data),pc_index = c(1:num_pcs))
   }else if(methods_list[m] == "limma"){
-    
+    #table(batch_labels2)
     batch_corrected_output = run_limma(mat = input_abundance_table, batch_labels)
     #batch_corrected_outputs[["limma"]] = batch_corrected_output
   }else if(methods_list[m] == "limma_batch2"){

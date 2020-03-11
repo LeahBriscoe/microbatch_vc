@@ -16,6 +16,8 @@ methods_list = unlist(strsplit(args[5],"&"))#c("ComBat_with_batch2")#"pca_regres
 batch_def_folder = args[6]
 prefix_name = args[7]
 use_quant_norm = TRUE
+apply_bootstrap = FALSE
+bootstrap_prop = 0.80
 # ============================================================================== #
 # load packages and functions
 require(varhandle)
@@ -23,6 +25,7 @@ require(varhandle)
 require(matrixStats)
 require(dplyr)
 require(varhandle)
+require(variancePartition)
 
 script_folder = paste0(microbatch_folder,'data_processing')
 batch_script_folder = paste0(microbatch_folder, 'batch_correction')
@@ -108,20 +111,67 @@ random_effects_bio = c("race.x","bin_alcohol_consumption","bin_omnivore_diet","b
 fixed_effects_tech = c("librarysize","collection_AM")
 fixed_effects_bio = c("sex","bmi_corrected","age_corrected")
 
+
+
 # ============================================================================== #
 # make formula
+random_effects_vars = c(random_effects_tech,random_effects_bio)
+fixed_effects_vars = c(fixed_effects_tech,fixed_effects_bio)
 
-formula_random = paste0('~ (1| ',paste(c(random_effects_tech,random_effects_bio) , collapse = ') + (1|'),")")
-formula_fixed =  paste(c(fixed_effects_tech,fixed_effects_bio), collapse = ' + ')
+for( r in random_effects_vars){
+  total_metadata_mod[,r] = as.character(total_metadata_mod[,r])
+}
+  
+  
+formula_random = paste0('~ (1| ',paste( random_effects_vars, collapse = ') + (1|'),")")
+formula_fixed =  paste(fixed_effects_vars, collapse = ' + ')
 
-formula = paste0(formula_random, " + ", formula_fixed)
+formula_input = paste0(formula_random, " + ", formula_fixed)
 
 # ============================================================================== #
 # var par
 
-collect_var_pars_mean_BC = list()
-collect_var_pars_full_BC = list()
 
+collect_var_pars_full_BC = list()
+if(use_quant_norm){
+  batch_corrected_data_input = batch_corrected_data_quant_norm
+}else{
+  batch_corrected_data_input = batch_corrected_data
+}
+for(i in 1:length(batch_corrected_data_input)){
+  i=1
+  input_abundance_table = batch_corrected_data_input[[methods_list[i]]]
+  input_metadata_table = total_metadata_mod
+  
+  if(apply_bootstrap){
+    
+    samples_picked = sample(1:ncol(input_abundance_table),as.integer(bootstrap_prop*ncol(input_abundance_table)))
+    sample_names_picked = colnames(input_abundance_table)[samples_picked]
+    
+    # subsample
+    sub_abundance_table= input_abundance_table[,sample_names_picked]
+    #sub_abundance_table_kmer = input_abundance_table_kmer[,samples_picked]
+    sub_metadata_table = input_metadata_table[sample_names_picked,]
+  }
+  
+  dim(input_abundance_table)
+  # remove any features with 0 variance in uncorrected data
+  input_abundance_table = input_abundance_table[rowVars(as.matrix(input_abundance_table)) != 0,]
+  filter_at_least_two_samples_sub = (rowSums(input_abundance_table  > 0 ) > 2)
+  input_abundance_table = input_abundance_table[filter_at_least_two_samples_sub,]
+  
+  
+  typeof(input_metadata_table$bin_alcohol_consumption)
+  varPartMetaData = fitExtractVarPartModel(formula = formula_input,
+                                           exprObj = input_abundance_table, data = data.frame(input_metadata_table))
+  
+  collect_var_pars_full_BC[[methods_list[i]]] = varPartMetaData
+  
+  write.table(as.matrix(varPartMetaData), paste0(input_folder ,"varpart",methods_list[m],".txt"),
+              sep = "\t",quote = FALSE)
+  saveRDS(varPartMetaData, paste0(input_folder ,"varpart",methods_list[m],".rds"))
+  
+}
 
 
 

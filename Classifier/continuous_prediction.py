@@ -60,8 +60,6 @@ all_methods_stats = dict()
 
 print("loaded and cleaned metadata")
 
-n_splits = 5
-
 bootstrap_prop = 0.80
 # FIX THE SEED
 

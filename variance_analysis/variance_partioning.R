@@ -4,7 +4,7 @@ args = commandArgs(trailingOnly=TRUE)
 #          "bmc&ComBat",10,1)
 
 args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/", "AGP_otumatch_noabx",
-         "raw&bmc&limma",'Instrument',"BatchCorrected")
+         "raw&bmc&limma&ComBat",'Instrument',"BatchCorrected")
 
 # ============================================================================== #
 # user input
@@ -139,7 +139,7 @@ if(use_quant_norm){
   batch_corrected_data_input = batch_corrected_data
 }
 for(i in 1:length(batch_corrected_data_input)){
-  i=1
+
   input_abundance_table = batch_corrected_data_input[[methods_list[i]]]
   input_metadata_table = total_metadata_mod
   

@@ -3,8 +3,8 @@ args = commandArgs(trailingOnly=TRUE)
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
 #          "bmc&ComBat",10,1)
 
-# args = c("otu", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_otumatch_noabx",
-#          "raw&bmc&ComBat&limma",'Instrument',"BatchCorrected")
+args = c("otu", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_otumatch_noabx",
+         "raw&bmc&ComBat&limma",'Instrument',"BatchCorrected",1)
 #args[5] = "no_scale_clr&no_scale_no_clr"
 # ============================================================================== #
 # user input
@@ -15,7 +15,7 @@ study_name = args[4]
 methods_list = unlist(strsplit(args[5],"&"))#c("ComBat_with_batch2")#"pca_regress_out_scale","clr_pca_regress_out_no_scale","clr_pca_regress_out_scale") #)#,
 batch_def_folder = args[6]
 prefix_name = args[7]
-use_quant_norm = as.logical(args[8])
+use_quant_norm = as.logical(as.integer(args[8]))
 apply_bootstrap = FALSE
 bootstrap_prop = 0.80
 # ============================================================================== #

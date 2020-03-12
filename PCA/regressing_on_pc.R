@@ -1,5 +1,5 @@
 args = commandArgs(trailingOnly=TRUE)
-
+print(args)
 # ============================================================================== #
 # user input
 data_type = args[1]#"kmer"
@@ -8,15 +8,16 @@ microbatch_folder = args[3]#'/Users/leahbriscoe/Documents/MicroBatch/microbatch_
 study_name = args[4]
 methods_list = unlist(strsplit(args[5],"&"))#c("ComBat_with_batch2")#"pca_regress_out_scale","clr_pca_regress_out_no_scale","clr_pca_regress_out_scale") #)#,
 num_pcs = as.integer(args[6])#5
-match_to_otu = as.logical(args[7])
+match_to_otu = as.logical(as.integer(args[7]))
 paper_data_folder = args[8]
-filter_healthy = as.logical(args[9])
+filter_healthy = as.logical(as.integer(args[9]))
+save_files = as.logical(as.integer(args[10]))
 # ============================================================================== #
 # user input
 fecal_tissue = TRUE
 bmi_corr = FALSE
 projection_transfer = TRUE
-save_files = TRUE
+#save_files = FALSE
 # ============================================================================== #
 # load packages and functions
 require(dplyr)
@@ -45,12 +46,12 @@ dir.create(otu_output_folder)
 dir.create(paste0(kmer_output_folder,"/Unsupervised"))
 # ============================================================================== #
 # load kmer_data
-kmer_table = read.table(paste0(paper_data_folder,"/kmer_matrix_6.csv"),header=TRUE,stringsAsFactors=FALSE,sep=",",as.is=TRUE,row.names = 1,check.names = FALSE)
+kmer_table = readRDS(paste0(paper_data_folder,"/kmer_matrix_6.rds"))
 # convert na to 0
 kmer_table[is.na(kmer_table)] = 0
 kmer_table = kmer_table[,colSums(kmer_table)!=0] 
 if(match_to_otu){
-  otu_table = read.csv(paste0(paper_data_folder,'/deblur_125nt_no_blooms.txt'),sep="\t")
+  otu_table = readRDS(paste0(paper_data_folder,'/deblur_125nt_no_blooms.rds'))
   # process row names
   row.names(otu_table) = otu_table$OTU_ID
   otu_table = otu_table[,-1]
@@ -102,7 +103,7 @@ if(match_to_otu){
 
 # ============================================================================== #
 ##adding more features
-total_metadata$COLLECTION_TIMESTAMP
+#total_metadata$COLLECTION_TIMESTAMP
 collection_date=as.Date(total_metadata$collection_timestamp, format="%Y-%m-%d %H:%M")
 collection_year = as.integer(format(as.Date(collection_date, format="%m/%d/%Y"), "%Y"))
 total_metadata$collection_year = collection_year
@@ -142,9 +143,9 @@ if(save_files){
 
 # ============================================================================== #
 # metadata model matrix
-sum(total_metadata$bmi_corrected != "Not provided")
+#sum(total_metadata$bmi_corrected != "Not provided")
 
-table(total_metadata$bin_alcohol_consumption)
+#table(total_metadata$bin_alcohol_consumption)
 
 total_metadata$bin_alcohol_consumption = binarize_metadata(total_metadata$alcohol_consumption,
                                                            pos_labels = c("true","Yes"), 
@@ -175,9 +176,9 @@ total_metadata$bin_consume_animal_products_abx = binarize_metadata(total_metadat
                                                                    neg_labels = c("false","No"),
                                                                    pos_indicator = "Yes",neg_indicator = "No")
 total_metadata$bin_antibiotic_last_year = binarize_metadata(total_metadata$antibiotic_history,
-                                                      pos_labels = c("Week","6 months","Year","Month"),
-                                                      neg_labels = c("I have not taken antibiotics in the past year."),
-                                                      pos_indicator = "Yes",neg_indicator = "No")
+                                                            pos_labels = c("Week","6 months","Year","Month"),
+                                                            neg_labels = c("I have not taken antibiotics in the past year."),
+                                                            pos_indicator = "Yes",neg_indicator = "No")
 
 # ============================================================================== #
 if(save_files){
@@ -193,7 +194,7 @@ if(save_files){
 
 # ============================================================================== #
 # make model matrix
-table(total_metadata$bowel_movement_quality)
+#table(total_metadata$bowel_movement_quality)
 binary_vars = c("collection_AM","bin_alcohol_consumption","bin_omnivore_diet")#,"bin_antibiotic_last_year")
 categorical_vars = c("race.x","bin_bowel_movement",
                      "collection_year","Instrument")
@@ -203,8 +204,8 @@ total_metadata_mod = process_model_matrix(total_metadata = total_metadata,
                                           categorical_vars =categorical_vars,
                                           numeric_vars = numeric_vars)
 
-hist(total_metadata_mod$age_corrected)
-range(total_metadata_mod$age_corrected,na.rm=TRUE)
+#hist(total_metadata_mod$age_corrected)
+#range(total_metadata_mod$age_corrected,na.rm=TRUE)
 total_metadata_mod_formula = as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod), collapse = " + ")))
 require(variancePartition)
 
@@ -237,18 +238,18 @@ if(filter_healthy){
                                                   antibiotic_history == "I have not taken antibiotics in the past year.") # HOW ABOUT NO ANTIBIOTIC! YOU FORGOT
 }
 print("non na age")
-print(sum(!is.na(input_metadata$age_corrected)))
+print(sum(!is.na(selected_samples$age_corrected)))
 print("non na bmi")
-print(sum(!is.na(input_metadata$bmi_corrected)))
+print(sum(!is.na(selected_samples$bmi_corrected)))
 print("non na alc")
-print(sum(!is.na(input_metadata$bin_alcohol_consumption)))
+print(sum(!is.na(selected_samples$bin_alcohol_consumption)))
 
 print("non na diet")
-print(sum(!is.na(input_metadata$bin_omnivore_diet)))
+print(sum(!is.na(selected_samples$bin_omnivore_diet)))
 print("non na bowel")
-print(sum(!is.na(input_metadata$bin_bowel_movement)))
+print(sum(!is.na(selected_samples$bin_bowel_movement)))
 print("non na antx")
-print(sum(!is.na(input_metadata$bin_antibiotic_last_year)))
+print(sum(!is.na(selected_samples$bin_antibiotic_last_year)))
 
 
 # ============================================================================== #
@@ -297,13 +298,13 @@ for(pc_method in methods_list){  #c("no_scale_no_clr","scale_no_clr","no_scale_c
     input_abundance_table_scale_clr = pca_res_clr_scale$transformed_data
   }else if(pc_method == "center_no_clr"){
     pc_data = pca_res_center$pca_score
-   
+    
   }else if(pc_method == "center_clr"){
     pc_data = pca_res_clr_center$pca_score
     input_abundance_table_center_clr = pca_res_clr_center$transformed_data
   }
   
-
+  
   
   colnames(pc_data) = paste0("PC",1:ncol(pc_data))
   input_metadata_pc = data.frame(input_metadata,pc_data)
@@ -314,9 +315,9 @@ for(pc_method in methods_list){  #c("no_scale_no_clr","scale_no_clr","no_scale_c
   pdf(paste0(plot_folder,"/","allAGP_", pc_method, ".pdf"))
   plotCorrMatrix(C[1:(nrow(C)-20),((nrow(C)-20)+1):ncol(C)],sort=FALSE)
   dev.off()
-
   
-
+  
+  
   
   if(bmi_corr){
     bmi_matrix = matrix(input_metadata_pc$bmi_corrected,nrow =length(input_metadata_pc$bmi_corrected))
@@ -375,7 +376,7 @@ for(pc_method in methods_list){  #c("no_scale_no_clr","scale_no_clr","no_scale_c
     saveRDS(corrected_data,paste0(kmer_output_folder,"/kmer_table_", pc_method,".rds"))
     write.table(corrected_data,paste0(kmer_output_folder,"/kmer_table_",pc_method,".txt"),sep = "\t",quote = FALSE)
     
-   
+    
     
   }else{
     if(pc_method == "no_scale_no_clr"){
@@ -391,7 +392,7 @@ for(pc_method in methods_list){  #c("no_scale_no_clr","scale_no_clr","no_scale_c
     saveRDS(corrected_data,paste0(kmer_output_folder,"/Unsupervised/BatchCorrected_", pc_method,".rds"))
     write.table(corrected_data,paste0(kmer_output_folder,"/Unsupervised/BatchCorrected_",pc_method,".txt"),sep = "\t",quote = FALSE)
     
-   
+    
   }
   
   

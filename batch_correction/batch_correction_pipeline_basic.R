@@ -4,7 +4,7 @@ args = commandArgs(trailingOnly=TRUE)
 #          "bmc&ComBat",10,1)
 
 # args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/", "AGP_otumatch",
-#          "limma&limma_batch2&pca_regress_out_scale&pca_regress_out_no_scale&clr_pca_regress_out_no_scale&clr_pca_regress_out_scale&smartsva",
+#          "refactor&smartsva",
 #          10,1)
 
 # ============================================================================== #
@@ -211,12 +211,21 @@ for(m in 1:length(methods_list)){
     #dim(batch_corrected_output)
   }else if(methods_list[m ] == "refactor"){
     require(TCA)
+    refactor_pretable = input_abundance_table[rowVars(input_abundance_table) > 10e-10,]
+    refactor_table =  t(scale(t(refactor_pretable)))  #feature scaling
+    refactor_res = refactor(X = refactor_table, k=num_pcs, sparsity = 500, C = NULL, C.remove = FALSE,
+             sd_threshold = 0.02, num_comp = NULL, rand_svd = FALSE,
+             log_file = "TCA.log", debug = FALSE, verbose = TRUE)
+    refactor_components = refactor_res$scores
+    mat_scaled_corrected<- t(resid(lm(t(refactor_table_shift_front ) ~ ., data=data.frame(RC))))
+    
+    
     source(paste0(batch_script_folder,"/refactor-master/R/refactor.R"))
     quantile(rowVars(input_abundance_table))
     refactor_pretable = input_abundance_table[rowVars(input_abundance_table) > 10e-10,]
     refactor_table =  t(scale(t(refactor_pretable))) 
     refactor_table_covar = total_metadata_mod
-    
+    mat_scaled_corrected<- t(resid(lm(t(refactor_table_shift_front ) ~ ., data=data.frame(RC))))
     write.table(refactor_table,paste0(input_folder,"/",batch_column,"/refactor_file.txt"),quote = FALSE,sep = "\t")
     write.table(refactor_table_covar,paste0(input_folder,"/",batch_column,"/refactor_covar_file.txt"),quote=FALSE,sep = "\t")
     
@@ -232,12 +241,7 @@ for(m in 1:length(methods_list)){
       saveRDS(RC, paste0(kmer_input_folder ,"/",batch_column,"/Refactor_scores_",methods_list[m],".rds"))
     }
     refactor_table_shift_front = refactor_table[,-1]
-    mat_scaled_corrected<- t(resid(lm(t(refactor_table_shift_front ) ~ ., data=data.frame(RC))))
-    batch_corrected_output = mat_scaled_corrected
-  }else if(methods_list[m ] == "refactor_shift1"){
-    refactor_table_shift_back = refactor_table[,-ncol(refactor_table)]
     
-    mat_scaled_corrected<- t(resid(lm(t(refactor_table_shift_back ) ~ ., data=data.frame(RC))))
     batch_corrected_output = mat_scaled_corrected
   }
   #names(batch_corrected_outputs)

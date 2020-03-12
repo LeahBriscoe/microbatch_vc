@@ -1,3 +1,5 @@
+args = commandArgs(trailingOnly=TRUE)
+
 # ============================================================================== #
 # user input
 data_type = args[1]#"kmer"
@@ -6,38 +8,23 @@ microbatch_folder = args[3]#'/Users/leahbriscoe/Documents/MicroBatch/microbatch_
 study_name = args[4]
 methods_list = unlist(strsplit(args[5],"&"))#c("ComBat_with_batch2")#"pca_regress_out_scale","clr_pca_regress_out_no_scale","clr_pca_regress_out_scale") #)#,
 num_pcs = as.integer(args[6])#5
-save_PC_scores = as.logical(as.integer(args[7]))#TRUE
-
-# ============================================================================== #
-
-
-
-
-
-
-
+match_to_otu = as.logical(args[7])
+paper_data_folder = args[8]
+filter_healthy = as.logical(args[9])
 # ============================================================================== #
 # user input
-kmer_len = 5
-study_name = "AGP_max"
-match_to_otu = FALSE
-
 fecal_tissue = TRUE
-filter_healthy = TRUE
 bmi_corr = FALSE
 projection_transfer = TRUE
 save_files = TRUE
 # ============================================================================== #
 # load packages and functions
-script_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data_processing'
-source(paste0(script_folder,"/utils.R"))
 require(dplyr)
 # ============================================================================== #
 # scripts
-microbatch_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/'
-script_folder = paste0(microbatch_folder,'data_processing')
-batch_script_folder = paste0(microbatch_folder, 'batch_correction')
-plot_folder = paste0(microbatch_folder,'plots/',study_name,"_k",kmer_len)
+script_folder = paste0(microbatch_folder,'/data_processing')
+batch_script_folder = paste0(microbatch_folder, '/batch_correction')
+plot_folder = paste0(microbatch_folder,'/plots/',study_name,"_k",kmer_len)
 dir.create(plot_folder)
 
 dir.create(plot_folder)
@@ -47,23 +34,23 @@ source(paste0(batch_script_folder,"/batch_correction_source.R"))
 
 # ============================================================================== #
 # define folders
-folder = '/Users/leahbriscoe/Documents/KmerCounting/AGP/'
-kmer_input_folder = '/Users/leahbriscoe/Documents/KmerCounting/AGP/'
-otu_input_folder = '/Users/leahbriscoe/Documents/KmerCounting/AGP_paper_data/'
 
-otu_output_folder = paste0('/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/',study_name ,"_otu")
-kmer_output_folder = paste0('/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/',study_name,"_k",kmer_len)
+
+otu_output_folder = paste0(microbatch_folder,'/data/',study_name, '_otu')
+kmer_output_folder = paste0(microbatch_folder,'/data/',study_name,'_k',kmer_len)
+
 dir.create(kmer_output_folder) 
 dir.create(otu_output_folder) 
 
+dir.create(paste0(kmer_output_folder,"/Unsupervised"))
 # ============================================================================== #
 # load kmer_data
-kmer_table = read.table(paste0(kmer_input_folder,"kmer_matrix_6.csv"),header=TRUE,stringsAsFactors=FALSE,sep=",",as.is=TRUE,row.names = 1,check.names = FALSE)
+kmer_table = read.table(paste0(paper_data_folder,"/kmer_matrix_6.csv"),header=TRUE,stringsAsFactors=FALSE,sep=",",as.is=TRUE,row.names = 1,check.names = FALSE)
 # convert na to 0
 kmer_table[is.na(kmer_table)] = 0
 kmer_table = kmer_table[,colSums(kmer_table)!=0] 
 if(match_to_otu){
-  otu_table = read.csv(paste0(otu_input_folder,'deblur_125nt_no_blooms.txt'),sep="\t")
+  otu_table = read.csv(paste0(paper_data_folder,'/deblur_125nt_no_blooms.txt'),sep="\t")
   # process row names
   row.names(otu_table) = otu_table$OTU_ID
   otu_table = otu_table[,-1]
@@ -72,9 +59,9 @@ if(match_to_otu){
 # ============================================================================== #
 # load metadata
 
-metadata_tech = read.csv('/Users/leahbriscoe/Documents/KmerCounting/AGP_paper_data/SraRunTable.csv',header =TRUE,stringsAsFactors = FALSE)
+metadata_tech = read.csv(paste0(paper_data_folder,'/SraRunTable.csv'),header =TRUE,stringsAsFactors = FALSE)
 
-metadata_qiita = read.csv('/Users/leahbriscoe/Documents/KmerCounting/AGP_paper_data/10317_20200305-094827.txt',sep = "\t",header =TRUE,stringsAsFactors = FALSE)
+metadata_qiita = read.csv(paste0(paper_data_folder,'/10317_20200305-094827.txt'),sep = "\t",header =TRUE,stringsAsFactors = FALSE)
 total_metadata <- dplyr::left_join(metadata_qiita,metadata_tech,  by=c("sample_name" = "Library.Name"))
 total_metadata = total_metadata %>% filter(!is.na(Run))
 row.names(total_metadata) = total_metadata$Run
@@ -243,14 +230,27 @@ if(fecal_tissue){
 
 if(filter_healthy){
   
-  selected_samples = selected_samples %>% filter( bmi_corrected < 30 & bmi_corrected > 18.5, 
+  selected_samples = selected_samples %>% filter( age_corrected >= 20 & age_corrected <=69, 
+                                                  bmi_corrected <= 30 & bmi_corrected >= 18.5, 
                                                   ibd_diagnosis != "Ulcerative colitis" &  ibd_diagnosis != "Crohn's disease",
                                                   !grepl("Diagnosed",diabetes), 
                                                   antibiotic_history == "I have not taken antibiotics in the past year.") # HOW ABOUT NO ANTIBIOTIC! YOU FORGOT
 }
-table(input_metadata$)
-sum(!is.na(input_metadata$age_corrected))
-sum(!is.na(input_metadata$bin_alcohol_consumption))
+print("non na age")
+print(sum(!is.na(input_metadata$age_corrected)))
+print("non na bmi")
+print(sum(!is.na(input_metadata$bmi_corrected)))
+print("non na alc")
+print(sum(!is.na(input_metadata$bin_alcohol_consumption)))
+
+print("non na diet")
+print(sum(!is.na(input_metadata$bin_omnivore_diet)))
+print("non na bowel")
+print(sum(!is.na(input_metadata$bin_bowel_movement)))
+print("non na antx")
+print(sum(!is.na(input_metadata$bin_antibiotic_last_year)))
+
+
 # ============================================================================== #
 # pca
 input_abundance_table = kmer_table_norm[,selected_samples$Run]
@@ -281,7 +281,7 @@ input_abundance_table_orig = input_abundance_table
 
 #pc_method = "no_scale_no_clr" # res_scale # "res_clr
 #"no_scale_no_clr","scale_no_clr","no_scale_clr","scale_clr"
-for(pc_method in c("no_scale_no_clr","scale_no_clr","no_scale_clr","scale_clr","center_no_clr","center_clr")){
+for(pc_method in methods_list){  #c("no_scale_no_clr","scale_no_clr","no_scale_clr","scale_clr","center_no_clr","center_clr")){
   print(pc_method)
   if(pc_method == "no_scale_no_clr"){
     pc_data = pca_res$pca_score
@@ -316,7 +316,7 @@ for(pc_method in c("no_scale_no_clr","scale_no_clr","no_scale_clr","scale_clr","
   dev.off()
 
   
-  num_pcs = 10
+
   
   if(bmi_corr){
     bmi_matrix = matrix(input_metadata_pc$bmi_corrected,nrow =length(input_metadata_pc$bmi_corrected))
@@ -387,8 +387,9 @@ for(pc_method in c("no_scale_no_clr","scale_no_clr","no_scale_clr","scale_clr","
     }else if(pc_method == "scale_clr"){
       corrected_data = regress_out(pc_scores =pc_data,data=t(input_abundance_table_scale_clr),pc_index = c(1:num_pcs))
     }
-    saveRDS(corrected_data,paste0(kmer_output_folder,"/kmer_table_", pc_method,".rds"))
-    write.table(corrected_data,paste0(kmer_output_folder,"/kmer_table_",pc_method,".txt"),sep = "\t",quote = FALSE)
+    
+    saveRDS(corrected_data,paste0(kmer_output_folder,"/Unsupervised/BatchCorrected_", pc_method,".rds"))
+    write.table(corrected_data,paste0(kmer_output_folder,"/Unsupervised/BatchCorrected_",pc_method,".txt"),sep = "\t",quote = FALSE)
     
    
   }

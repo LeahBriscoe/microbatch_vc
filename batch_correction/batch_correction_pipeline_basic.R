@@ -210,6 +210,7 @@ for(m in 1:length(methods_list)){
    
     #dim(batch_corrected_output)
   }else if(methods_list[m ] == "refactor"){
+    require(TCA)
     source(paste0(batch_script_folder,"/refactor-master/R/refactor.R"))
     quantile(rowVars(input_abundance_table))
     refactor_pretable = input_abundance_table[rowVars(input_abundance_table) > 10e-10,]

@@ -438,7 +438,7 @@ python continuous_prediction.py /Users/leahbriscoe/Documents/MicroBatch/microbat
 
 ```
 
- clasification
+# clasification
  
  ```
  python classification_CI.py /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k6 BatchCorrected antibiotic "bmc&ComBat&ComBat_with_batch2&ComBat_with_biocovariates&limma" 4 kmer
@@ -461,14 +461,27 @@ python classification_CI.py /Users/leahbriscoe/Documents/MicroBatch/microbatch_v
 
  ```
  
- batch correction
+ 
+#batch correction
+ 
  
  ```
  Rscript batch_correction_pipeline_basic.R otu 7 /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/ AGP_otumatch "limma&limma_batch2&pca_regress_out_scale&pca_regress_out_no_scale&clr_pca_regress_out_no_scale&clr_pca_regress_out_scale&smartsva" 10 1
  
  Rscript batch_correction_pipeline_basic.R otu 7 /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/ AGP_otumatch "bmc&ComBat" 10 1
+ 
+ Rscript variance_partioning.R otu 7 ~/project-halperin/MicroBatch AGP_otumatch raw&bmc&ComBat&limma Instrument BatchCorrected 1
  ```
 
 
 
+
+# Variance 
+
+Rscript variance_partioning.R otu 7 /u/home/b/briscoel/project-halperin/MicroBatch AGP_otumatch_noabx "raw" 'Instrument' "BatchCorrected"
+
+
+# Regressing on PC
+
+Rscript regressing_on_pc.R kmer 6 /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter "no_scale_clr&scale_clr&no_scale_no_clr&scale_no_clr" 10 1 /u/home/b/briscoel/project-halperin/MicroBatch/data/AGP_paper_data 1
 

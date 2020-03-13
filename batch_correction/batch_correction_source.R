@@ -139,28 +139,41 @@ regress_out <- function(pc_scores,data,pc_index){
 
 #' @param mat matrix you want to batch correct
 #' @param data object containing $df_meta 
-run_sva <- function(mat,metadata_mod,bio_signal_formula){
+run_sva <- function(mat,metadata_mod=NULL,bio_signal_formula=NULL,num_pcs = NULL){
   #mat = input_abundance_table
   #metadata_mod = total_metadata_mod
   #mat = input_abundance_table
   #metadata_mod=total_metadata_mod
   
   mat = mat[,rowSums(is.na(metadata_mod)) == 0]
-  metadata_mod= metadata_mod[rowSums(is.na(metadata_mod)) == 0,]
-
-  #bio_signal_formula <- paste0("~",paste(colnames(metadata_mod), collapse = "+"))
-  bio_signal_formula_resid = as.formula(paste0("t( mat_scaled)", paste0(as.character(bio_signal_formula),collapse = '')))
-  
-  require(SmartSVA)
-  #Determine number of SVs
   mat_scaled = t(scale(t(mat))) 
-  Y.r <- t(resid(lm(bio_signal_formula_resid,data = metadata_mod)))
   
-  message("estimating RT")
-  t1 = Sys.time()
-  n.sv <- EstDimRMT(Y.r, FALSE)$dim + 1 # Very important: Add one extra dimension to compensate potential loss of 1 degree of freedom in confounded scenarios !!!
-  t2= Sys.time()
-  message(t2 -t1)
+  if(!is.null(metadata_mod)){
+    metadata_mod= metadata_mod[rowSums(is.na(metadata_mod)) == 0,]
+    
+    #bio_signal_formula <- paste0("~",paste(colnames(metadata_mod), collapse = "+"))
+    bio_signal_formula_resid = as.formula(paste0("t( mat_scaled)", paste0(as.character(bio_signal_formula),collapse = '')))
+    
+    require(SmartSVA)
+    #?smartsva.cpp
+    #?smartsva.cpp
+    #Determine number of SVs
+    
+    Y.r <- t(resid(lm(bio_signal_formula_resid,data = metadata_mod)))
+    
+    message("estimating RT")
+    t1 = Sys.time()
+    n.sv <- EstDimRMT(Y.r, FALSE)$dim + 1 # Very important: Add one extra dimension to compensate potential loss of 1 degree of freedom in confounded scenarios !!!
+    t2= Sys.time()
+    message(t2 -t1)
+  }else{
+    Y.r = mat_scaled
+    t1 = Sys.time()
+    n.sv <- EstDimRMT(Y.r, FALSE)$dim + 1 # Very important: Add one extra dimension to compensate potential loss of 1 degree of freedom in confounded scenarios !!!
+    t2= Sys.time()
+    message(t2 -t1)
+  }
+  
 
   # Run SVA
   mod <- model.matrix( object = bio_signal_formula, data =  metadata_mod)

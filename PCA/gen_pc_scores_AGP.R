@@ -3,7 +3,7 @@ args = commandArgs(trailingOnly=TRUE)
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
 #          "bmc&ComBat",10,1)
 
-args = c("kmer", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/", "AGP_healthymax",
+args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/", "AGP_healthymax",
          "kmer_table_norm")
 
 # ============================================================================== #
@@ -98,7 +98,7 @@ plot(k.values, avg_sil_values,
 require('factoextra')
 fviz_nbclust(df, kmeans, method = "silhouette")
 # =========================================================================== #
-# kmeans with k =5
+# kmeans with k =5 (for kmer size 6)
 kmeans_res = kmeans(df, centers=5, nstart = 10 )
 total_metadata$pc10_cluster = kmeans_res$cluster
 total_metadata$Sample_ID = total_metadata$Run

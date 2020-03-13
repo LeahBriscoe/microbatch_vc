@@ -21,6 +21,8 @@ projection_transfer = TRUE
 # ============================================================================== #
 # load packages and functions
 require(dplyr)
+require(variancePartition)
+require(compositions)
 # ============================================================================== #
 # scripts
 script_folder = paste0(microbatch_folder,'/data_processing')
@@ -43,10 +45,12 @@ kmer_output_folder = paste0(microbatch_folder,'/data/',study_name,'_k',kmer_len)
 dir.create(kmer_output_folder) 
 dir.create(otu_output_folder) 
 
-dir.create(paste0(kmer_output_folder,"/Unsupervised"))
+
+dir.create(paste0(kmer_output_folder,"/Unsupervised_numpc_",num_pcs))
 # ============================================================================== #
 # load kmer_data
-kmer_table = readRDS(paste0(paper_data_folder,"/kmer_matrix_6.rds"))
+kmer_table = read.table(paste0(paper_data_folder,"/kmer_matrix_", kmer_len,".csv"),header=TRUE,stringsAsFactors=FALSE,sep=",",as.is=TRUE,row.names = 1,check.names = FALSE)
+#readRDS(paste0(paper_data_folder,"/kmer_matrix_", kmer_len,".rds"))
 # convert na to 0
 kmer_table[is.na(kmer_table)] = 0
 kmer_table = kmer_table[,colSums(kmer_table)!=0] 
@@ -110,6 +114,7 @@ total_metadata$collection_year = collection_year
 
 collection_month_year = format(as.Date(collection_date, format="%m/%d/%Y"), "%Y-%m")
 collection_month_year[collection_year < 2010] = NA
+collection_month_year[collection_year > 2017] = NA
 total_metadata$collection_month_year = collection_month_year
 
 collection_days = collection_date - min(collection_date,na.rm=TRUE)
@@ -207,7 +212,7 @@ total_metadata_mod = process_model_matrix(total_metadata = total_metadata,
 #hist(total_metadata_mod$age_corrected)
 #range(total_metadata_mod$age_corrected,na.rm=TRUE)
 total_metadata_mod_formula = as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod), collapse = " + ")))
-require(variancePartition)
+
 
 # ============================================================================== #
 # correlation between metadata
@@ -373,8 +378,8 @@ for(pc_method in methods_list){  #c("no_scale_no_clr","scale_no_clr","no_scale_c
       all_pc_scores = t(kmer_table_norm_center_clr) %*% pca_res_clr_center$svd_result$v
       corrected_data = regress_out(pc_scores =all_pc_scores,data=t(kmer_table_norm_center_clr),pc_index = c(1:num_pcs))
     }
-    saveRDS(corrected_data,paste0(kmer_output_folder,"/kmer_table_", pc_method,".rds"))
-    write.table(corrected_data,paste0(kmer_output_folder,"/kmer_table_",pc_method,".txt"),sep = "\t",quote = FALSE)
+    saveRDS(corrected_data,paste0(kmer_output_folder,"/Unsupervised_numpc_",num_pcs,"/kmer_table_", pc_method,".rds"))
+    write.table(corrected_data,paste0(kmer_output_folder,"/Unsupervised_numpc_",num_pcs,"/kmer_table_",pc_method,".txt"),sep = "\t",quote = FALSE)
     
     
     

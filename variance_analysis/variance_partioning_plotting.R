@@ -3,19 +3,24 @@ args = commandArgs(trailingOnly=TRUE)
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
 #          "bmc&ComBat",10,1)
 
-args = c("otu", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_otumatch_noabx",
-         "raw&bmc&ComBat&limma",'Unsupervised',"kmer_table")
+args = c("AGP_Hfilter_6", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_Hfilter_otu&AGP_Hfilter_k6&AGP_Hfilter_k6",
+         "raw&ComBat&limma&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10@raw&ComBat&limma&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10@no_scale_clr&no_scale_no_clr&scale_clr&scale_no_clr",
+         'Instrument&Instrument&Unsupervised_numpc_10',"1")
 #args[5] = "no_scale_clr&no_scale_no_clr"
 # ============================================================================== #
 # user input
-data_type = args[1]#"kmer"
+plot_folder = args[1]#"kmer"
 kmer_len = args[2]#6
 microbatch_folder = args[3]#'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/'
-study_name = args[4]
-methods_list = unlist(strsplit(args[5],"&"))#c("ComBat_with_batch2")#"pca_regress_out_scale","clr_pca_regress_out_no_scale","clr_pca_regress_out_scale") #)#,
-batch_def_folder = args[6]
-prefix_name = args[7]
-use_quant_norm = TRUE
+study_list = unlist(strsplit(args[4],"&"))
+
+
+methods_list_list = unlist(strsplit(args[5],"@"))
+methods_list = sapply(test,function(x){strsplit(x,"&")})#c("ComBat_with_batch2")#"pca_regress_out_scale","clr_pca_regress_out_no_scale","clr_pca_regress_out_scale") #)#,
+names(methods_list) = 1:length(methods_list)
+
+batch_def_folder = unlist(strsplit(args[6],"&"))
+use_quant_norm = as.logical(as.integer(args[7]))
 apply_bootstrap = FALSE
 bootstrap_prop = 0.80
 # ============================================================================== #
@@ -29,58 +34,92 @@ require(variancePartition)
 
 script_folder = paste0(microbatch_folder,'/data_processing')
 batch_script_folder = paste0(microbatch_folder, '/batch_correction')
+plot_path = paste0(microbatch_folder,'/plots/',plot_folder)
+dir.create(plot_path) 
 
 source(paste0(script_folder,"/utils.R"))
 source(paste0(batch_script_folder,"/batch_correction_source.R"))
+
 # ============================================================================== #
-# define input folder
+# define fixed and random
 
-otu_input_folder = paste0(microbatch_folder,'/data/',study_name, '_otu')
-kmer_input_folder = paste0(microbatch_folder,'/data/',study_name,'_k',kmer_len)
+random_effects_tech = c("collection_year","Instrument") # "center_project_name","collection_days")#"Instrument",
+random_effects_bio = c("race.x","bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year","bin_bowel_movement") #"diet_type.x","artificial_sweeteners"
 
-if(data_type == "kmer"){
-  input_folder = paste0(kmer_input_folder,"/",batch_def_folder)
-}else{
-  input_folder =  paste0(otu_input_folder,"/",batch_def_folder)
-}
+fixed_effects_tech = c("librarysize","collection_AM")
+fixed_effects_bio = c("sex","bmi_corrected","age_corrected")
+
+
+
+# ============================================================================== #
+# make formula
+
+technical_vars = c(random_effects_tech,fixed_effects_tech)
+biological_vars = c(random_effects_bio,fixed_effects_bio)
+random_effects_vars = c(random_effects_tech,random_effects_bio)
+fixed_effects_vars = c(fixed_effects_tech,fixed_effects_bio)
+
 
 # ============================================================================== #
 # get data
-for( i in 1:length(metods+list))
+retrieve_varpars = list()
+for(s in 1:length(study_list)){
 
+  print(study_list[s])
+  input_folder = paste0(microbatch_folder,'/data/',study_list[s], "/",batch_def_folder[s])
+  
+  study_methods_list = methods_list[[s]]
+  for(m in 1:length(study_methods_list)){
 
-saveRDS(varPartMetaData, paste0(input_folder ,"/varpart",methods_list[i],".rds"))
-
-
-
-# Plot per category
-
-
-plot_otu_folder = paste0(microbatch_folder,'plots/',study_name, '_otu/')
-plot_kmer_folder = paste0(microbatch_folder,'plots/',study_name,'_k',kmer_len, "/")
-plot_folder = plot_kmer_folder
-dir.create(plot_folder) 
-#methods_list = names(collect_var_pars_full_BC_tech_bio)
-for( m in 1:length(methods_list)){
-  varPart = collect_var_pars_full_BC[[methods_list[m]]]
-  print(varPart[1:4,1:4])
-  # vp <- varPart[,c(technical_vars,biological_vars,"Residuals")]#[#sortCols( varPart ) 
-  # vp = vp[order(vp$bmi_corrected,decreasing = TRUE),]
-  # 
-  # dir.create(paste0(plot_folder,study_name,'/'))
-  # #pdf()
-  # ggsave(filename = paste0(plot_folder,study_name,'/barplots_kmer_variance_',methods_list[m],"_",study_name,'.pdf'), 
-  #        plot = plotPercentBars( vp[1:20,]) )
-  # ggsave(filename = paste0(plot_folder,study_name,'/plot_kmer_variance_partition_',methods_list[m],"_",study_name,'.pdf'),
-  #        plot = plotVarPart( vp ))
+    print( study_methods_list[m])
+    retrieve_varpars[[paste0(study_list[s],study_methods_list[m])]] = readRDS(paste0(input_folder ,"/varpart_quant",use_quant_norm ,"_",study_methods_list[m],".rds"))
+    
+  }
+  
 }
+
 
 # ============================================================================== #
 # partition bio and tech
 require(reshape2)
-collect_var_pars_full_BC_tech_bio = list()
-for( m in 1:length(methods_list)){
-  print(methods_list[m])
-  collect_var_pars_full_BC_tech_bio[[methods_list[m]]] = data.frame(bio_variability_explained = rowSums(as.matrix(collect_var_pars_full_BC[[methods_list[m]]])[,biological_vars]),
-                                                                    tech_variability_explained = rowSums(as.matrix(collect_var_pars_full_BC[[methods_list[m]]])[,technical_vars]))
+varpar_types  = names(retrieve_varpars)
+var_pars_tech_bio = list()
+for( t in 1:length(varpar_types )){
+  print(varpar_types[t])
+  
+  vp = retrieve_varpars[[varpar_types[t]]]
+  row.names(vp) = paste0("Feature",1:nrow(vp))
+  vp = vp[order(vp$bmi_corrected,decreasing = TRUE),]
+  
+  ggsave(filename = paste0(plot_path,'/barplots_kmer_variance_',varpar_types[t],'.pdf'), 
+         plot = plotPercentBars( vp[1:20,]) )
+  ggsave(filename = paste0(plot_path,'/plot_kmer_variance_partition_',varpar_types[t],'.pdf'),
+         plot = plotVarPart( vp ))
+  
+  
+  
+  var_pars_tech_bio[[varpar_types[t]]] = data.frame(bio_variability_explained = rowSums(as.matrix(retrieve_varpars[[varpar_types[t]]])[,biological_vars]),
+                                                                    tech_variability_explained = rowSums(as.matrix(retrieve_varpars[[varpar_types[t]]])[,technical_vars]))
 }
+# ============================================================================== #
+# makedf
+
+to_plot = melt(var_pars_tech_bio,id.vars = c("bio_variability_explained","tech_variability_explained"))
+
+# ============================================================================== #
+# scatter
+p<-ggplot(to_plot_filter ,aes(x=bio_variability_explained,y= tech_variability_explained,color=L1)) + ggtitle("Variance") 
+p<-p + geom_point() + theme_bw() #+ stat_ellipse()#+ scale_color_manual(values=c("#999999", "#56B4E9"))
+p
+# ============================================================================== #
+# bio
+
+p<-ggplot(to_plot ,aes(x=bio_variability_explained,y=L1)) + ggtitle("Bio") 
+p<-p + geom_boxplot() + theme_bw() #+ scale_color_manual(values=c("#999999", "#56B4E9"))
+p
+# ============================================================================== #
+#tech 
+
+p<-ggplot(to_plot ,aes(x=tech_variability_explained,y=L1)) + ggtitle("Tech") 
+p<-p + geom_boxplot() + theme_bw() #+ scale_color_manual(values=c("#999999", "#56B4E9"))
+p

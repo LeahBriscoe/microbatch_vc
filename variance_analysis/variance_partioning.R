@@ -1,10 +1,11 @@
+rm(list = ls())
 args = commandArgs(trailingOnly=TRUE)
 #args = c("otu", "WR_AD","~/Documents/MicroBatch/", "0-0.5","1-2","01/07/2016","DiseaseState","study")
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
 #          "bmc&ComBat",10,1)
 
-args = c("otu", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_otumatch_noabx",
-         "raw&bmc&ComBat&limma",'Instrument',"BatchCorrected",1)
+# args = c("otu", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_otumatch_noabx",
+#          "raw&bmc&ComBat&limma",'Instrument',"BatchCorrected",1)
 #args[5] = "no_scale_clr&no_scale_no_clr"
 # ============================================================================== #
 # user input
@@ -16,6 +17,7 @@ methods_list = unlist(strsplit(args[5],"&"))#c("ComBat_with_batch2")#"pca_regres
 batch_def_folder = args[6]
 prefix_name = args[7]
 use_quant_norm = as.logical(as.integer(args[8]))
+use_std =  as.logical(as.integer(args[9]))
 apply_bootstrap = FALSE
 bootstrap_prop = 0.80
 # ============================================================================== #
@@ -53,7 +55,7 @@ total_metadata$librarysize = colSums(otu_table)
 # read in data
 batch_corrected_data = list()
 batch_corrected_data_quant_norm = list()
-
+batch_corrected_data_scale = list()
 for(m in 1:length(methods_list)){
   print(methods_list[m])
   batch_corrected_data[[methods_list[m]]] = readRDS(paste0(input_folder ,"/",prefix_name,"_",methods_list[m],".rds"))
@@ -67,6 +69,13 @@ if(use_quant_norm){
     print(Sys.time())
     print(m)
     batch_corrected_data_quant_norm[[methods_list[m]]] = quantile_norm(batch_corrected_data[[methods_list[m]]])
+    print(Sys.time())
+  }
+}else if(use_std){
+  for(m in 1:length(methods_list)){
+    print(Sys.time())
+    print(m)
+    batch_corrected_data_std[[methods_list[m]]] = t(scale(t(batch_corrected_data[[methods_list[m]]])))
     print(Sys.time())
   }
 }
@@ -137,11 +146,13 @@ formula_input = paste0(formula_random, " + ", formula_fixed)
 collect_var_pars_full_BC = list()
 if(use_quant_norm){
   batch_corrected_data_input = batch_corrected_data_quant_norm
+}else if(use_std){
+  batch_corrected_data_input = batch_corrected_data_scale
 }else{
   batch_corrected_data_input = batch_corrected_data
 }
 length(collect_var_pars_full_BC )
-for(i in 2:length(batch_corrected_data_input)){
+for(i in 1:length(batch_corrected_data_input)){
   print(methods_list[i])
   varPartMetaData = c()
   input_abundance_table = c()
@@ -177,8 +188,8 @@ for(i in 2:length(batch_corrected_data_input)){
   
   
 
-  #dim(input_abundance_table)
-  #dim(input_metadata_table)
+  dim(input_abundance_table)
+  dim(input_metadata_table)
   
   varPartMetaData = fitExtractVarPartModel(formula = formula_input,
                                            exprObj = input_abundance_table, data = data.frame(input_metadata_table))

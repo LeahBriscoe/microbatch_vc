@@ -469,6 +469,11 @@ python classification_CI.py /u/home/b/briscoel/project-halperin/MicroBatch AGP_H
 
 qsub -cwd -V -N class -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k7 BatchCorrected antibiotic 'raw&bmc&ComBat&limma&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10&smartsva_first10&refactor_first10' 4 kmer Instrument"
 
+qsub -cwd -V -N class -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_otu BatchCorrected antibiotic 'raw&bmc&ComBat&limma&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10&refactor_first10' 4 otu Instrument"
+
+
+qsub -cwd -V -N class -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k7 kmer_table antibiotic 'no_scale_clr&no_scale_no_clr&scale_clr&scale_no_clr' 4 kmer Unsupervised_numpc_10"
+
  ```
  
  

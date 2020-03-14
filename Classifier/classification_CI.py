@@ -44,11 +44,12 @@ column_of_interest = args[4]
 methods = args[5].split("&")
 n_repeats = int(args[6])
 data_type = args[7]
+batch_def_folder = args[8]
 
 
 data_folder = greater_folder + "/data/" + study_name + "/"   
 plot_folder = greater_folder + "/plots/" + study_name + "/" #+ 
-methods_dict = utils.load_data(data_folder,prefix_name,methods,data_type)
+methods_dict = utils.load_data(data_folder,prefix_name,methods,batch_column = batch_def_folder)
 
 metadata = pd.read_csv(data_folder + "metadata.txt",delimiter="\t")
 

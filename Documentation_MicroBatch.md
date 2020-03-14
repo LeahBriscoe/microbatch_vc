@@ -457,7 +457,17 @@ python classification_CI.py /Users/leahbriscoe/Documents/MicroBatch/microbatch_v
  
  python classification_CI.py /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc AGP_otumatch_noabx_k7 kmer_table antibiotic "no_scale_clr&no_scale_no_clr&scale_clr&scale_no_clr&center_no_clr&center_clr" 4 kmer
  
+ 
+ #RUNNO
+ 
+python classification_CI.py /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k7 BatchCorrected antibiotic "raw&bmc&ComBat&limma&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10&smartsva_first10&refactor_first10" 4 kmer Instrument
+ 
+python classification_CI.py /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k7 kmer_table antibiotic "no_scale_clr&no_scale_no_clr&scale_clr&scale_no_clr" 4 kmer Instrument
 
+
+
+
+qsub -cwd -V -N class -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k7 BatchCorrected antibiotic 'raw&bmc&ComBat&limma&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10&smartsva_first10&refactor_first10' 4 kmer Instrument"
 
  ```
  
@@ -537,7 +547,15 @@ do
 done
 
 
-/u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_Hfilter -arg "refactor&smartsva" -arg Instrument -arg BatchCorrected -arg 1
+for i in no_scale_clr no_scale_no_clr scale_clr scale_no_clr
+do
+	/u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_Hfilter -arg "$i" -arg Unsupervised_numpc_10 -arg kmer_table -arg 0 -arg 1
+done
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_Hfilter -arg "raw&ComBat&limma&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10" -arg Instrument -arg BatchCorrected -arg 0 -arg 1
+
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_Hfilter -arg "refactor_first10&smartsva_first10" -arg Instrument -arg BatchCorrected -arg 1 -arg 1
 
 
 "otu", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_otumatch_noabx",

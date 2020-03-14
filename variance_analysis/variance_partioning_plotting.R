@@ -3,10 +3,12 @@ args = commandArgs(trailingOnly=TRUE)
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
 #          "bmc&ComBat",10,1)
 
-args = c("AGP_Hfilter_6", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_Hfilter_otu&AGP_Hfilter_k6&AGP_Hfilter_k6",
-         "raw&ComBat&limma&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10@raw&ComBat&limma&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10@no_scale_clr&no_scale_no_clr&scale_clr&scale_no_clr",
-         'Instrument&Instrument&Unsupervised_numpc_10',"1")
-#args[5] = "no_scale_clr&no_scale_no_clr"
+args = c("AGP_Hfilter_6", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_Hfilter_k6",
+         "no_scale_clr&no_scale_no_clr&scale_clr&scale_no_clr",
+         'Unsupervised_numpc_10',"0")
+#AGP_Hfilter_otu&AGP_Hfilter_k6&
+#Instrument&Instrument&
+#raw&ComBat&limma&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10@raw&ComBat&limma&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10@no_scale_clr&
 # ============================================================================== #
 # user input
 plot_folder = args[1]#"kmer"
@@ -16,7 +18,7 @@ study_list = unlist(strsplit(args[4],"&"))
 
 
 methods_list_list = unlist(strsplit(args[5],"@"))
-methods_list = sapply(test,function(x){strsplit(x,"&")})#c("ComBat_with_batch2")#"pca_regress_out_scale","clr_pca_regress_out_no_scale","clr_pca_regress_out_scale") #)#,
+methods_list = sapply(methods_list_list ,function(x){strsplit(x,"&")})#c("ComBat_with_batch2")#"pca_regress_out_scale","clr_pca_regress_out_no_scale","clr_pca_regress_out_scale") #)#,
 names(methods_list) = 1:length(methods_list)
 
 batch_def_folder = unlist(strsplit(args[6],"&"))
@@ -78,7 +80,8 @@ for(s in 1:length(study_list)){
   
 }
 
-
+colMeans(retrieve_varpars[["AGP_Hfilter_k6scale_clr" ]])
+colMaxs(as.matrix(retrieve_varpars[["AGP_Hfilter_k6scale_clr" ]]))
 # ============================================================================== #
 # partition bio and tech
 require(reshape2)
@@ -103,11 +106,21 @@ for( t in 1:length(varpar_types )){
 }
 # ============================================================================== #
 # makedf
-
+varpar_types
 to_plot = melt(var_pars_tech_bio,id.vars = c("bio_variability_explained","tech_variability_explained"))
+# to_plot_filter = to_plot %>% filter(L1 %in% c("AGP_Hfilter_oturaw" , "AGP_Hfilter_otuComBat","AGP_Hfilter_otulimma" ,
+#                                               "AGP_Hfilter_otuclr_pca_regress_out_scale_first10" , "AGP_Hfilter_k6raw",
+#                                               "AGP_Hfilter_k6clr_pca_regress_out_scale_first10" ))
 
+to_plot_filter = to_plot %>% filter(L1 %in% c("AGP_Hfilter_k6raw",
+                                              "AGP_Hfilter_k6scale_clr" ))
+
+
+#to_plot_filter = to_plot
 # ============================================================================== #
 # scatter
+
+to_plot_filter$L1 = factor(to_plot_filter$L1, levels =unique( to_plot_filter$L1))
 p<-ggplot(to_plot_filter ,aes(x=bio_variability_explained,y= tech_variability_explained,color=L1)) + ggtitle("Variance") 
 p<-p + geom_point() + theme_bw() #+ stat_ellipse()#+ scale_color_manual(values=c("#999999", "#56B4E9"))
 p

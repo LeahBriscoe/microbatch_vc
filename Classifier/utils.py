@@ -2,12 +2,12 @@ import pandas as pd
 import numpy as np
 import scipy.stats
 
-def load_data(data_folder,prefix_name, methods,data_type):
+def load_data(data_folder,prefix_name, methods,batch_column):
     
     method_dict = dict()
     for m in methods:
         print(m)
-        batch_corrected_matrix = pd.read_csv(str(data_folder +prefix_name + "_" + m +".txt"),delimiter="\t")
+        batch_corrected_matrix = pd.read_csv(str(data_folder + batch_column + "/" + prefix_name + "_" + m +".txt"),delimiter="\t")
         method_dict[m] = batch_corrected_matrix
     return method_dict
 

@@ -3,7 +3,7 @@ args = commandArgs(trailingOnly=TRUE)
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
 #          "bmc&ComBat",10,1)
 
-args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/", "AGP_healthymax",
+args = c("kmer", 8, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_healthymax",
          "kmer_table_norm")
 
 # ============================================================================== #
@@ -23,16 +23,16 @@ require(dplyr)
 require(varhandle)
 require(variancePartition)
 
-script_folder = paste0(microbatch_folder,'data_processing')
-batch_script_folder = paste0(microbatch_folder, 'batch_correction')
+script_folder = paste0(microbatch_folder,'/data_processing')
+batch_script_folder = paste0(microbatch_folder, '/batch_correction')
 
 source(paste0(script_folder,"/utils.R"))
 source(paste0(batch_script_folder,"/batch_correction_source.R"))
 # ============================================================================== #
 # define input folder
 
-otu_input_folder = paste0(microbatch_folder,'data/',study_name, '_otu/')
-kmer_input_folder = paste0(microbatch_folder,'data/',study_name,'_k',kmer_len, "/")
+otu_input_folder = paste0(microbatch_folder,'/data/',study_name, '_otu')
+kmer_input_folder = paste0(microbatch_folder,'/data/',study_name,'_k',kmer_len)
 
 if(data_type == "kmer"){
   input_folder = kmer_input_folder

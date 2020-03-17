@@ -1,12 +1,12 @@
-rm(list = ls())
+#rm(list = ls())
 args = commandArgs(trailingOnly=TRUE)
 print(args)
 #args = c("otu", "WR_AD","~/Documents/MicroBatch/", "0-0.5","1-2","01/07/2016","DiseaseState","study")
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
 #          "bmc&ComBat",10,1)
 
-args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/", "AGP_otumatch",
-         "smartsva",10,1)
+# args = c("kmer", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/", "AGP_reprocess",
+#          "clr_pca_regress_out_no_scale",10,1)
 # 
 # args = c("kmer", 6, "/u/home/b/briscoel/project-halperin/MicroBatch", "AGP_Hfilter",
 #          "refactor",10,"Instrument",1)
@@ -61,6 +61,14 @@ if(data_type == "kmer"){
   otu_table_norm = readRDS(paste0(otu_input_folder,"/otu_table_norm.rds"))
 }
 total_metadata = readRDS(paste0(input_folder,"/metadata.rds"))
+
+if(grepl("reprocess",study_name)){
+  collection_date=as.Date(total_metadata$collection_timestamp, format="%Y-%m-%d %H:%M")
+  collection_year = as.integer(format(as.Date(collection_date, format="%m/%d/%Y"), "%Y"))
+  total_metadata$collection_year = collection_year
+  
+}
+
 #install.packages('SmartSVA')
 new_collection_year = total_metadata$collection_year
 new_collection_year[new_collection_year < 2010] = NA
@@ -99,10 +107,14 @@ batch_labels2 = as.character(collection_year)
 total_metadata_mod = process_model_matrix(total_metadata = total_metadata,binary_vars="sex",categorical_vars ="race.x")
 bio_signal_formula <- as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod), collapse = " + ")))
 #names(batch_corrected_outputs)
-total_metadata_mod2 = process_model_matrix(total_metadata = total_metadata,binary_vars="sex",
-                                           categorical_vars =c("bin_omnivore_diet","bin_antibiotic_last_year"))
-bio_signal_formula2 <- as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod2), collapse = " + ")))
 
+if(!grepl("reprocess",study_name)){
+  total_metadata_mod2 = process_model_matrix(total_metadata = total_metadata,binary_vars="sex",
+                                             categorical_vars =c("bin_omnivore_diet","bin_antibiotic_last_year"))
+  bio_signal_formula2 <- as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod2), collapse = " + ")))
+  
+  
+}
 for(m in 1:length(methods_list)){
   
   batch_corrected_output  = c()

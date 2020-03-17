@@ -8,7 +8,8 @@
 3. [iHMP feces](#ihmp_feces)
 4. [Hispanic Community Health](#bashoneline)
 5. [PCA experiment](#pcaexperiment)
-6. [Classification](#classification)
+6. [Scripts](#scripts)
+7. 
 
 ##<a name ="hoffman">Hoffman Starting Commands</a>
 1. [Running deblur](#deblur)
@@ -408,26 +409,12 @@ Step 2: Regress BMI out of the
 
 
 
-## <a name=classification> Class </a>
+## <a name=scripts> Scripts </a>
 
 
 continuous prediction
 
 ```
-python continuous_prediction.py /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc AGP_healthymax_k7 kmer_table bmi_corrected "norm&no_scale_no_clr&scale_no_clr&no_scale_clr&scale_clr&center_no_clr&center_clr" 10 kmer
-
-['continuous_prediction.py', '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc', 'AGP_healthymax_k7', 'kmer_table', 'bmi_corrected', 'norm&no_scale_no_clr&scale_no_clr&no_scale_clr&scale_clr', '10', 'kmer']
-
-#k7
-python continuous_prediction.py /u/home/b/briscoel/project-halperin/MicroBatch AGP_healthymax_k7 BatchCorrected bmi_corrected "bmc&ComBat&ComBat_with_batch2&ComBat_with_biocovariates&limma" 10 kmer
-
-
-#otumatch k
-
-python continuous_prediction.py /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc AGP_otumatch_k7 kmer_table bmi_corrected "norm&no_scale_no_clr&scale_no_clr&no_scale_clr&scale_clr&center_no_clr&center_clr" 10 kmer
-
-python continuous_prediction.py /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc AGP_otumatch_k7 BatchCorrected bmi_corrected "bmc&ComBat&ComBat_with_biocovariates&limma&clr_pca_regress_out_no_scale_first10&smartsva" 10 kmer
-
 python continuous_prediction.py /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc AGP_otumatch_otu BatchCorrected bmi_corrected "bmc&ComBat&ComBat_with_biocovariates&limma&clr_pca_regress_out_no_scale_first10&smartsva" 10 otu
 
 
@@ -474,6 +461,12 @@ qsub -cwd -V -N class -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel
 
 qsub -cwd -V -N class -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k7 kmer_table antibiotic 'no_scale_clr&no_scale_no_clr&scale_clr&scale_no_clr' 4 kmer Unsupervised_numpc_10"
 
+
+qsub -cwd -V -N class -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k8 BatchCorrected antibiotic 'clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10' 4 kmer Instrument"
+
+
+qsub -cwd -V -N class -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k5 BatchCorrected antibiotic 'clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10' 4 kmer Instrument"
+
  ```
  
  
@@ -481,46 +474,16 @@ qsub -cwd -V -N class -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel
  
  
  ```
- Rscript batch_correction_pipeline_basic.R otu 7 /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/ AGP_otumatch "limma&limma_batch2&pca_regress_out_scale&pca_regress_out_no_scale&clr_pca_regress_out_no_scale&clr_pca_regress_out_scale&smartsva" 10 1
- 
- Rscript batch_correction_pipeline_basic.R otu 7 /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/ AGP_otumatch "bmc&ComBat" 10 1
  
  Rscript variance_partioning.R otu 7 ~/project-halperin/MicroBatch AGP_otumatch raw&bmc&ComBat&limma Instrument BatchCorrected 1
 
 
 "raw&bmc&ComBat&limma&clr_pca_regress_out_no_scale&clr_pca_regress_out_scale&smartsva&refactor"
 
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_reprocess -arg "clr_pca_regress_out_no_scale&clr_pca_regress_out_scale" -arg 10 -arg Instrument -arg 1
 
 
-/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "raw&bmc&ComBat&limma&smartsva&refactor&clr_pca_regress_out_no_scale&clr_pca_regress_out_scale&smartsva&refactor" -arg 10 -arg Instrument -arg 1
-
-
-
-/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg otu -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "smartsva_2" -arg 10 -arg Instrument -arg 1
-
-
-
-
-
-
-/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "refactor&smartsva" -arg 10 -arg Instrument -arg 1
-
-
-/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "clr_pca_regress_out_no_scale&clr_pca_regress_out_scale" -arg 10 -arg Instrument -arg 1
-
-/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "raw&bmc&ComBat&limma" -arg 10 -arg Instrument -arg 1
-
-
-
-/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 8 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "refactor&smartsva" -arg 10 -arg Instrument -arg 1
-
-
-/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 8 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "clr_pca_regress_out_no_scale&clr_pca_regress_out_scale" -arg 10 -arg Instrument -arg 1
-
-/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 8 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "raw&bmc&ComBat&limma" -arg 10 -arg Instrument -arg 1
-
-
-/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 8 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "smartsva_2" -arg 10 -arg Instrument -arg 1
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 5 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "raw&bmc&limma&ComBat&clr_pca_regress_out_no_scale&clr_pca_regress_out_scale" -arg 10 -arg Instrument -arg 1
 
 
 
@@ -538,12 +501,10 @@ qsub -cwd -V -N class -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel
 
 # Variance 
 
-Rscript variance_partioning.R otu 7 /u/home/b/briscoel/project-halperin/MicroBatch AGP_otumatch_noabx "raw" 'Instrument' "BatchCorrected"
+```
+
 
 Rscript variance_partioning.R otu 6 /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter "raw&bmc&ComBat&limma&smartsva&refactor",'Instrument',"BatchCorrected",1)
-
-
-/u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 16 -t 100 -hp -v 3.6.0 -arg otu -arg 6 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_Hfilter -arg "raw&bmc&ComBat&limma&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10" -arg Instrument -arg BatchCorrected -arg 1
 
 
 for i in no_scale_clr no_scale_no_clr scale_clr scale_no_clr
@@ -561,23 +522,20 @@ done
 
 
 /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_Hfilter -arg "refactor_first10&smartsva_first10" -arg Instrument -arg BatchCorrected -arg 1 -arg 1
+```
+
+example input within R script
 
 
-"otu", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_otumatch_noabx",
-#          "raw&bmc&ComBat&limma",'Instrument',"BatchCorrected",1)
-
+```
+# example input within R script
+"otu", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_otumatch_noabx", "raw&bmc&ComBat&limma",'Instrument',"BatchCorrected",1)
+```
 
 # Regressing on PC
 ```
 Rscript regressing_on_pc.R kmer 6 /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter "no_scale_clr&scale_clr&no_scale_no_clr&scale_no_clr" 10 1 /u/home/b/briscoel/project-halperin/MicroBatch/data/AGP_paper_data 1 0
 
-Rscript regressing_on_pc.R kmer 7 /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter "no_scale_clr&scale_clr&no_scale_no_clr&scale_no_clr" 10 1 /u/home/b/briscoel/project-halperin/MicroBatch/data/AGP_paper_data 1 1
-
-
-
-/u/local/apps/submit_scripts/R_job_submitter.sh -n regressing_on_pc.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "no_scale_clr&scale_clr&no_scale_no_clr&scale_no_clr" -arg 10 -arg 1 -arg /u/home/b/briscoel/project-halperin/MicroBatch/data/AGP_paper_data -arg 1 -arg 0
-
-/u/local/apps/submit_scripts/R_job_submitter.sh -n regressing_on_pc.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 5 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "no_scale_clr&scale_clr&no_scale_no_clr&scale_no_clr" -arg 10 -arg 1 -arg /u/home/b/briscoel/project-halperin/MicroBatch/data/AGP_paper_data -arg 1 -arg 1
 
 /u/local/apps/submit_scripts/R_job_submitter.sh -n regressing_on_pc.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 8 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "no_scale_clr&scale_clr&no_scale_no_clr&scale_no_clr" -arg 10 -arg 1 -arg /u/home/b/briscoel/project-halperin/MicroBatch/data/AGP_paper_data -arg 1 -arg 1
 
@@ -587,15 +545,3 @@ Rscript regressing_on_pc.R kmer 7 /u/home/b/briscoel/project-halperin/MicroBatch
 # RUNNING
 
 2366101: regress out pc in kmer 5
-2366102: regress out pc in kmer 8
-2366107: var par k 6 --> failed random reason
-2366108: var par otu  --> FAILED because no clr
-2366110: var par otu without CLR
-2366111: var par otu with CLR
-2366130: 
-2366480: var par no scale
-2366485: bmc
-2366486: ComBat
-2366487: limma
-priority: variance partition -> "raw&bmc&ComBat&limma&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10" 
- 

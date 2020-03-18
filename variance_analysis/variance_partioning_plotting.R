@@ -3,9 +3,13 @@ args = commandArgs(trailingOnly=TRUE)
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
 #          "bmc&ComBat",10,1)
 
-args = c("AGP_Hfilter_6", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_Hfilter_k6",
-         "no_scale_clr&no_scale_no_clr&scale_clr&scale_no_clr",
-         'Unsupervised_numpc_10',"0")
+# args = c("AGP_Hfilter_6", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_Hfilter_otu",
+#          "raw",
+#          'Instrument',"1")
+# 
+# 
+# args = c("AGP_Hfilter_otu", 6, "/u/home/b/briscoel/project-halperin/MicroBatch/", "AGP_Hfilter_otu",
+#          "raw",'Instrument',"1")
 #AGP_Hfilter_otu&AGP_Hfilter_k6&
 #Instrument&Instrument&
 #raw&ComBat&limma&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10@raw&ComBat&limma&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10@no_scale_clr&
@@ -80,8 +84,8 @@ for(s in 1:length(study_list)){
   
 }
 
-colMeans(retrieve_varpars[["AGP_Hfilter_k6scale_clr" ]])
-colMaxs(as.matrix(retrieve_varpars[["AGP_Hfilter_k6scale_clr" ]]))
+#colMeans(retrieve_varpars[["AGP_Hfilter_k6scale_clr" ]])
+#colMaxs(as.matrix(retrieve_varpars[["AGP_Hfilter_k6scale_clr" ]]))
 # ============================================================================== #
 # partition bio and tech
 require(reshape2)
@@ -98,7 +102,12 @@ for( t in 1:length(varpar_types )){
          plot = plotPercentBars( vp[1:20,]) )
   ggsave(filename = paste0(plot_path,'/plot_kmer_variance_partition_',varpar_types[t],'.pdf'),
          plot = plotVarPart( vp ))
+  head(vp)
   
+  #top_5 = names(sort(colMeans(vp),decreasing=TRUE))[1:5]
+  top_5 = c("Residuals","Instrument","collection_year","race.x", "librarysize" )
+  ggsave(filename = paste0(plot_path,'/top5_plot_kmer_variance_partition_',varpar_types[t],'.pdf'),
+         plot = plotVarPart( vp[,top_5] ))
   
   
   var_pars_tech_bio[[varpar_types[t]]] = data.frame(bio_variability_explained = rowSums(as.matrix(retrieve_varpars[[varpar_types[t]]])[,biological_vars]),
@@ -112,18 +121,23 @@ to_plot = melt(var_pars_tech_bio,id.vars = c("bio_variability_explained","tech_v
 #                                               "AGP_Hfilter_otuclr_pca_regress_out_scale_first10" , "AGP_Hfilter_k6raw",
 #                                               "AGP_Hfilter_k6clr_pca_regress_out_scale_first10" ))
 
+table(to_plot$L1)
 to_plot_filter = to_plot %>% filter(L1 %in% c("AGP_Hfilter_k6raw",
-                                              "AGP_Hfilter_k6scale_clr" ))
+                                              "AGP_Hfilter_k6clr_pca_regress_out_no_scale_first10" ))
 
+table(to_plot_filter$L1)
 
+kmer_to_plot_filter = to_plot_filter
 #to_plot_filter = to_plot
 # ============================================================================== #
 # scatter
 
 to_plot_filter$L1 = factor(to_plot_filter$L1, levels =unique( to_plot_filter$L1))
 p<-ggplot(to_plot_filter ,aes(x=bio_variability_explained,y= tech_variability_explained,color=L1)) + ggtitle("Variance") 
-p<-p + geom_point() + theme_bw() #+ stat_ellipse()#+ scale_color_manual(values=c("#999999", "#56B4E9"))
+p<-p + geom_point() + theme_bw() + theme(legend.position = "none") #+ stat_ellipse()#+ scale_color_manual(values=c("#999999", "#56B4E9"))
 p
+ggsave(filename = paste0(plot_path,'/scatter_',varpar_types[t],'.pdf'), 
+       plot = p )
 # ============================================================================== #
 # bio
 

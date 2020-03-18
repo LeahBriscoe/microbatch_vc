@@ -5,11 +5,11 @@ print(args)
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
 #          "bmc&ComBat",10,1)
 
-# args = c("kmer", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/", "AGP_reprocess",
-#          "clr_pca_regress_out_no_scale",10,1)
+# args = c("otu", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/",
+# "AGP_reprocess", "clr",10,"Instrument",1)
 # 
-# args = c("kmer", 6, "/u/home/b/briscoel/project-halperin/MicroBatch", "AGP_Hfilter",
-#          "refactor",10,"Instrument",1)
+# args = c("otu", 6, "/u/home/b/briscoel/project-halperin/MicroBatch", "AGP_Hfilter",
+#          "raw",10,"Instrument",1)
 
 # ============================================================================== #
 # user input
@@ -32,7 +32,7 @@ require(varhandle)
 
 script_folder = paste0(microbatch_folder,'/data_processing')
 batch_script_folder = paste0(microbatch_folder, '/batch_correction')
-
+plot_dir =paste0(microbatch_folder,'/plots/',study_name,'_k',kmer_len)
 source(paste0(script_folder,"/utils.R"))
 source(paste0(batch_script_folder,"/batch_correction_source.R"))
 # ============================================================================== #
@@ -80,6 +80,7 @@ total_metadata$collection_year = new_collection_year
 
 
 input_abundance_table = get(paste0(data_type,"_table_norm"))
+input_abundance_table_orig = input_abundance_table
 filter_at_least_two_samples_per_feature = (rowSums(input_abundance_table  > 0 ) > 2)
 input_abundance_table = input_abundance_table[filter_at_least_two_samples_per_feature,]
 input_abundance_table = input_abundance_table[rowVars(as.matrix(input_abundance_table)) !=0 ,]
@@ -127,7 +128,16 @@ for(m in 1:length(methods_list)){
   if(methods_list[m] == "bmc"){
     batch_corrected_output = run_bmc(mat = input_abundance_table, batch_labels)
   }else if(methods_list[m] == "raw"){
+    
     batch_corrected_output = input_abundance_table
+    
+  }else if(methods_list[m] == "clr"){
+    require(compositions)
+    batch_corrected_output = t(clr(t(input_abundance_table_orig)))
+    
+  }else if(methods_list[m] == "ilr"){
+    require(compositions)
+    batch_corrected_output2 = t(ilr(t(input_abundance_table_orig)))
     
   }else if(methods_list[m] == "ComBat"){
     batch_corrected_output = run_ComBat(mat = input_abundance_table, batch_labels)

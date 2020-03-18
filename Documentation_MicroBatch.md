@@ -412,7 +412,7 @@ Step 2: Regress BMI out of the
 ## <a name=scripts> Scripts </a>
 
 
-continuous prediction
+#continuous prediction
 
 ```
 python continuous_prediction.py /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc AGP_otumatch_otu BatchCorrected bmi_corrected "bmc&ComBat&ComBat_with_biocovariates&limma&clr_pca_regress_out_no_scale_first10&smartsva" 10 otu
@@ -422,6 +422,23 @@ python continuous_prediction.py /Users/leahbriscoe/Documents/MicroBatch/microbat
 
 
 python continuous_prediction.py /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc AGP_otumatch_k7 kmer_table bmi_corrected "norm&no_scale_no_clr&scale_no_clr&no_scale_clr&scale_clr&center_no_clr&center_clr" 10 kmer
+
+
+python continuous_prediction.py /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc AGP_Hfilter_k7 kmer_table bmi_corrected 'raw&bmc&ComBat&limma&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10&smartsva_first10&refactor_first10' 10 kmer
+
+
+
+qsub -cwd -V -N pred -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k7 BatchCorrected bmi_corrected 'raw&bmc&ComBat&limma&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10&smartsva_first10&refactor_first10' 10 kmer Instrument"
+
+
+qsub -cwd -V -N pred -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_otu BatchCorrected bmi_corrected 'raw&bmc&ComBat&limma&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10&refactor_first10' 10 otu Instrument"
+
+
+qsub -cwd -V -N pred -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k6 BatchCorrected bmi_corrected 'raw&bmc&ComBat&limma&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10&smartsva_first10&refactor_first10' 10 kmer Instrument"
+
+qsub -cwd -V -N pred -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k5 BatchCorrected bmi_corrected 'clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10' 10 kmer Instrument"
+
+qsub -cwd -V -N pred -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k8 BatchCorrected bmi_corrected 'clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10' 10 kmer Instrument"
 
 ```
 
@@ -467,6 +484,9 @@ qsub -cwd -V -N class -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel
 
 qsub -cwd -V -N class -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k5 BatchCorrected antibiotic 'clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10' 4 kmer Instrument"
 
+
+qsub -cwd -V -N class -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k6 BatchCorrected antibiotic 'clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10' 4 kmer Instrument"
+
  ```
  
  
@@ -484,6 +504,12 @@ qsub -cwd -V -N class -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel
 
 
 /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 5 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "raw&bmc&limma&ComBat&clr_pca_regress_out_no_scale&clr_pca_regress_out_scale" -arg 10 -arg Instrument -arg 1
+
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg otu -arg 5 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "clr&ilr" -arg 10 -arg Instrument -arg 1
+
+
+
 
 
 
@@ -522,6 +548,8 @@ done
 
 
 /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_Hfilter -arg "refactor_first10&smartsva_first10" -arg Instrument -arg BatchCorrected -arg 1 -arg 1
+
+
 ```
 
 example input within R script

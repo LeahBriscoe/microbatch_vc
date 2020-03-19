@@ -1,4 +1,4 @@
-#rm(list = ls())
+rm(list = ls())
 args = commandArgs(trailingOnly=TRUE)
 print(args)
 #args = c("otu", "WR_AD","~/Documents/MicroBatch/", "0-0.5","1-2","01/07/2016","DiseaseState","study")
@@ -21,6 +21,7 @@ methods_list = unlist(strsplit(args[5],"&"))#c("ComBat_with_batch2")#"pca_regres
 num_pcs = as.integer(args[6])#5
 batch_column = args[7]
 save_PC_scores = as.logical(as.integer(args[8]))#TRUE
+filter_low_counts = as.logical(as.integer(args[9]))
 
 # ============================================================================== #
 # load packages and functions
@@ -80,10 +81,14 @@ total_metadata$collection_year = new_collection_year
 
 
 input_abundance_table = get(paste0(data_type,"_table_norm"))
-input_abundance_table_orig = input_abundance_table
-filter_at_least_two_samples_per_feature = (rowSums(input_abundance_table  > 0 ) > 2)
-input_abundance_table = input_abundance_table[filter_at_least_two_samples_per_feature,]
+if(filter_low_counts){
+  filter_at_least_two_samples_per_feature = (rowSums(input_abundance_table  > 0 ) > 2)
+  input_abundance_table = input_abundance_table[filter_at_least_two_samples_per_feature,]
+
+}
+# take out 0 variance rows
 input_abundance_table = input_abundance_table[rowVars(as.matrix(input_abundance_table)) !=0 ,]
+
 input_abundance_table_scale = t(scale(t(input_abundance_table)))
 
 batch_labels = as.integer(droplevels(as.factor(total_metadata[,batch_column])))
@@ -133,11 +138,11 @@ for(m in 1:length(methods_list)){
     
   }else if(methods_list[m] == "clr"){
     require(compositions)
-    batch_corrected_output = t(clr(t(input_abundance_table_orig)))
+    batch_corrected_output = t(clr(t(input_abundance_table)))
     
   }else if(methods_list[m] == "ilr"){
     require(compositions)
-    batch_corrected_output2 = t(ilr(t(input_abundance_table_orig)))
+    batch_corrected_output = t(ilr(t(input_abundance_table)))
     
   }else if(methods_list[m] == "ComBat"){
     batch_corrected_output = run_ComBat(mat = input_abundance_table, batch_labels)
@@ -277,31 +282,24 @@ for(m in 1:length(methods_list)){
   #batch_corrected_outputs[["smartsva_no_scale"]] = out_mat_no_scaling
   #batch_corrected_outputs[["smartsva_scale"]] = out_mat
   if(grepl("kmer",data_type)){
-    if(grepl("pca",methods_list[m]) |grepl("refactor",methods_list[m]) |grepl("sva",methods_list[m])){
-      write.table(batch_corrected_outputs[[methods_list[m]]], paste0(kmer_input_folder,"/",batch_column,"/BatchCorrected_",methods_list[m],"_first",num_pcs,".txt"),
-                  sep = "\t",quote = FALSE)
-      saveRDS(batch_corrected_outputs[[methods_list[m]]], paste0(kmer_input_folder ,"/",batch_column,"/BatchCorrected_",methods_list[m],"_first",num_pcs,".rds"))
-      
-    }else{
-      write.table(batch_corrected_outputs[[methods_list[m]]], paste0(kmer_input_folder ,"/",batch_column,"/BatchCorrected_",methods_list[m],".txt"),
-                  sep = "\t",quote = FALSE)
-      saveRDS(batch_corrected_outputs[[methods_list[m]]], paste0(kmer_input_folder ,"/",batch_column,"/BatchCorrected_",methods_list[m],".rds"))
-      
-    }
+    
+    output_folder = kmer_input_folder
   }else{
-    if(grepl("pca",methods_list[m]) |grepl("refactor",methods_list[m]) |grepl("sva",methods_list[m])){
-      write.table(batch_corrected_outputs[[methods_list[m]]], paste0(otu_input_folder,"/",batch_column,"/BatchCorrected_",methods_list[m],"_first",num_pcs,".txt"),
-                  sep = "\t",quote = FALSE)
-      saveRDS(batch_corrected_outputs[[methods_list[m]]], paste0(otu_input_folder ,"/",batch_column,"/BatchCorrected_",methods_list[m],"_first",num_pcs,".rds"))
-      
-    }else{
-      write.table(batch_corrected_outputs[[methods_list[m]]], paste0(otu_input_folder ,"/",batch_column,"/BatchCorrected_",methods_list[m],".txt"),
-                  sep = "\t",quote = FALSE)
-      saveRDS(batch_corrected_outputs[[methods_list[m]]], paste0(otu_input_folder ,"/",batch_column,"/BatchCorrected_",methods_list[m],".rds"))
-      
-    }
- }
-}
+    output_folder = otu_input_folder
+  }
+  
+  # make file_name
+  file_name= ""
+  if(grepl("pca",methods_list[m]) |grepl("refactor",methods_list[m]) |grepl("sva",methods_list[m])){
+    file_name = paste0(file_name,"_first",num_pcs)
+  }
+  file_name = paste0(file_name,"filter_",filter_low_counts)
+  
+  write.table(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder,"/",batch_column,"/BatchCorrected_",methods_list[m],extra_file_name,".txt"),
+              sep = "\t",quote = FALSE)
+  saveRDS(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder ,"/",batch_column,"/BatchCorrected_",methods_list[m],extra_file_name,".rds"))
+  
+}s
 
 
 

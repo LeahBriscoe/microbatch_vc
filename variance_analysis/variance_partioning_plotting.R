@@ -3,9 +3,9 @@ args = commandArgs(trailingOnly=TRUE)
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
 #          "bmc&ComBat",10,1)
 
-# args = c("AGP_Hfilter_6", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_Hfilter_otu",
-#          "raw",
-#          'Instrument',"1")
+args = c("AGP_Hfilter", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_Hfilter_otu&AGP_Hfilter_k6&AGP_Hfilter_k7",
+         "raw&clr@clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10@clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10",
+         'Instrument&Instrument&Instrument',"1")
 # 
 # 
 # args = c("AGP_Hfilter_otu", 6, "/u/home/b/briscoel/project-halperin/MicroBatch/", "AGP_Hfilter_otu",

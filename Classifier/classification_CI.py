@@ -219,11 +219,11 @@ for method in methods:
     
     all_methods_means.loc[method,:] = np.array(pd.DataFrame.mean(metric_classifier,axis =0))
           
-    pickle.dump(all_methods_metrics , open( data_folder + "/" + data_type + "_" + prefix_name + "_" + column_of_interest + "_classification_metrics.pkl", "wb" ) )
+    pickle.dump(all_methods_metrics , open( data_folder + "/" + data_type + "_" + prefix_name + "_" + column_of_interest + "_" + method + "_classification_metrics.pkl", "wb" ) )
 
-    pickle.dump(all_methods_auc_stats , open( data_folder + "/" + data_type + "_" + prefix_name + "_" + column_of_interest + "_classification_auc.pkl", "wb" ) )
+    pickle.dump(all_methods_auc_stats , open( data_folder + "/" + data_type + "_" + prefix_name + "_" + column_of_interest + "_" + method + "_classification_auc.pkl", "wb" ) )
 
-    pickle.dump(all_methods_means , open( data_folder + "/" + data_type + "_" + prefix_name + "_" + column_of_interest + "_classification_means.pkl", "wb" ) )
+    pickle.dump(all_methods_means , open( data_folder + "/" + data_type + "_" + prefix_name + "_" + column_of_interest + "_" + method + "_classification_means.pkl", "wb" ) )
 
 
 

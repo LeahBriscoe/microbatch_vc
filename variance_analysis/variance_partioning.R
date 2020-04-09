@@ -1,5 +1,6 @@
 rm(list = ls())
 args = commandArgs(trailingOnly=TRUE)
+print(args)
 #args = c("otu", "WR_AD","~/Documents/MicroBatch/", "0-0.5","1-2","01/07/2016","DiseaseState","study")
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
 #          "bmc&ComBat",10,1)
@@ -18,6 +19,7 @@ batch_def_folder = args[6]
 prefix_name = args[7]
 use_quant_norm = as.logical(as.integer(args[8]))
 use_std =  as.logical(as.integer(args[9]))
+filter_low_counts =  as.logical(as.integer(args[10]))
 apply_bootstrap = FALSE
 bootstrap_prop = 0.80
 # ============================================================================== #
@@ -75,7 +77,7 @@ if(use_quant_norm){
   for(m in 1:length(methods_list)){
     print(Sys.time())
     print(m)
-    batch_corrected_data_std[[methods_list[m]]] = t(scale(t(batch_corrected_data[[methods_list[m]]])))
+    batch_corrected_data_scale[[methods_list[m]]] = t(scale(t(batch_corrected_data[[methods_list[m]]])))
     print(Sys.time())
   }
 }
@@ -180,9 +182,13 @@ for(i in 1:length(batch_corrected_data_input)){
   input_metadata_table = input_metadata_table[!yes_no_na,]
   
   input_abundance_table = input_abundance_table[rowVars(as.matrix(input_abundance_table)) > 10e-9,]
-  filter_at_least_two_samples_sub = (rowSums(input_abundance_table  > 0 ) > 2)
-  input_abundance_table = input_abundance_table[filter_at_least_two_samples_sub,]
   
+  if(filter_low_counts){
+    filter_at_least_two_samples_sub = (rowSums(input_abundance_table  > 0 ) > 2)
+    input_abundance_table = input_abundance_table[filter_at_least_two_samples_sub,]
+    
+  }
+
   #row.names(input_abundance_table) = paste0("OTU",1:nrow(input_abundance_table))
 
   
@@ -198,7 +204,8 @@ for(i in 1:length(batch_corrected_data_input)){
   
   # write.table(as.matrix(varPartMetaData), paste0(input_folder ,"varpart",methods_list[i],".txt"),
   #             sep = "\t",quote = FALSE)
-  saveRDS(varPartMetaData, paste0(input_folder ,"/varpart_quant",use_quant_norm ,"_",methods_list[i],".rds"))
+
+  saveRDS(varPartMetaData, paste0(input_folder ,"/varpart_quant",use_quant_norm ,"_",methods_list[i],"_filter_", filter_low_counts,".rds"))
   
 }
 

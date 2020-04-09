@@ -4,8 +4,8 @@ args = commandArgs(trailingOnly=TRUE)
 #          "bmc&ComBat",10,1)
 
 args = c("AGP_Hfilter", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_Hfilter_otu&AGP_Hfilter_k6&AGP_Hfilter_k7",
-         "raw&clr@clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10@clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10",
-         'Instrument&Instrument&Instrument',"1")
+         "raw&clr@raw&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10@raw&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10",
+         'Instrument&Instrument&Instrument',"0","") #filter_FALSE_filter_FALSE
 # 
 # 
 # args = c("AGP_Hfilter_otu", 6, "/u/home/b/briscoel/project-halperin/MicroBatch/", "AGP_Hfilter_otu",
@@ -27,6 +27,7 @@ names(methods_list) = 1:length(methods_list)
 
 batch_def_folder = unlist(strsplit(args[6],"&"))
 use_quant_norm = as.logical(as.integer(args[7]))
+last_name = args[8]
 apply_bootstrap = FALSE
 bootstrap_prop = 0.80
 # ============================================================================== #
@@ -78,7 +79,7 @@ for(s in 1:length(study_list)){
   for(m in 1:length(study_methods_list)){
 
     print( study_methods_list[m])
-    retrieve_varpars[[paste0(study_list[s],study_methods_list[m])]] = readRDS(paste0(input_folder ,"/varpart_quant",use_quant_norm ,"_",study_methods_list[m],".rds"))
+    retrieve_varpars[[paste0(study_list[s],study_methods_list[m])]] = readRDS(paste0(input_folder ,"/varpart_quant",use_quant_norm ,"_",study_methods_list[m],last_name, ".rds"))
     
   }
   
@@ -116,37 +117,74 @@ for( t in 1:length(varpar_types )){
 # ============================================================================== #
 # makedf
 varpar_types
+to_plot_spec = melt(retrieve_varpars)
+to_plot_spec[1:4,]
 to_plot = melt(var_pars_tech_bio,id.vars = c("bio_variability_explained","tech_variability_explained"))
 # to_plot_filter = to_plot %>% filter(L1 %in% c("AGP_Hfilter_oturaw" , "AGP_Hfilter_otuComBat","AGP_Hfilter_otulimma" ,
 #                                               "AGP_Hfilter_otuclr_pca_regress_out_scale_first10" , "AGP_Hfilter_k6raw",
 #                                               "AGP_Hfilter_k6clr_pca_regress_out_scale_first10" ))
 
-table(to_plot$L1)
-to_plot_filter = to_plot %>% filter(L1 %in% c("AGP_Hfilter_k6raw",
-                                              "AGP_Hfilter_k6clr_pca_regress_out_no_scale_first10" ))
+names(var_pars_tech_bio)
+table(to_plot_spec$variables)
 
+to_plot_filter = to_plot %>% filter(L1 %in% c("AGP_Hfilter_k7raw",
+                                              "AGP_Hfilter_k7clr_pca_regress_out_scale_first10"))
+to_plot_spec_bmi = to_plot_spec %>% filter(L1 %in% c("AGP_Hfilter_k7raw",
+                                              "AGP_Hfilter_k7clr_pca_regress_out_no_scale_first10"),variable == "bmi_corrected")
+
+to_plot_spec_bmi = to_plot_spec %>% filter(L1 %in% c("AGP_Hfilter_k7raw",
+                                                     "AGP_Hfilter_k7clr_pca_regress_out_no_scale_first10"),variable == "Instrument")
+
+
+table(to_plot_spec$variable)
 table(to_plot_filter$L1)
 
 kmer_to_plot_filter = to_plot_filter
+
+
+### SPEC
+
+to_plot_filter$L1 = factor(to_plot_filter$L1, levels =unique( to_plot_filter$L1))
+p<-ggplot(to_plot_filter ,aes(x=bio_variability_explained,y= tech_variability_explained,color=L1)) + ggtitle("Variance") 
+p<-p + geom_point() + theme_bw() #+ theme(legend.position = "none") #+ stat_ellipse()#+ scale_color_manual(values=c("#999999", "#56B4E9"))
+p
+ggsave(filename = paste0(plot_path,'/scatter_',varpar_types[1],'.pdf'), 
+       plot = p )
+
+
+
+
+
 #to_plot_filter = to_plot
 # ============================================================================== #
 # scatter
 
 to_plot_filter$L1 = factor(to_plot_filter$L1, levels =unique( to_plot_filter$L1))
 p<-ggplot(to_plot_filter ,aes(x=bio_variability_explained,y= tech_variability_explained,color=L1)) + ggtitle("Variance") 
-p<-p + geom_point() + theme_bw() + theme(legend.position = "none") #+ stat_ellipse()#+ scale_color_manual(values=c("#999999", "#56B4E9"))
+p<-p + geom_point() + theme_bw() #+ theme(legend.position = "none") #+ stat_ellipse()#+ scale_color_manual(values=c("#999999", "#56B4E9"))
 p
-ggsave(filename = paste0(plot_path,'/scatter_',varpar_types[t],'.pdf'), 
+ggsave(filename = paste0(plot_path,'/scatter_',varpar_types[1],'.pdf'), 
        plot = p )
+
+
 # ============================================================================== #
 # bio
 
-p<-ggplot(to_plot ,aes(x=bio_variability_explained,y=L1)) + ggtitle("Bio") 
-p<-p + geom_boxplot() + theme_bw() #+ scale_color_manual(values=c("#999999", "#56B4E9"))
-p
+p<-ggplot(to_plot_filter ,aes(x=L1,y=bio_variability_explained,color=L1)) + ggtitle("Bio") 
+p<-p + geom_boxplot() + theme_bw() + theme(text = element_text(size=15),axis.text.x = element_text(angle = 90, hjust = 1)) # + scale_color_manual(values=c("#999999", "#56B4E9"))
+p  #legend.position = "right",
+ggsave(filename = paste0(plot_path,'/Bio_',varpar_types[1],'.pdf'), 
+       plot = p )
 # ============================================================================== #
 #tech 
 
-p<-ggplot(to_plot ,aes(x=tech_variability_explained,y=L1)) + ggtitle("Tech") 
-p<-p + geom_boxplot() + theme_bw() #+ scale_color_manual(values=c("#999999", "#56B4E9"))
+p<-ggplot(to_plot_filter ,aes(x=L1,y=tech_variability_explained,color=L1)) + ggtitle("Tech") 
+p<-p + geom_boxplot() + theme_bw() + theme(text = element_text(size=15),axis.text.x = element_text(angle = 90, hjust = 1)) #+ scale_color_manual(values=c("#999999", "#56B4E9"))
 p
+ggsave(filename = paste0(plot_path,'/Tech_',varpar_types[1],'.pdf'), 
+       plot = p )
+
+hist(var_pars_tech_bio$AGP_Hfilter_k6raw$bio_variability_explained,breaks=100)
+wilcox.test(var_pars_tech_bio$AGP_Hfilter_k6raw$bio_variability_explained, 
+            var_pars_tech_bio$AGP_Hfilter_k6clr_pca_regress_out_scale_first10$bio_variability_explained)
+

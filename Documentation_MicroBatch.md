@@ -56,6 +56,14 @@ portal_client --manifest hmp_manifest_3523275bd8.tsv --user briscoel --endpoint-
 6. [AGP K-mer table creation](#agpkmertab)
 7. [AGP data summary](#agpsummary)
 8. [Batch correction pipe](#agpcorrection)
+9. [QIITA](#qiitabiom)
+
+ 1005  wget "https://qiita.ucsd.edu/public_download/?data=biom&study_id=10317"
+ 1006  ls
+ 1007  ls -lrt
+ 1008  gunzip allbiom
+ 1009  mv allbiom allbiom.zip
+ 1010  unzip allbiom.zip
 
 
 ### <a name ="agpcommands">Commands</a>
@@ -190,6 +198,17 @@ local run
 ```
 Rscript batch_correction_pipeline_basic.R kmer 5 /u/home/b/briscoel/project-halperin/MicroBatch/ AGP_reprocess "bmc&ComBat&ComBat_with_batch2&ComBat_with_biocovariates&ComBat_with_biocovariates_with_batch2&limma&limma_batch2&pca_regress_out_scale&clr_pca_regress_out_no_scal&clr_pca_regress_out_scale&smartsva&refactor&refactor_shift1" 5 1
 ```
+
+# <a name="qiitabiom"> QIITA </a>
+
+ 1005  wget "https://qiita.ucsd.edu/public_download/?data=biom&study_id=10317"
+ 1006  ls
+ 1007  ls -lrt
+ 1008  gunzip allbiom
+ 1009  mv allbiom allbiom.zip
+ 1010  unzip allbiom.zip
+ 
+ /u/scratch/b/briscoel/KmerCounting/AGP_QIITA
 
 
 ##<a name ="hmp1">HMP data sources</a>
@@ -440,6 +459,29 @@ qsub -cwd -V -N pred -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel 
 
 qsub -cwd -V -N pred -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k8 BatchCorrected bmi_corrected 'clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10' 10 kmer Instrument"
 
+
+qsub -cwd -V -N pred -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k7 BatchCorrected bmi_corrected 'clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10' 10 kmer Instrument"
+
+
+
+# APRIL 2020
+
+
+
+qsub -cwd -V -N pred -l h_data=16G,time=100:00:00,highp -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k6 BatchCorrected bmi_corrected 'clr_pca_regress_out_no_scale_first10filter_FALSE&clr_pca_regress_out_scale_first10filter_FALSE&smartsva_first10filter_FALSE&clr_pca_regress_out_no_scale_first5filter_FALSE&clr_pca_regress_out_scale_first5filter_FALSE&smartsva_first5filter_FALSE' 10 kmer Instrument"
+
+qsub -cwd -V -N pred -l h_data=16G,time=100:00:00,highp -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k7 BatchCorrected bmi_corrected 'clr_pca_regress_out_no_scale_first10filter_FALSE&clr_pca_regress_out_scale_first10filter_FALSE&smartsva_first10filter_FALSE&clr_pca_regress_out_no_scale_first5filter_FALSE&clr_pca_regress_out_scale_first5filter_FALSE&smartsva_first5filter_FALSE' 10 kmer Instrument"
+
+
+
+qsub -cwd -V -N pred -l h_data=16G,time=100:00:00,highp -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k7 BatchCorrected bmi_corrected 'refactor_clr_first10filter_FALSE' 10 kmer Instrument"
+
+qsub -cwd -V -N pred -l h_data=16G,time=100:00:00,highp -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k7 BatchCorrected bmi_corrected 'refactor_first10filter_FALSE' 10 kmer Instrument"
+
+
+qsub -cwd -V -N pred -l h_data=16G,time=100:00:00,highp -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k7 BatchCorrected bmi_corrected 'minervafilter_FALSE' 10 kmer Instrument"
+
+qsub -cwd -V -N pred -l h_data=16G,time=100:00:00,highp -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k7 BatchCorrected bmi_corrected 'clr_pca_regress_out_scale_first10filter_FALSE' 10 kmer Instrument"
 ```
 
 # clasification
@@ -487,6 +529,11 @@ qsub -cwd -V -N class -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel
 
 qsub -cwd -V -N class -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k6 BatchCorrected antibiotic 'clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10' 4 kmer Instrument"
 
+
+qsub -cwd -V -N class -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k7 BatchCorrected antibiotic 'smartsva_first10filter_FALSE' 10 kmer Instrument"
+
+qsub -cwd -V -N class -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k7 BatchCorrected antibiotic 'smartsva_clr_first10filter_FALSE' 10 kmer Instrument"
+
  ```
  
  
@@ -507,6 +554,35 @@ qsub -cwd -V -N class -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel
 
 
 /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg otu -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "clr&ilr" -arg 10 -arg Instrument -arg 1
+
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg otu -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "raw&clr" -arg 10 -arg Instrument -arg 1 -arg 0
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "raw&clr_pca_regress_out_no_scale&clr_pca_regress_out_scale" -arg 10 -arg Instrument -arg 1 -arg 0
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "smartsva" -arg 10 -arg Instrument -arg 1 -arg 0 -arg bmi_corrected
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "smartsva" -arg 10 -arg Instrument -arg 1 -arg 0 -arg bmi_corrected
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "refactor_clr" -arg 10 -arg Instrument -arg 1 -arg 0 -arg bmi_corrected
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "minerva" -arg 10 -arg Instrument -arg 1 -arg 0 -arg bmi_corrected
+
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg otu -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "smartsva" -arg 10 -arg Instrument -arg 1 -arg 0 -arg bmi_corrected
+
+
+
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "smartsva_clr" -arg 100 -arg Instrument -arg 1 -arg 0 -arg bmi_corrected -arg 0
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "refactor_clr" -arg 100 -arg Instrument -arg 1 -arg 0 -arg bmi_corrected -arg 0
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "minerva" -arg 100 -arg Instrument -arg 1 -arg 0 -arg bmi_corrected -arg 0
+
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "smartsva_clr" -arg 100 -arg Instrument -arg 1 -arg 0 -arg bmi_corrected -arg 1
+
 
 
 
@@ -552,7 +628,16 @@ done
 
 /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg otu -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_Hfilter -arg "clr" -arg Instrument -arg BatchCorrected -arg 1 -arg 0
 
-/u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg otu -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_Hfilter -arg "clr" -arg Instrument -arg BatchCorrected -arg 0 -arg 1
+
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg otu -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_Hfilter -arg "clr" -arg Instrument -arg BatchCorrected -arg 0 -arg 1 -arg 1
+
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_Hfilter -arg "rawfilter_FALSE" -arg Instrument -arg BatchCorrected -arg 0 -arg 1 -arg 0
+
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_Hfilter -arg "rawfilter_FALSE" -arg Instrument -arg BatchCorrected -arg 0 -arg 1 -arg 0
+
 
 
 ```
@@ -571,6 +656,11 @@ Rscript regressing_on_pc.R kmer 6 /u/home/b/briscoel/project-halperin/MicroBatch
 
 
 /u/local/apps/submit_scripts/R_job_submitter.sh -n regressing_on_pc.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 8 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "no_scale_clr&scale_clr&no_scale_no_clr&scale_no_clr" -arg 10 -arg 1 -arg /u/home/b/briscoel/project-halperin/MicroBatch/data/AGP_paper_data -arg 1 -arg 1
+
+
+
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n regressing_on_pc.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_maxo -arg "no_scale_clr" -arg 10 -arg 0 -arg /u/home/b/briscoel/project-halperin/MicroBatch/data/AGP_paper_data -arg 1 -arg 0
 
 ```
 

@@ -58,7 +58,7 @@ run_bmc <- function(mat,batch_labels){
 #   ilr()
 # }
 
-pca_method <- function(input,clr_transform = FALSE,center_scale_transform =TRUE){
+pca_method <- function(input,clr_transform = FALSE,center_scale_transform =TRUE,num_pcs){
   #input = otu_data$df_otu_rel_ab
   orig_input = input
   require(compositions)
@@ -79,7 +79,7 @@ pca_method <- function(input,clr_transform = FALSE,center_scale_transform =TRUE)
   
   #svd_result = big_SVD(myFBM,k=20,fun.scaling = big_scale())
   
-  svd_result = big_SVD(myFBM,k=20)
+  svd_result = big_SVD(myFBM,k=(num_pcs+10))
 
   
   print(Sys.time()-t1)
@@ -139,40 +139,66 @@ regress_out <- function(pc_scores,data,pc_index){
 
 #' @param mat matrix you want to batch correct
 #' @param data object containing $df_meta 
+#' 
+#' 
+
+# mat = input_abundance_table_clr_scale
+# metadata_mod= total_metadata_mod_interest
+# bio_signal_formula = bio_signal_formula_interest
+# bio_signal_formula = bio_signal_formula_interest
+#num_pcs = NULL
 run_sva <- function(mat,metadata_mod=NULL,bio_signal_formula=NULL,num_pcs = NULL){
-  #mat = input_abundance_table
-  #metadata_mod = total_metadata_mod
+  message("about to load smartsva")
+  require(SmartSVA)
+  message("finish load smartsva")
+  
+  #mat = input_abundance_table_scale
+  #metadata_mod = total_metadata_mod_interest
   #mat = input_abundance_table
   #metadata_mod=total_metadata_mod
   
-  mat = mat[,rowSums(is.na(metadata_mod)) == 0]
-  mat_scaled = t(scale(t(mat))) 
+  mat = mat[rowVars(mat)!=0,]
+  mat_scaled = mat
   
-  if(!is.null(metadata_mod)){
-    metadata_mod= metadata_mod[rowSums(is.na(metadata_mod)) == 0,]
-    
-    #bio_signal_formula <- paste0("~",paste(colnames(metadata_mod), collapse = "+"))
-    bio_signal_formula_resid = as.formula(paste0("t( mat_scaled)", paste0(as.character(bio_signal_formula),collapse = '')))
-    
-    require(SmartSVA)
-    #?smartsva.cpp
-    #?smartsva.cpp
-    #Determine number of SVs
-    
-    Y.r <- t(resid(lm(bio_signal_formula_resid,data = metadata_mod)))
-    
-    message("estimating RT")
-    t1 = Sys.time()
-    n.sv <- EstDimRMT(Y.r, FALSE)$dim + 1 # Very important: Add one extra dimension to compensate potential loss of 1 degree of freedom in confounded scenarios !!!
-    t2= Sys.time()
-    message(t2 -t1)
+  message(dim(mat_scaled))
+  message(dim(metadata_mod))
+
+  
+  
+  if(!is.null(num_pcs)){
+    n.sv = num_pcs
   }else{
-    Y.r = mat_scaled
-    t1 = Sys.time()
-    n.sv <- EstDimRMT(Y.r, FALSE)$dim + 1 # Very important: Add one extra dimension to compensate potential loss of 1 degree of freedom in confounded scenarios !!!
-    t2= Sys.time()
-    message(t2 -t1)
+    if(!is.null(metadata_mod)){
+    
+      
+      #bio_signal_formula <- paste0("~",paste(colnames(metadata_mod), collapse = "+"))
+      bio_signal_formula_resid = as.formula(paste0("t( mat_scaled)", paste0(as.character(bio_signal_formula),collapse = '')))
+      
+      dim(mat_scaled)
+      dim(metadata_mod)
+      #?smartsva.cpp
+      #?smartsva.cpp
+      
+      #Determine number of SVs
+      message("about to resid")
+      Y.r <- t(resid(lm(bio_signal_formula_resid,data = metadata_mod)))
+  
+      message("estimating RT")
+      t1 = Sys.time()
+      n.sv <- EstDimRMT(Y.r, FALSE)$dim + 1 # Very important: Add one extra dimension to compensate potential loss of 1 degree of freedom in confounded scenarios !!!
+      t2= Sys.time()
+      message(t2 -t1)
+    }else{
+      Y.r = mat_scaled
+      t1 = Sys.time()
+      n.sv <- EstDimRMT(Y.r, FALSE)$dim + 1 # Very important: Add one extra dimension to compensate potential loss of 1 degree of freedom in confounded scenarios !!!
+      t2= Sys.time()
+      message(t2 -t1)
+    }
+    print("n.sv")
+    print(n.sv)
   }
+  
   
 
   # Run SVA
@@ -186,5 +212,5 @@ run_sva <- function(mat,metadata_mod=NULL,bio_signal_formula=NULL,num_pcs = NULL
   #dim(mat_scaled)
   #To get corrected data run: 
   mat_scaled_corrected<- t(resid(lm(t(mat_scaled) ~ ., data=data.frame(sv.obj$sv))))
-  return( list(corrected_data = mat_scaled_corrected, sv.obj=sv.obj))
+  return( list(corrected_data = mat_scaled_corrected, sv.obj=sv.obj,n.sv=n.sv))
 }

@@ -13,6 +13,7 @@ capitalize_first_letter <- function(c){
   
 }
 
+
 otu_file <- function(kmer_folder,filename){
   #filename = "otu_table_psn_v35.txt"
   file =paste0(kmer_folder,filename)
@@ -22,6 +23,19 @@ otu_file <- function(kmer_folder,filename){
   
   return(otu_table)
 }
+
+
+scale_custom <- function(mat){
+  mat_means = apply(mat,2,mean)
+  mat_sd = apply(mat,2,sd)
+  
+  mat_sub_mean = sweep(mat,2,mat_means,FUN = "-" )
+  mat_sub_mean_div_sd = sweep(mat_sub_mean,2,mat_sd,FUN = "/" )
+  
+  return(mat_sub_mean_div_sd)
+  
+}
+
 
 #' @param provided_total_reads
 #' @param sample_column_true samples are in columns

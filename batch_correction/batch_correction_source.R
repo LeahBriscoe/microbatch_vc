@@ -142,11 +142,10 @@ regress_out <- function(pc_scores,data,pc_index){
 #' 
 #' 
 
-# mat = input_abundance_table_clr_scale
-# metadata_mod= total_metadata_mod_interest
-# bio_signal_formula = bio_signal_formula_interest
-# bio_signal_formula = bio_signal_formula_interest
-#num_pcs = NULL
+mat = input_abundance_table_clr_scale
+metadata_mod= total_metadata_mod_interest
+bio_signal_formula = bio_signal_formula_interest
+num_pcs=100
 run_sva <- function(mat,metadata_mod=NULL,bio_signal_formula=NULL,num_pcs = NULL){
   message("about to load smartsva")
   require(SmartSVA)
@@ -157,13 +156,14 @@ run_sva <- function(mat,metadata_mod=NULL,bio_signal_formula=NULL,num_pcs = NULL
   #mat = input_abundance_table
   #metadata_mod=total_metadata_mod
   
-  mat = mat[rowVars(mat)!=0,]
+  #mat = mat[rowVars(mat)!=0,]
   mat_scaled = mat
+  
   
   message(dim(mat_scaled))
   message(dim(metadata_mod))
 
-  
+  message(num_pcs)
   
   if(!is.null(num_pcs)){
     n.sv = num_pcs
@@ -199,12 +199,22 @@ run_sva <- function(mat,metadata_mod=NULL,bio_signal_formula=NULL,num_pcs = NULL
     print(n.sv)
   }
   
+  ## TEST
   
-
+  mod <- model.matrix( ~ bmi_corrected, BMI)
+  
+  sv.obj <- smartsva.cpp(dat = kmers, mod = mod, alpha = .25,
+                         mod0=NULL, n.sv=100, B = 1000, VERBOSE = T)
+  ##TEST END
+  
   # Run SVA
-  mod <- model.matrix( object = bio_signal_formula, data =  metadata_mod)
+  detach("package:compositions", unload=TRUE)
+  mod <- model.matrix( object = bio_signal_formula, data =  data.frame(metadata_mod))
+
   #mod <- model.matrix( object = ~ DiseaseState, data = data$df_meta)
-  sv.obj <- smartsva.cpp(dat =  mat_scaled, mod = mod, mod0=NULL, n.sv=n.sv, B = 100, alpha = 1, epsilon = 0.001, VERBOSE = T) 
+  sv.obj <- smartsva.cpp(dat =  as.matrix(mat_scaled), mod = mod, mod0=NULL, n.sv=n.sv, B = 1000, VERBOSE = T) 
+  sum(rowSums(mat_scaled) == 0)
+  dim(mod)
   # Make sure that this converges! This happens when you do not reach max number of iterations (B) If it does not, increase B or decrease alpha
   t3= Sys.time()
   #message(t3 -t2)

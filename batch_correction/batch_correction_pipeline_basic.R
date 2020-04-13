@@ -5,11 +5,11 @@ print(args)
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
 #          "bmc&ComBat",10,1)
 
-# args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-# "AGP_reprocess", "smartsva",10,"Instrument",1,0,"bmi_corrected")
+args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+"AGP_Hfilter", "smartsva_clr",100,"Instrument",1,0,"bmi_corrected",0)
 # 
-args = c("otu", 6, "/u/home/b/briscoel/project-halperin/MicroBatch", "AGP_Hfilter",
-         "smartsva_clr",10,"Instrument",1, "bmi_corrected",0)
+# args = c("otu", 6, "/u/home/b/briscoel/project-halperin/MicroBatch", "AGP_Hfilter",
+#          "smartsva_clr",10,"Instrument",1, "bmi_corrected",0)
 
 # ============================================================================== #
 # user input
@@ -92,11 +92,7 @@ total_metadata$collection_year = new_collection_year
 input_abundance_table = get(paste0(data_type,"_table_norm"))
 
 
-if(filter_low_counts){
-  filter_at_least_two_samples_per_feature = (rowSums(input_abundance_table  > 0 ) > 2)
-  input_abundance_table = input_abundance_table[filter_at_least_two_samples_per_feature,]
 
-}
 
 batch_labels = as.integer(droplevels(as.factor(total_metadata[,batch_column])))
 
@@ -130,16 +126,25 @@ if(grepl(covariate_interest, "bmi")){
 bio_signal_formula_interest <- as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod_interest), collapse = " + ")))
 
 # take out 0 variance rows
+
 input_abundance_table  =input_abundance_table[,rowSums(is.na(total_metadata_mod_interest )) == 0]
 total_metadata_mod_interest= total_metadata_mod_interest[rowSums(is.na(total_metadata_mod_interest)) == 0,,drop=FALSE]
 dim(total_metadata_mod_interest)
 dim(input_abundance_table)
+
+if(filter_low_counts){
+  filter_at_least_two_samples_per_feature = (rowSums(input_abundance_table  > 0 ) > 2)
+  input_abundance_table = input_abundance_table[filter_at_least_two_samples_per_feature,]
+  
+}
+
 
 input_abundance_table = input_abundance_table[rowVars(as.matrix(input_abundance_table)) !=0 ,]
 input_abundance_table_clr = t(clr(t(input_abundance_table)))
 
 input_abundance_table_scale = t(scale_custom(t(input_abundance_table)))
 input_abundance_table_clr_scale = t(scale_custom(t(input_abundance_table_clr)))
+dim(input_abundance_table_clr_scale)
 
 
 if(!grepl("reprocess",study_name)){
@@ -268,7 +273,7 @@ for(m in 1:length(methods_list)){
     
     pca_res = pca_method(input_abundance_table_clr_scale,clr_transform = FALSE,center_scale_transform = FALSE,num_pcs = num_factors )
     if(save_PC_scores == TRUE){
-      saveRDS(pca_res$pca_score, paste0(kmer_input_folder ,"/",batch_column,"/PC_scores_",methods_list[m],".rds"))
+      saveRDS(pca_res, paste0(kmer_input_folder ,"/",batch_column,"/PC_scores_",methods_list[m],".rds"))
     }
     
     
@@ -419,9 +424,12 @@ for(m in 1:length(methods_list)){
   saveRDS(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder ,"/",batch_column,"/BatchCorrected_",methods_list[m],extra_file_name,".rds"))
   
 }
+all(mat_scaled == input_abundance_table_clr_scale)
 
-
-
+# write.table(input_abundance_table_clr_scale,paste0(output_folder,"/",batch_column,"/kmer_table_clr_scaled.txt"),
+#             sep = "\t",quote = FALSE)
+# write.table(total_metadata_mod_interest,paste0(output_folder,"/",batch_column,"/bmi_corrected.txt"),
+#             sep = "\t",quote = FALSE)
 #write.table(input_abundance_table ,paste0(kmer_input_folder ,"/BatchCorrected_raw.txt"),sep = "\t",quote = FALSE)
 
 

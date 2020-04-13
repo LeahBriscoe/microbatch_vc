@@ -141,23 +141,48 @@ regress_out <- function(pc_scores,data,pc_index){
 #' @param data object containing $df_meta 
 #' 
 #' 
+# 
+# mat = input_abundance_table_clr_scale
+# metadata_mod= total_metadata_mod_interest
+# bio_signal_formula = bio_signal_formula_interest
+# num_pcs=100
+# mod_ <- model.matrix( object = bio_signal_formula, data =  metadata_mod)
+# mat1 = mat + 1
+# sv.obj <- smartsva.cpp(dat = mat, mod = mod_, alpha = .25,
+#                        mod0=NULL, n.sv=100, B = 1000, VERBOSE = T)
+# 
+# 
+# 
+# BMI=read.table(file = "~/Downloads/bmi_corrected.txt")
+# library(data.table)
+# kmers=as.matrix(data.frame(fread(file = "~/Downloads/kmer_table_clr_scaled.txt", header = T), row.names = 1))
+# mod <- model.matrix( ~ bmi_corrected, BMI)
+# 
+# sv.obj <- smartsva.cpp(dat = kmers, mod = mod, alpha = .25,
+#                        mod0=NULL, n.sv=100, B = 1000, VERBOSE = T)
+# dim(kmers)
+# 
+# kmers[1:4,1:4]
+# mat[1:4,1:4]
 
-mat = input_abundance_table_clr_scale
-metadata_mod= total_metadata_mod_interest
-bio_signal_formula = bio_signal_formula_interest
-num_pcs=100
+
+
+# mat = input_abundance_table
+# metadata_mod = total_metadata_mod_interest
+# bio_signal_formula =  bio_signal_formula_interest
+
 run_sva <- function(mat,metadata_mod=NULL,bio_signal_formula=NULL,num_pcs = NULL){
   message("about to load smartsva")
   require(SmartSVA)
   message("finish load smartsva")
   
-  #mat = input_abundance_table_scale
-  #metadata_mod = total_metadata_mod_interest
+  
   #mat = input_abundance_table
   #metadata_mod=total_metadata_mod
   
   #mat = mat[rowVars(mat)!=0,]
   mat_scaled = mat
+
   
   
   message(dim(mat_scaled))
@@ -199,13 +224,7 @@ run_sva <- function(mat,metadata_mod=NULL,bio_signal_formula=NULL,num_pcs = NULL
     print(n.sv)
   }
   
-  ## TEST
-  
-  mod <- model.matrix( ~ bmi_corrected, BMI)
-  
-  sv.obj <- smartsva.cpp(dat = kmers, mod = mod, alpha = .25,
-                         mod0=NULL, n.sv=100, B = 1000, VERBOSE = T)
-  ##TEST END
+
   
   # Run SVA
   detach("package:compositions", unload=TRUE)
@@ -213,9 +232,6 @@ run_sva <- function(mat,metadata_mod=NULL,bio_signal_formula=NULL,num_pcs = NULL
 
   #mod <- model.matrix( object = ~ DiseaseState, data = data$df_meta)
   sv.obj <- smartsva.cpp(dat =  as.matrix(mat_scaled), mod = mod, mod0=NULL, n.sv=n.sv, B = 1000, VERBOSE = T) 
-  sum(rowSums(mat_scaled) == 0)
-  dim(mod)
-  # Make sure that this converges! This happens when you do not reach max number of iterations (B) If it does not, increase B or decrease alpha
   t3= Sys.time()
   #message(t3 -t2)
   #dim(sv.obj$sv)

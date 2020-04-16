@@ -439,6 +439,38 @@ qsub -cwd -V -N pred -l h_data=16G,time=100:00:00,highp -M briscoel -m beas -b y
 
 
 qsub -cwd -V -N pred -l h_data=16G,time=100:00:00,highp -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k7 BatchCorrected bmi_corrected 'clr_pca_regress_out_scale_first10filter_FALSE' 10 kmer Instrument"
+
+for method in minerva
+do
+	for tran in clr clr_scale
+	do
+		qsub -cwd -V -N pred -l h_data=16G,time=100:00:00,highp -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_otu BatchCorrected bmi_corrected '$method'filter_TRUE_trans_'$tran' 10 kmer Instrument"
+	done
+done
+
+
+for method in minerva
+do
+	for tran in none clr clr_scale
+	do
+		qsub -cwd -V -N pred -l h_data=16G,time=100:00:00,highp -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_otu BatchCorrected bmi_corrected '$method'_first20filter_TRUE_trans_'$tran' 10 otu Instrument"
+	done
+done
+
+for method in minerva
+do
+	for tran in none clr clr_scale
+	do
+		qsub -cwd -V -N pred -l h_data=16G,time=100:00:00,highp -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_k7 BatchCorrected bmi_corrected '$method'_first20filter_TRUE_trans_'$tran' 10 kmer Instrument"
+	done
+done
+
+
+
+
+
+
+
 ```
 
 # clasification
@@ -472,7 +504,31 @@ qsub -cwd -V -N class -l h_data=8G,time=100:00:00,highp -pe shared 4 -M briscoel
 /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "minerva" -arg 100 -arg Instrument -arg 1 -arg 0 -arg bmi_corrected -arg 0
 
 
-/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 32 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "smartsva" -arg 100 -arg Instrument -arg 1 -arg 1 -arg bmi_corrected -arg 0 -arg "none"
+for method in minerva refactor bmc raw ComBat limma 
+do
+	for tran in none clr clr_scale
+	do
+		/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 32 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "$method" -arg 20 -arg Instrument -arg 1 -arg 1 -arg bmi_corrected -arg 0 -arg "$tran"
+	done
+done
+
+
+for method in smartsva minerva refactor bmc raw ComBat limma 
+do
+	for tran in none clr clr_scale
+	do
+		/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 32 -t 100 -hp -v 3.6.0 -arg otu -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "$method" -arg 100 -arg Instrument -arg 1 -arg 1 -arg bmi_corrected -arg 0 -arg "$tran"
+	done
+done
+
+
+for method in minerva
+do
+	for tran in none clr clr_scale
+	do
+		/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 32 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_Hfilter -arg "$method" -arg 100 -arg Instrument -arg 1 -arg 1 -arg bmi_corrected -arg 0 -arg "$tran"
+	done
+done
 ```
 
 ## different batch column: collection_year
@@ -530,4 +586,9 @@ Rscript regressing_on_pc.R kmer 6 /u/home/b/briscoel/project-halperin/MicroBatch
 /u/local/apps/submit_scripts/R_job_submitter.sh -n regressing_on_pc.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_maxo -arg "no_scale_clr" -arg 10 -arg 0 -arg /u/home/b/briscoel/project-halperin/MicroBatch/data/AGP_paper_data -arg 1 -arg 0
 
 ```
+
+
+# RUNNING
+2784470 : clr
+2784472 : scale
 

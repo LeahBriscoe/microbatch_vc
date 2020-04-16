@@ -6,7 +6,7 @@ print(args)
 #          "bmc&ComBat",10,1)
 
 # args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-# "AGP_Hfilter", "smartsva",100,"Instrument",1,1,"bmi_corrected",0,"clr_scale")
+# "AGP_Hfilter", "smartsva",100,"Instrument",1,1,"bmi_corrected",0,"none")
 # 
 # args = c("otu", 6, "/u/home/b/briscoel/project-halperin/MicroBatch", "AGP_Hfilter",
 #          "smartsva_clr",10,"Instrument",1, "bmi_corrected",0)
@@ -67,6 +67,7 @@ if(data_type == "kmer"){
   
   input_folder = kmer_input_folder
   kmer_table = readRDS(paste0(kmer_input_folder,"/kmer_table", file_type,".rds"))
+
 }else{
   dir.create(paste0(otu_input_folder,"/",batch_column))
   
@@ -138,14 +139,17 @@ input_abundance_table  =input_abundance_table[,rowSums(is.na(total_metadata_mod_
 
 total_metadata_mod_interest= total_metadata_mod_interest[rowSums(is.na(total_metadata_mod_interest)) == 0,,drop=FALSE]
 
-
 if(filter_low_counts){
-  filter_at_least_two_samples_per_feature = (rowSums(input_abundance_table  > 2 ) > 2)
-
+  if(grepl("clr",transformation)){
+    filter_at_least_two_samples_per_feature = (rowSums(input_abundance_table  > 5 ) > 2)
+  }else{
+    filter_at_least_two_samples_per_feature = (rowSums(input_abundance_table  > 0 ) > 2)
+  }
+  
   input_abundance_table = input_abundance_table[filter_at_least_two_samples_per_feature,]
   
 }
-
+#sum(filter_at_least_two_samples_per_feature)
 
 
 if(grepl("clr",transformation)){
@@ -153,8 +157,6 @@ if(grepl("clr",transformation)){
   input_abundance_table = data.frame(input_abundance_table)
   input_abundance_table = as.matrix(input_abundance_table)
   
-}else{
-  input_abundance_table = convert_to_rel_ab(input_abundance_table)
 }
 if(grepl("scale",transformation)){
   input_abundance_table= t(scale_custom(t(input_abundance_table)))
@@ -298,6 +300,7 @@ for(m in 1:length(methods_list)){
       writeLines(as.character(sva_result$n.sv), fileConn)
       message(paste0("NUM sv ", sva_result$n.sv))
     }
+    num_factors = as.integer(sva_result$n.sv)
     
   }else if(methods_list[m ] == "refactor"){
     require(TCA)
@@ -330,10 +333,10 @@ for(m in 1:length(methods_list)){
   
   # make file_name
   extra_file_name= ""
-  if(grepl("pca",methods_list[m]) |grepl("refactor",methods_list[m]) |grepl("sva",methods_list[m])){
-    extra_file_name = paste0(extra_file_name,"_first",num_pcs)
+  if(grepl("pca",methods_list[m]) |grepl("refactor",methods_list[m]) |grepl("sva",methods_list[m]) | grepl("minerva",methods_list[m])){
+    extra_file_name = paste0(extra_file_name,"_first",num_factors)
   }
-  extra_file_name = paste0(extra_file_name,"filter_",filter_low_counts)
+  extra_file_name = paste0(extra_file_name,"filter_",filter_low_counts, "_trans_",transformation)
   
   write.table(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder,"/",batch_column,"/BatchCorrected_",methods_list[m],extra_file_name,".txt"),
               sep = "\t",quote = FALSE)
@@ -374,3 +377,5 @@ for(m in 1:length(methods_list)){
 # 
 # pca_res = pca_fn(data$df_otu_rel_ab,sample_column_true=TRUE,label_strings=data$df_meta$study,
 #        filename=paste0(plot_path,"PCA/","rel_ab"),title="Pca on rel ab",acomp_version = FALSE)
+
+

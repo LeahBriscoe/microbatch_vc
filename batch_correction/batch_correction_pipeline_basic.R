@@ -6,7 +6,7 @@ print(args)
 #          "bmc&ComBat",10,1)
 
 # args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-# "AGP_Hfilter", "smartsva",100,"Instrument",1,1,"bmi_corrected",0,"none")
+# "AGP_Hfilter", "smartsva",20,"Instrument",1,1,"bin_omnivore_diet",0,"clr_scale")
 # 
 # args = c("otu", 6, "/u/home/b/briscoel/project-halperin/MicroBatch", "AGP_Hfilter",
 #          "smartsva_clr",10,"Instrument",1, "bmi_corrected",0)
@@ -64,6 +64,7 @@ if(grepl("clr",transformation)){
 }
 if(data_type == "kmer"){
   dir.create(paste0(kmer_input_folder,"/",batch_column))
+  dir.create(paste0(kmer_input_folder,"/protect_",covariate_interest))
   
   input_folder = kmer_input_folder
   kmer_table = readRDS(paste0(kmer_input_folder,"/kmer_table", file_type,".rds"))
@@ -128,7 +129,7 @@ bio_signal_formula <- as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod)
 if(grepl(covariate_interest, "bmi")){
   total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,numeric_vars = "bmi_corrected")
 }else{
-  total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,numeric_vars = covariate_interest)
+  total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,binary_vars = covariate_interest)
 }
 
 bio_signal_formula_interest <- as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod_interest), collapse = " + ")))
@@ -136,6 +137,7 @@ bio_signal_formula_interest <- as.formula(paste0(" ~ ",paste(colnames(total_meta
 # take out 0 variance rows
 
 input_abundance_table  =input_abundance_table[,rowSums(is.na(total_metadata_mod_interest )) == 0]
+
 
 total_metadata_mod_interest= total_metadata_mod_interest[rowSums(is.na(total_metadata_mod_interest)) == 0,,drop=FALSE]
 
@@ -177,6 +179,7 @@ if(!grepl("reprocess",study_name)){
 
 
 for(m in 1:length(methods_list)){
+  sv_object_output = c()
   
   batch_corrected_output  = c()
   
@@ -254,10 +257,9 @@ for(m in 1:length(methods_list)){
     }
     
     
-    pca_res = pca_method(input_abundance_table_clr_scale,clr_transform = FALSE,center_scale_transform = FALSE,num_pcs = num_factors )
-    if(save_PC_scores == TRUE){
-      saveRDS(pca_res, paste0(kmer_input_folder ,"/",batch_column,"/PC_scores_",methods_list[m],".rds"))
-    }
+    pca_res = pca_method(input_abundance_table,clr_transform = FALSE,center_scale_transform = FALSE,num_pcs = num_factors )
+    
+    sv_object_output = pca_res
     
     
     batch_corrected_output = regress_out(pca_res$pca_score,data=t(pca_res$transformed_data),pc_index = c(1:num_factors))
@@ -290,6 +292,8 @@ for(m in 1:length(methods_list)){
     }
       
     svobj = sva_result$sv.obj
+    sv_object_output =  svobj
+    
     if(save_PC_scores){
       saveRDS( svobj, paste0(kmer_input_folder ,"/",batch_column, "/svobj_",methods_list[m],".rds"))
     }
@@ -320,9 +324,7 @@ for(m in 1:length(methods_list)){
     mat_scaled_corrected<- t(resid(lm(t(input_abundance_table) ~ ., data=data.frame(RC))))
     
     
-    if(save_PC_scores){
-      saveRDS(RC, paste0(kmer_input_folder ,"/",batch_column,"/Refactor_scores_",methods_list[m],".rds"))
-    }
+    sv_object_output= refactor_res
     batch_corrected_output = mat_scaled_corrected
   }
   #names(batch_corrected_outputs)
@@ -338,9 +340,27 @@ for(m in 1:length(methods_list)){
   }
   extra_file_name = paste0(extra_file_name,"filter_",filter_low_counts, "_trans_",transformation)
   
-  write.table(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder,"/",batch_column,"/BatchCorrected_",methods_list[m],extra_file_name,".txt"),
-              sep = "\t",quote = FALSE)
-  saveRDS(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder ,"/",batch_column,"/BatchCorrected_",methods_list[m],extra_file_name,".rds"))
+  if(grepl("sva",methods_list[m])){
+    write.table(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder,"/protect_",covariate_interest,"/BatchCorrected_",methods_list[m],extra_file_name,".txt"),
+                sep = "\t",quote = FALSE)
+    saveRDS(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder ,"/protect_",covariate_interest,"/BatchCorrected_",methods_list[m],extra_file_name,".rds"))
+    if(save_PC_scores){
+      saveRDS(sv_object_output, paste0(output_folder ,"/protect_",covariate_interest,"/SVs_",methods_list[m],extra_file_name,".rds"))
+      
+      
+    }
+  }else{
+    write.table(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder,"/",batch_column,"/BatchCorrected_",methods_list[m],extra_file_name,".txt"),
+                sep = "\t",quote = FALSE)
+    saveRDS(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder ,"/",batch_column,"/BatchCorrected_",methods_list[m],extra_file_name,".rds"))
+    if(save_PC_scores){
+      saveRDS(sv_object_output, paste0(output_folder ,"/",batch_column,"/SVs_",methods_list[m],extra_file_name,".rds"))
+      
+      
+    }
+  }
+  
+  
   
 }
 
@@ -378,4 +398,6 @@ for(m in 1:length(methods_list)){
 # pca_res = pca_fn(data$df_otu_rel_ab,sample_column_true=TRUE,label_strings=data$df_meta$study,
 #        filename=paste0(plot_path,"PCA/","rel_ab"),title="Pca on rel ab",acomp_version = FALSE)
 
+#length(sv_object_output$svd_result$d)
+#plot(sv_object_output$svd_result$d)
 

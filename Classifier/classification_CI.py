@@ -61,13 +61,16 @@ if column_of_interest == "antibiotic" and "AGP" in study_name:
     metadata[column_of_interest] = bin_antibiotic
     pos_label = 1 #"Healthy"#'1-2' #'0-0.5'#'Omnivore' # '0-1.5'
 elif column_of_interest == "age_of_reloc":
-    bin_column_of_interest = binarize_labels_mod(metadata["agegroup_c6_v2.x"],pos_labels =['1','2','3','4'],none_labels = ["not applicable",float("Nan"),'not provided'])
+    bin_column_of_interest = utils.binarize_labels_mod(metadata["agegroup_c6_v2.x"],pos_labels =['1','2','3','4'],none_labels = ["not applicable",float("Nan"),'not provided'])
 
     metadata[column_of_interest] = bin_column_of_interest
     column_of_interest = column_of_interest
     pos_label = 1 #"Healthy"#'1-2' #'0-0.5'#'Omnivore' # '0-1.5'
-    
-
+else:
+    bin_column_of_interest = utils.binarize_labels_mod(metadata[column_of_interest],pos_labels =['Yes'],none_labels = ["not applicable",float("Nan"),'not provided'])
+    metadata[column_of_interest] = bin_column_of_interest
+    column_of_interest = column_of_interest
+    pos_label = 1 #"Healthy"#'1-2' #'0-0.5'#'Omnivore' # '0-1.5
 
 names = ["Random Forest","Naive Bayes"]
 all_methods_metrics = dict()
@@ -219,11 +222,11 @@ for method in methods:
     
     all_methods_means.loc[method,:] = np.array(pd.DataFrame.mean(metric_classifier,axis =0))
           
-    pickle.dump(all_methods_metrics , open( data_folder + "/" + data_type + "_" + prefix_name + "_" + column_of_interest + "_" + method + "_classification_metrics.pkl", "wb" ) )
+    pickle.dump(all_methods_metrics , open( data_folder +  data_type + "_" + prefix_name + "_" + column_of_interest + "_" + method + "_classification_metrics.pkl", "wb" ) )
 
-    pickle.dump(all_methods_auc_stats , open( data_folder + "/" + data_type + "_" + prefix_name + "_" + column_of_interest + "_" + method + "_classification_auc.pkl", "wb" ) )
+    pickle.dump(all_methods_auc_stats , open( data_folder + data_type + "_" + prefix_name + "_" + column_of_interest + "_" + method + "_classification_auc.pkl", "wb" ) )
 
-    pickle.dump(all_methods_means , open( data_folder + "/" + data_type + "_" + prefix_name + "_" + column_of_interest + "_" + method + "_classification_means.pkl", "wb" ) )
+    pickle.dump(all_methods_means , open( data_folder + data_type + "_" + prefix_name + "_" + column_of_interest + "_" + method + "_classification_means.pkl", "wb" ) )
 
 
 

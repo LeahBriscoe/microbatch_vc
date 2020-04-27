@@ -110,7 +110,7 @@ for cv in range(n_cvs):
         #all_methods_stats[method]['pearson'] = cv_pearson
         #all_methods_stats[method]['mse'] = cv_mse
         
-            pickle.dump( all_methods_stats[method], open( data_folder + "/" + data_type + "_" + prefix_name + "_" + column_of_interest + "_" + method + "_pearson_and_mse.pkl", "wb" ) )
+            pickle.dump( all_methods_stats[method], open( data_folder + data_type + "_" + prefix_name + "_" + column_of_interest + "_" + method + "_pearson_and_mse.pkl", "wb" ) )
         
 
 

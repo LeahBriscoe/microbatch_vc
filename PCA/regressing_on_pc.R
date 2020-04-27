@@ -77,7 +77,7 @@ row.names(total_metadata) = total_metadata$Run
 unique_samples = total_metadata %>% distinct(sample_name,.keep_all = TRUE)
 
 row.names(unique_samples) = unique_samples$sample_name
-unique_samples
+#unique_samples
 new_otu_samples = unique_samples[gsub ("X","",colnames(otu_table)),"Run"]
 colnames(otu_table) = new_otu_samples
 

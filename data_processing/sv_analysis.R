@@ -110,7 +110,7 @@ for( t in 1:length(transformation)){
 }
 
 for( t in 1:length(transformation)){
-
+  t=1
   if(methods_list == "minerva"){
     svs = sv_object_list[[t]]$pca_score
     
@@ -152,6 +152,23 @@ for( t in 1:length(transformation)){
   dev.off()
   
   
+  
+  binary_vars = c("collection_AM","bin_alcohol_consumption","bin_omnivore_diet")#,"bin_antibiotic_last_year")
+  categorical_vars = c("bin_bowel_movement",
+                       "collection_year","Instrument","race.x")
+  numeric_vars = c("bmi_corrected","age_corrected")
+  total_metadata_mod = process_model_matrix(total_metadata = total_metadata,
+                                            binary_vars=binary_vars,
+                                            categorical_vars =categorical_vars,
+                                            numeric_vars = numeric_vars)
+  total_metadata_mod_formula = as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod), collapse = " + ")))
+  
+  C = canCorPairs(formula = total_metadata_mod_formula , data = total_metadata_mod)
+  
+  pdf(paste0(output_folder ,"/SV_analysis/metadata_to_metadata_",methods_list[m],extra_file_name_list[[t]],".pdf"))
+  #pdf(paste0(plot_folder,"/","allAGP_metadata_to_metadata.pdf"))
+  plotCorrMatrix(C,sort = FALSE)
+  dev.off()
   
 }
 

@@ -6,7 +6,7 @@ print(args)
 #          "bmc&ComBat",10,1)
 
 # args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-# "AGP_Hfilter", "smartsva",20,"Instrument",1,1,"bin_omnivore_diet",0,"clr_scale")
+# "AGP_Hfilter", "refactor",20,"Instrument",1,1,"bmi_corrected",0,"none")
 # 
 # args = c("otu", 6, "/u/home/b/briscoel/project-halperin/MicroBatch", "AGP_Hfilter",
 #          "smartsva_clr",10,"Instrument",1, "bmi_corrected",0)
@@ -294,7 +294,9 @@ for(m in 1:length(methods_list)){
     svobj = sva_result$sv.obj
     sv_object_output =  svobj
     
+    
     if(save_PC_scores){
+      row.names(svobj$sv) = row.names(input_abundance_table)
       saveRDS( svobj, paste0(kmer_input_folder ,"/",batch_column, "/svobj_",methods_list[m],".rds"))
     }
     batch_corrected_output = sva_result$corrected_data
@@ -307,6 +309,15 @@ for(m in 1:length(methods_list)){
     num_factors = as.integer(sva_result$n.sv)
     
   }else if(methods_list[m ] == "refactor"){
+    
+    # rs = rowSums(input_abundance_table)
+    # rv = rowVars(input_abundance_table)
+    # sum(rv < 10e-9)
+    # input_abundance_table_rf = input_abundance_table[(rv > 10e-4),]
+    # dim(input_abudance_table_rf)
+    # dim(input_abundance_table)
+    # 
+   
     require(TCA)
     
     if(use_RMT){
@@ -319,12 +330,15 @@ for(m in 1:length(methods_list)){
       num_factors = num_pcs
     }
     
+    
     refactor_res = refactor(input_abundance_table, k=num_factors)
+    
     RC = refactor_res$scores
     mat_scaled_corrected<- t(resid(lm(t(input_abundance_table) ~ ., data=data.frame(RC))))
     
     
     sv_object_output= refactor_res
+    row.names(sv_object_output$scores) = row.names(input_abundance_table)
     batch_corrected_output = mat_scaled_corrected
   }
   #names(batch_corrected_outputs)

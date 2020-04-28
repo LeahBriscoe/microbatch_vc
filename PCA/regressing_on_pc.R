@@ -209,6 +209,7 @@ total_metadata_mod = process_model_matrix(total_metadata = total_metadata,
                                           categorical_vars =categorical_vars,
                                           numeric_vars = numeric_vars)
 
+
 #hist(total_metadata_mod$age_corrected)
 #range(total_metadata_mod$age_corrected,na.rm=TRUE)
 total_metadata_mod_formula = as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod), collapse = " + ")))

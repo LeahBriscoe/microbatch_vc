@@ -599,6 +599,30 @@ done
 
 
 
+for svs in 4 20 30 40 50 100
+do
+	for tran in clr_scale
+	do
+		for phen in bin_antibiotic_last_year
+		do
+			qsub -cwd -V -N "svapred$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k6 BatchCorrected '$phen' minerva_first'$svs'filter_TRUE_trans_'$tran' 10 kmer Instrument"
+		done
+	done
+done
+
+
+for svs in 1 2 3 4 5 6 7 8 9 10 20 30 40 50
+do
+	for tran in clr_scale
+	do
+		for phen in bin_antibiotic_last_year
+		do
+			qsub -cwd -V -N "svapred$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k6 BatchCorrected '$phen' smartsva_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen'"
+		done
+	done
+done
+
+
 
 
 
@@ -637,18 +661,25 @@ do
 done
 
 ```
-Running as of 12:50 PM April 27
+Running as of 11:57 PM April 27
+
+#minerva jobs 
+# Smart sva jobs 84 -95
 ```
-for method in minerva
+for method in smartsva
 do 
-	for tran in clr clr_scale
+	for tran in clr_scale
 	do
-		for sv in 50 100
+		for sv in 1 2 3 4 5 6 7 8 9 10 20 30 40 50 100
 		do
-			/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_max -arg "$method" -arg $sv -arg Instrument -arg 1 -arg 1 -arg bmi_corrected -arg 0 -arg "$tran"
+			/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_max -arg "$method" -arg $sv -arg Instrument -arg 1 -arg 1 -arg bin_antibiotic_last_year -arg 0 -arg "$tran"
 		done
 	done
 done
+
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 32 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_max -arg "raw&bmc&ComBat&limma" -arg 1 -arg Instrument -arg 1 -arg 1 -arg bin_antibiotic_last_year -arg 0 -arg clr_scale
+
 
 ```
 for tran in none clr clr_scale
@@ -757,3 +788,13 @@ do
 	#mkdir ./AGP_max_k$k/cont_pred
 	mv ./AGP_max_k$k/*pearson*pkl ./AGP_max_k$k/cont_pred
 done
+
+
+
+# missing
+bc Minerva: 20,30, 40 ,50 100 (20, 30, 40, 50, 100 : 3000295 - 3000300)
+bc smart sva binary: 1-9,10,20,30, 40 ,50 100 (1-9: 3000279 - 3000292) (all: 3001312 to 3001326)
+bc raw&bmc&ComBat&limma: 3000318
+
+classification Minerva: 4, 20, 30 , 40, 50 , 100
+classification smartsva: 1-10, 20, 30, 40, 50 , 100

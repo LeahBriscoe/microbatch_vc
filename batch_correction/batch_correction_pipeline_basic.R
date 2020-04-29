@@ -5,8 +5,8 @@ print(args)
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
 #          "bmc&ComBat",10,1)
 
-# args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-# "AGP_Hfilter", "refactor",20,"Instrument",1,1,"bmi_corrected",0,"none")
+args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+"AGP_Hfilter", "refactor_protect",20,"Instrument",1,1,"bmi_corrected",0,"clr_scale")
 # 
 # args = c("otu", 6, "/u/home/b/briscoel/project-halperin/MicroBatch", "AGP_Hfilter",
 #          "smartsva_clr",10,"Instrument",1, "bmi_corrected",0)
@@ -132,11 +132,13 @@ if(grepl(covariate_interest, "bmi")){
   total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,binary_vars = covariate_interest)
 }
 
+
 bio_signal_formula_interest <- as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod_interest), collapse = " + ")))
 
 # take out 0 variance rows
 
 input_abundance_table  =input_abundance_table[,rowSums(is.na(total_metadata_mod_interest )) == 0]
+batch_labels = batch_labels[rowSums(is.na(total_metadata_mod_interest )) == 0]
 
 
 total_metadata_mod_interest= total_metadata_mod_interest[rowSums(is.na(total_metadata_mod_interest)) == 0,,drop=FALSE]
@@ -177,7 +179,8 @@ if(!grepl("reprocess",study_name)){
   
 }
 
-
+print("dimensions")
+print(dim(input_abundance_table))
 for(m in 1:length(methods_list)){
   sv_object_output = c()
   
@@ -190,6 +193,8 @@ for(m in 1:length(methods_list)){
   
   if(methods_list[m] == "bmc"){
     batch_corrected_output = run_bmc(mat = input_abundance_table, batch_labels)
+    #length(batch_labels)
+    #dim(input_abundance_table)
   }else if(methods_list[m] == "raw"){
     
     batch_corrected_output = input_abundance_table
@@ -296,7 +301,7 @@ for(m in 1:length(methods_list)){
     
     
     if(save_PC_scores){
-      row.names(svobj$sv) = row.names(input_abundance_table)
+      #row.names(svobj$sv) = row.names(input_abundance_table)
       saveRDS( svobj, paste0(kmer_input_folder ,"/",batch_column, "/svobj_",methods_list[m],".rds"))
     }
     batch_corrected_output = sva_result$corrected_data
@@ -338,7 +343,33 @@ for(m in 1:length(methods_list)){
     
     
     sv_object_output= refactor_res
-    row.names(sv_object_output$scores) = row.names(input_abundance_table)
+    #row.names(sv_object_output$scores) = row.names(input_abundance_table)
+    batch_corrected_output = mat_scaled_corrected
+  }else if(methods_list[m ] == "refactor_protect"){
+    
+    require(TCA)
+    
+    if(use_RMT){
+      fileConn<-file( paste0(output_folder,"/",batch_column,"/NumSV_smartsva",".txt"),"r")
+      line = readLines(fileConn, n = 1)
+      close(fileConn)
+      num_factors = as.integer(line)
+      
+    }else{
+      num_factors = num_pcs
+    }
+    
+    #dim(total_metadata_mod_interest)
+   
+    
+    refactor_res = refactor(input_abundance_table, k=num_factors,C=total_metadata_mod_interest, C.remove =TRUE)
+    
+    RC = refactor_res$scores
+    mat_scaled_corrected<- t(resid(lm(t(input_abundance_table) ~ ., data=data.frame(RC))))
+    
+    
+    sv_object_output= refactor_res
+    #row.names(sv_object_output$scores) = row.names(input_abundance_table)
     batch_corrected_output = mat_scaled_corrected
   }
   #names(batch_corrected_outputs)

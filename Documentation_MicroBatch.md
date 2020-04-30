@@ -510,13 +510,13 @@ done
 
 
 
-for svs in 20 50 100
+for svs in 1 2 3 4 5 100 131
 do
 	for tran in clr_scale
 	do
 		for phen in bmi_corrected
 		do
-			qsub -cwd -V -N "svapred$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k7 BatchCorrected '$phen' minerva_first'$svs'filter_TRUE_trans_'$tran' 10 kmer Instrument"
+			qsub -cwd -V -N "svapred$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k7 BatchCorrected '$phen' smartsva_first'$svs'filter_TRUE_trans_'$tran' 10 kmer Instrument"
 		done
 	done
 done
@@ -585,7 +585,7 @@ do
 	done
 done
 
-for svs in 20 50 100
+for svs in 1 2 3 4 5 6 7 8 9 20 30 40 50 
 do
 	for tran in clr_scale
 	do
@@ -611,18 +611,20 @@ do
 done
 
 
-for svs in 1 2 3 4 5 6 7 8 9 10 20 30 40 50
+for svs in 1 2 3 4 5 6 7 8 9 10 20 30 40
 do
 	for tran in clr_scale
 	do
 		for phen in bin_antibiotic_last_year
 		do
-			qsub -cwd -V -N "svapred$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k6 BatchCorrected '$phen' smartsva_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen'"
+			qsub -cwd -V -N "svapred$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k7 BatchCorrected '$phen' smartsva_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen'"
 		done
 	done
 done
 
 
+# RAW
+qsub -cwd -V -N "svapred$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k6 BatchCorrected bin_antibiotic_last_year 'rawfilter_TRUE_trans_clr_scale&bmcfilter_TRUE_trans_clr_scale&ComBatfilter_TRUE_trans_clr_scale&limmafilter_TRUE_trans_clr_scale' 10 kmer Instrument"
 
 
 
@@ -649,11 +651,11 @@ Running as of 12:55 PM April 27
 ```
 
 
-for method in smartsva refactor
+for method in smartsva
 do 
-	for tran in none clr clr_scale
+	for tran in clr_scale
 	do
-		for k in 5 6 7 8
+		for k in 1 2 3
 		do
 			/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_max -arg "$method" -arg 20 -arg Instrument -arg 1 -arg 1 -arg bmi_corrected -arg 0 -arg "$tran"
 		done
@@ -670,15 +672,20 @@ for method in smartsva
 do 
 	for tran in clr_scale
 	do
-		for sv in 1 2 3 4 5 6 7 8 9 10 20 30 40 50 100
+		for sv in 1 2 3 4 5 6 7 8 9 10 30 40 50 120 140
 		do
-			/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_max -arg "$method" -arg $sv -arg Instrument -arg 1 -arg 1 -arg bin_antibiotic_last_year -arg 0 -arg "$tran"
+			/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_max -arg "$method" -arg $sv -arg Instrument -arg 1 -arg 1 -arg bmi_corrected -arg 0 -arg "$tran"
 		done
 	done
 done
 
 
-/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 32 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_max -arg "raw&bmc&ComBat&limma" -arg 1 -arg Instrument -arg 1 -arg 1 -arg bin_antibiotic_last_year -arg 0 -arg clr_scale
+
+
+
+
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 32 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_max -arg "smartsva" -arg 1 -arg Instrument -arg 1 -arg 1 -arg bin_antibiotic_last_year -arg 1 -arg clr_scale
 
 
 ```
@@ -792,9 +799,38 @@ done
 
 
 # missing
-bc Minerva: 20,30, 40 ,50 100 (20, 30, 40, 50, 100 : 3000295 - 3000300)
-bc smart sva binary: 1-9,10,20,30, 40 ,50 100 (1-9: 3000279 - 3000292) (all: 3001312 to 3001326)
-bc raw&bmc&ComBat&limma: 3000318
+bc Minerva (k=6): 20,30, 40 ,50 100 (20, 30, 40, 50, 100 : 3000295 - 3000300)
+bc Minerva (k=7): 1-10,20,30, 40 ,50 100 (3006452 -  3006467 )
+bc smart sva binary (k=6): 1-9,10,20,30, 40 ,50 100 (1-9: 3000279 - 3000292) (all: 3001312 to 3001326), 120 -140 (2006429, 3006430)
+bc smart sva binary (k=7): 1-9,10,20,30, 40 ,50 100, 120, 140 (3006433 - 3006450)
+bc smart sva binary RMT (k=6): 3007408
 
-classification Minerva: 4, 20, 30 , 40, 50 , 100
-classification smartsva: 1-10, 20, 30, 40, 50 , 100
+bc smart sva bmi (k=6): 1-9,10,30, 40 ,50, 120, 140 
+bc smart sva bmi (k=7): 1-9,10,30, 40 ,50, 120, 140 
+
+
+bc raw&bmc&ComBat&limma (k=6): 3013813
+bc raw&bmc&ComBat&limma (k=7): 
+
+classification Minerva (k=7): 1-9,20,30,40,50, (3013741- 3013754)
+classification smartsva: 100
+prediction Smartsva (k=6): 1-10,30,40,50,120,140 
+classification Smartsva (k=7): 1-10,30,40,50,120,140  (3009808 3009820 )
+prediction Smartsva (k=7): 1-5,20,100,131,  
+
+plot smartsva now:
+
+
+
+for svs in 1 2 3 4 5 6 7 8 9 10 20 30 40
+do
+	for tran in clr_scale
+	do
+		for phen in bin_antibiotic_last_year
+		do
+			qsub -cwd -V -N "svapred$svs$tran$phen" -l h_data=16G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k7 BatchCorrected '$phen' smartsva_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen'"
+		done
+	done
+
+
+

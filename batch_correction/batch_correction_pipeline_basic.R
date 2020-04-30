@@ -5,8 +5,8 @@ print(args)
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
 #          "bmc&ComBat",10,1)
 
-args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-"AGP_Hfilter", "refactor_protect",20,"Instrument",1,1,"bmi_corrected",0,"clr_scale")
+# args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+# "AGP_Hfilter", "refactor_protect",20,"Instrument",1,1,"bmi_corrected",0,"clr_scale")
 # 
 # args = c("otu", 6, "/u/home/b/briscoel/project-halperin/MicroBatch", "AGP_Hfilter",
 #          "smartsva_clr",10,"Instrument",1, "bmi_corrected",0)

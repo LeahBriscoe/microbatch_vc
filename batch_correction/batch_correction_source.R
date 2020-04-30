@@ -81,7 +81,7 @@ pca_method <- function(input,clr_transform = FALSE,center_scale_transform =TRUE,
   
   svd_result = big_SVD(myFBM,k=(num_pcs+10))
 
-  
+  #?big_SVD
   print(Sys.time()-t1)
   
   pca_score <-  svd_result$u %*% diag(svd_result$d)

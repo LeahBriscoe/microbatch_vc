@@ -70,5 +70,63 @@ head(thomas_a_load)
 
 res <- curatedMetagenomicData("HMP_2012.metaphlan_bugs_list.stool", dryrun=FALSE)
 res$HMP_2012.metaphlan_bugs_list.stool
-(physeq, addtax = T, addtot = F, addmaxrank = F,
+#(physeq, addtax = T, addtot = F, addmaxrank = F)
   
+  
+  
+### +++++++++++#####
+
+
+all_relab = readRDS( "~/Documents/curatedMetagenomicData/allrelab.rds")
+all_counts = readRDS( "~/Documents/curatedMetagenomicData/allcounts.rds")
+combined_metadata = readRDS( "~/Documents/curatedMetagenomicData/meta.rds")
+
+
+
+
+phyloseq_ob <- all_counts[[1]]
+for(d in 2:length(all_counts)){
+  print(d)
+  phyloseq_ob  <- merge_phyloseq(phyloseq_ob ,all_counts[[d]] )
+}
+all_counts_df <- as(otu_table(object=phyloseq_ob), "matrix")
+
+species_mask = grepl("s__",row.names(all_counts_df))
+species_table = all_counts_df[species_mask,]
+dim(species_table)
+samples = colnames(species_table)
+require(dplyr)
+select_samples = combined_metadata %>% filter(sampleID %in% samples)
+#length(intersect(combined_metadata$sampleID,samples))
+row.names(species_table)
+table(select_samples$dataset_name)
+
+dim(select_samples)
+dim(species_table)
+
+samples  = intersect(select_samples$sampleID,colnames(species_table))
+row.names(select_samples) = select_samples$sampleID
+dim(metadata)
+metadata = metadata
+
+
+
+metadata = select_samples %>% filter(dataset_name %in% c("ZellerG_2014","FengQ_2015"))
+
+otu_table = species_table[,samples_doub$sampleID]
+row.names(metadata ) = metadata$sampleID
+sum(table(metadata$disease_subtype))
+dim(otu_table)
+new_bin_crc = sapply(metadata$disease_subtype,function(x){
+  if(is.na(x)){
+    return("H")
+  }else{
+    return(x)
+  }
+})
+metadata$bin_crc = new_bin_crc 
+dir.create("~/Documents/MicroBatch/microbatch_vc/data/curator_fengzeller")
+saveRDS(otu_table,"~/Documents/MicroBatch/microbatch_vc/data/curator_fengzeller/otu_table.rds")
+saveRDS(metadata,"~/Documents/MicroBatch/microbatch_vc/data/curator_fengzeller/metadata.rds")
+write.table(otu_table,"~/Documents/MicroBatch/microbatch_vc/data/curator_fengzeller/otu_table.txt",sep = "\t",quote = FALSE)
+write.table(metadata,"~/Documents/MicroBatch/microbatch_vc/data/curator_fengzeller/metadata.txt",sep = "\t",quote = FALSE)

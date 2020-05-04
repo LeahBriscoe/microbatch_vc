@@ -298,12 +298,9 @@ for(m in 1:length(methods_list)){
       
     svobj = sva_result$sv.obj
     sv_object_output =  svobj
+    row.names(sv_object_output$sv) = colnames(input_abundance_table)
     
     
-    if(save_PC_scores){
-      #row.names(svobj$sv) = row.names(input_abundance_table)
-      saveRDS( svobj, paste0(kmer_input_folder ,"/",batch_column, "/svobj_",methods_list[m],".rds"))
-    }
     batch_corrected_output = sva_result$corrected_data
     
     if(use_RMT){
@@ -341,8 +338,9 @@ for(m in 1:length(methods_list)){
     RC = refactor_res$scores
     mat_scaled_corrected<- t(resid(lm(t(input_abundance_table) ~ ., data=data.frame(RC))))
     
-    
+    row.names(refactor_res$scores) = colnames(input_abundance_table)
     sv_object_output= refactor_res
+    
     #row.names(sv_object_output$scores) = row.names(input_abundance_table)
     batch_corrected_output = mat_scaled_corrected
   }else if(methods_list[m ] == "refactor_protect"){

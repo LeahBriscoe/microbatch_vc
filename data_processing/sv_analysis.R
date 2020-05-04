@@ -5,8 +5,8 @@ print(args)
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
 #          "bmc&ComBat",10,1)
 
-args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-         "AGP_Hfilter", "refactor",20,"Instrument",1,1,"bmi_corrected",0,"clr&clr_scale")
+args = c("kmer", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+         "AGP_max", "minerva",100,"Instrument",1,1,"bmi_corrected",0,"clr_scale")
 # 
 # args = c("otu", 6, "/u/home/b/briscoel/project-halperin/MicroBatch", "AGP_Hfilter",
 #          "smartsva_clr",10,"Instrument",1, "bmi_corrected",0)
@@ -59,15 +59,15 @@ if(grepl("clr",transformation)){
 }
 if(data_type == "kmer"){
   dir.create(paste0(kmer_input_folder,"/",batch_column))
-  
+
   input_folder = kmer_input_folder
-  kmer_table = readRDS(paste0(kmer_input_folder,"/kmer_table", file_type,".rds"))
-  
+  #kmer_table = readRDS(paste0(kmer_input_folder,"/kmer_table", file_type,".rds"))
+
 }else{
   dir.create(paste0(otu_input_folder,"/",batch_column))
-  
+
   input_folder = otu_input_folder
-  otu_table = readRDS(paste0(otu_input_folder,"/otu_table", file_type,".rds"))
+  #otu_table = readRDS(paste0(otu_input_folder,"/otu_table", file_type,".rds"))
 }
 total_metadata = readRDS(paste0(input_folder,"/metadata.rds"))
 
@@ -85,12 +85,21 @@ for( t in 1:length(transformation)){
   extra_file_name_list[[t]] = paste0(extra_file_name,"filter_",filter_low_counts, "_trans_",transformation[t])
   
   if(save_PC_scores){
-    sv_object_list[[t]] = readRDS(paste0(output_folder ,"/SV_analysis/SVs_",methods_list[m],extra_file_name_list[[t]],".rds"))
+    if(methods_list == "minerva"){
+      
+      subfolder = batch_column
+    }else if(methods_list == "smartsva"){
+      subfolder = paste0("protect_",covariate_interest)
+    }else if(methods_list == "refactor"){
+      subfolder = batch_column
+    }
+    sv_object_list[[t]] = readRDS(paste0(output_folder ,"/SV_analysis/",subfolder, "/SVs_",methods_list[m],extra_file_name_list[[t]],".rds"))
     
   }
 }
 
 
+### get row names for SVs based on MINERCA which had row names
 pca_ob= readRDS(paste0(output_folder ,"/SV_analysis/SVs_minerva_first20filter_TRUE_trans_clr_scale.rds"))
 
 sample_names = row.names(pca_ob$pca_score) 
@@ -110,10 +119,10 @@ for( t in 1:length(transformation)){
 }
 
 for( t in 1:length(transformation)){
-  t=1
+
   if(methods_list == "minerva"){
     svs = sv_object_list[[t]]$pca_score
-    
+    sample_names = row.names(svs)
   }else if(methods_list == "smartsva"){
     svs = sv_object_list[[t]]$sv
   }else if(methods_list == "refactor"){
@@ -134,10 +143,11 @@ for( t in 1:length(transformation)){
   
   #rowMeans(abs(C))
   library(RColorBrewer)
+  t=1
   pdf(paste0(output_folder ,"/SV_analysis/SV_corr_within_",methods_list[m],extra_file_name_list[[t]],".pdf"))
   #heatmap(C,col= colorRampPalette(brewer.pal(8, "Blues"))(25))
   #plotCorrMatrix(C,sort = FALSE)
-  cor_sv = cor(svs)
+  cor_sv = cor(svs[,1:20])
   p <- ggcorrplot::ggcorrplot(cor_sv,p.mat = ggcorrplot::cor_pmat(cor_sv))
   plot(p)
   dev.off()
@@ -146,12 +156,13 @@ for( t in 1:length(transformation)){
   pdf(paste0(output_folder ,"/SV_analysis/SV_corr_withbmi_",methods_list[m],extra_file_name_list[[t]],".pdf"))
   #heatmap(C,col= colorRampPalette(brewer.pal(8, "Blues"))(25))
   #plotCorrMatrix(C,sort = FALSE)
-  cor_sv = matrix(cor(svs,bmi_data),nrow = ncol(svs))
+  cor_sv = matrix(cor(svs[,1:20],bmi_data),nrow = ncol(svs[,1:20]))
   p <- ggcorrplot::ggcorrplot(cor_sv)
   plot(p)
   dev.off()
   
-  
+  #sum(!is.na(total_metadata$bin_antibiotic_last_year))
+  #dim(svs)
   
   binary_vars = c("collection_AM","bin_alcohol_consumption","bin_omnivore_diet")#,"bin_antibiotic_last_year")
   categorical_vars = c("bin_bowel_movement",

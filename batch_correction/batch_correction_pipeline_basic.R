@@ -385,24 +385,15 @@ for(m in 1:length(methods_list)){
   }
   extra_file_name = paste0(extra_file_name,"filter_",filter_low_counts, "_trans_",transformation)
   
-  if(grepl("sva",methods_list[m])){
-    write.table(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder,"/protect_",covariate_interest,"/BatchCorrected_",methods_list[m],extra_file_name,".txt"),
+  write.table(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder,"/protect_",covariate_interest,"/BatchCorrected_",methods_list[m],extra_file_name,".txt"),
                 sep = "\t",quote = FALSE)
-    saveRDS(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder ,"/protect_",covariate_interest,"/BatchCorrected_",methods_list[m],extra_file_name,".rds"))
-    if(save_PC_scores){
-      saveRDS(sv_object_output, paste0(output_folder ,"/protect_",covariate_interest,"/SVs_",methods_list[m],extra_file_name,".rds"))
-      
-      
-    }
-  }else{
-    write.table(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder,"/",batch_column,"/BatchCorrected_",methods_list[m],extra_file_name,".txt"),
-                sep = "\t",quote = FALSE)
-    saveRDS(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder ,"/",batch_column,"/BatchCorrected_",methods_list[m],extra_file_name,".rds"))
-    if(save_PC_scores){
-      saveRDS(sv_object_output, paste0(output_folder ,"/",batch_column,"/SVs_",methods_list[m],extra_file_name,".rds"))
-      
-      
-    }
+  saveRDS(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder ,"/protect_",covariate_interest,"/BatchCorrected_",methods_list[m],extra_file_name,".rds"))
+  if(save_PC_scores){
+    saveRDS(sv_object_output, paste0(output_folder ,"/protect_",covariate_interest,"/SVs_",methods_list[m],extra_file_name,".rds"))
+ 
+  # write.table(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder,"/",batch_column,"/BatchCorrected_",methods_list[m],extra_file_name,".txt"),
+  #             sep = "\t",quote = FALSE)
+
   }
   
   

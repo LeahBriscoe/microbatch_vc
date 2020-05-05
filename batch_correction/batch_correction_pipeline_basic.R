@@ -7,6 +7,12 @@ print(args)
 
 # args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "AGP_Hfilter", "refactor_protect",20,"Instrument",1,1,"bmi_corrected",0,"clr_scale")
+args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+"Hispanic", "minerva",10,"Instrument",1,1,"antibiotic",0,"clr_scale")
+# args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+#          "Hispanic", "minerva",10,"Instrument",1,1,"bmi_v2",0,"clr_scale")
+
+
 # 
 # args = c("otu", 6, "/u/home/b/briscoel/project-halperin/MicroBatch", "AGP_Hfilter",
 #          "smartsva_clr",10,"Instrument",1, "bmi_corrected",0)
@@ -86,11 +92,12 @@ if(grepl("reprocess",study_name)){
 
 
 #install.packages('SmartSVA')
-new_collection_year = total_metadata$collection_year
-new_collection_year[new_collection_year < 2010] = NA
-new_collection_year[new_collection_year > 2017] = NA
-total_metadata$collection_year = new_collection_year
-
+if(grepl("AGP",study_name)){
+  new_collection_year = total_metadata$collection_year
+  new_collection_year[new_collection_year < 2010] = NA
+  new_collection_year[new_collection_year > 2017] = NA
+  total_metadata$collection_year = new_collection_year
+}
 
 
 
@@ -113,21 +120,30 @@ batch_labels_dummy = to.dummy(batch_labels,"batch")
 
 batch_corrected_outputs = list()
 
-collection_date=as.Date(total_metadata$collection_timestamp, format="%Y-%m-%d")
-total_metadata$collection_date = collection_date
-collection_days = collection_date - min(collection_date,na.rm=TRUE)
-collection_month = format(as.Date(total_metadata$collection_date, format="%m/%d/%Y"), "%Y-%m")
-collection_year = as.integer(format(as.Date(collection_date, format="%m/%d/%Y"), "%Y"))
+if(grepl(study_name,"AGP")){
+  collection_date=as.Date(total_metadata$collection_timestamp, format="%Y-%m-%d")
+  total_metadata$collection_date = collection_date
+  collection_days = collection_date - min(collection_date,na.rm=TRUE)
+  collection_month = format(as.Date(total_metadata$collection_date, format="%m/%d/%Y"), "%Y-%m")
+  
+  
+  collection_year = as.integer(format(as.Date(collection_date, format="%m/%d/%Y"), "%Y"))
+  
+  batch_labels2 = as.character(collection_year)
+  
+  #total_metadata_mod = process_model_matrix(total_metadata = total_metadata,binary_vars="sex",categorical_vars ="race.x",numeric_vars = "bmi_corrected")
+  total_metadata_mod = process_model_matrix(total_metadata = total_metadata,binary_vars="sex",categorical_vars ="race.x")
+  bio_signal_formula <- as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod), collapse = " + ")))
+  #names(batch_corrected_outputs)
+  
+}
 
-batch_labels2 = as.character(collection_year)
-
-#total_metadata_mod = process_model_matrix(total_metadata = total_metadata,binary_vars="sex",categorical_vars ="race.x",numeric_vars = "bmi_corrected")
-total_metadata_mod = process_model_matrix(total_metadata = total_metadata,binary_vars="sex",categorical_vars ="race.x")
-bio_signal_formula <- as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod), collapse = " + ")))
-#names(batch_corrected_outputs)
 
 if(grepl(covariate_interest, "bmi")){
-  total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,numeric_vars = "bmi_corrected")
+ 
+  #covariate_interest = "host_body_mass_index"
+  total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,numeric_vars =  covariate_interest)
+  
 }else{
   total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,binary_vars = covariate_interest)
 }
@@ -364,7 +380,7 @@ for(m in 1:length(methods_list)){
     
     RC = refactor_res$scores
     mat_scaled_corrected<- t(resid(lm(t(input_abundance_table) ~ ., data=data.frame(RC))))
-    
+    row.names(refactor_res$scores) = colnames(input_abundance_table)
     
     sv_object_output= refactor_res
     #row.names(sv_object_output$scores) = row.names(input_abundance_table)

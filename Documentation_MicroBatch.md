@@ -449,6 +449,10 @@ done
 ```
 for tran in clr_scale; do for svs in 1 2 3 4 5 6 7 8 9 20 30 40; do qsub -cwd -V -N "mpred$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k7 BatchCorrected bmi_corrected minerva_first'$svs'filter_TRUE_trans_'$tran' 10 kmer Instrument"; done; done
 ```
+#### Hispanic
+```
+for tran in clr_scale; do for svs in 1 2 3 4 5 6 7 8 9 20 30 40; do qsub -cwd -V -N "mpred$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_hispanic_k6 BatchCorrected bmi_corrected minerva_first'$svs'filter_TRUE_trans_'$tran' 10 kmer Instrument"; done; done
+```
 
 ### smartsva predi
 ```
@@ -574,15 +578,29 @@ do
 done
 
  ```
- 
+ ```
  
 #batch correction
  
  
-
+### refactor bc
+```
+for method in refactor refactor; do for tran in clr_scale; do for sv in 1 2 3 4 5 6 7 8 9 10 20 30 40 50 100 120 140; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_max -arg "$method" -arg $sv -arg Instrument -arg 1 -arg 1 -arg bmi_corrected -arg 0 -arg "$tran"; done; done; done
+```
 
 
 ### minerva bc
+
+```
+for method in minerva; do for tran in clr_scale; do for sv in 1 2 3 4 5 6 7 8 9 10 20 30 40 50 100 120 140; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_max -arg "$method" -arg $sv -arg Instrument -arg 1 -arg 1 -arg bmi_corrected -arg 0 -arg "$tran"; done; done; done
+```
+
+#### Hispanic
+```
+for method in minerva; do for tran in clr_scale; do for sv in 1 2 3 ; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg Hispanic -arg "$method" -arg $sv -arg 'extraction_robot..exp.' -arg 1 -arg 1 -arg bmi_v2 -arg 0 -arg "$tran"; done; done; done
+```
+
+
 ### Smart sva bc
 ```
 for method in smartsva; do for tran in clr_scale; do for sv in 120 130 150 200; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_max -arg "$method" -arg $sv -arg Instrument -arg 1 -arg 1 -arg bmi_corrected -arg 0 -arg "$tran"; done; done; done
@@ -721,8 +739,13 @@ bc raw&bmc&ComBat&limma (k=6): DONE
 bc raw&bmc&ComBat&limma (k=7): DONE
 
 
-bc refactor (k=6)
-bc refactor (k=7)
+bc Minerva bmi(k=6): 1-10,20,30,40,50, 100, 120,140 (3051232-3051249)
+bc Minerva bmi (k=7): 1-10,20,30,40,50, 100, 120,140 (3051216 - 3051230)
+bc refactor bmi (k=6): 1-10,20,30,40,50,100, 120,140 (3051290 -  3051306 )
+bc refactor bmi (k=7):1-10,20,30,40,50,100, 120,140 (3051253 - 3051249)
+bc refactor_protect bmi (k=6): 1-10,20,30,40,50,100, 120,140 (3051307 ... )
+bc refactor_protect bmi (k=7):1-10,20,30,40,50,100, 120,140 (3051253- 3051284)
+
 
 
 prediction minerva (k=7): 1-9,20,30,40,120,140  (10, 100, 50: done) (3026924-3026942)

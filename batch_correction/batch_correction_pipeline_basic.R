@@ -6,9 +6,9 @@ print(args)
 #          "bmc&ComBat",10,1)
 
 # args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-# "AGP_Hfilter", "refactor_protect",20,"Instrument",1,1,"bmi_corrected",0,"clr_scale")
-args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-"Hispanic", "minerva",10,"Instrument",1,1,"antibiotic",0,"clr_scale")
+# "AGP_Hfilter", "refactor",20,"Instrument",1,1,"bmi_corrected",0,"none")
+# args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+# "Hispanic", "minerva",10,"Instrument",1,1,"antibiotic",0,"clr_scale")
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 #          "Hispanic", "minerva",10,"Instrument",1,1,"bmi_v2",0,"clr_scale")
 
@@ -186,7 +186,7 @@ if(grepl("scale",transformation)){
 input_abundance_table = input_abundance_table[rowVars(as.matrix(input_abundance_table)) > 10e-10 ,]
 
 
-if(!grepl("reprocess",study_name)){
+if(!grepl("reprocess",study_name) & grepl("AGP",study_name)){
   total_metadata_mod2 = process_model_matrix(total_metadata = total_metadata,binary_vars="sex",
                                              categorical_vars =c("bin_omnivore_diet","bin_antibiotic_last_year"))
   bio_signal_formula2 <- as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod2), collapse = " + ")))
@@ -349,7 +349,10 @@ for(m in 1:length(methods_list)){
     }
     
     
-    refactor_res = refactor(input_abundance_table, k=num_factors)
+    refactor_res = refactor(input_abundance_table[,1:30], k=num_factors)
+    #write.table(input_abundance_table,"~/Downloads/RefactorExample.txt",quote = FALSE,sep = "\t")
+    
+    sum(rowSums(input_abundance_table[,1:30])==0)
     
     RC = refactor_res$scores
     mat_scaled_corrected<- t(resid(lm(t(input_abundance_table) ~ ., data=data.frame(RC))))

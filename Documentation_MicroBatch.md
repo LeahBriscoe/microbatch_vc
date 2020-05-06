@@ -447,17 +447,27 @@ done
 
 ### minerva predi
 ```
-for tran in clr_scale; do for svs in 1 2 3 4 5 6 7 8 9 20 30 40; do qsub -cwd -V -N "mpred$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k7 BatchCorrected bmi_corrected minerva_first'$svs'filter_TRUE_trans_'$tran' 10 kmer Instrument"; done; done
+for tran in clr_scale; do for svs in 1 2 3 4 5 6 7 8 9 20 30 40; do for phen in bmi_corrected; do qsub -cwd -V -N "mpred$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k6 BatchCorrected bmi_corrected minerva_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen'"; done; done; done
 ```
+
 #### Hispanic
 ```
-for tran in clr_scale; do for svs in 1 2 3 4 5 6 7 8 9 20 30 40; do qsub -cwd -V -N "mpred$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_hispanic_k6 BatchCorrected bmi_corrected minerva_first'$svs'filter_TRUE_trans_'$tran' 10 kmer Instrument"; done; done
+for tran in clr_scale; do for svs in 1 2 3 4 5 6 7 8 9 20 30 40; do qsub -cwd -V -N "mpred$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_hispanic_k6 BatchCorrected bmi_corrected minerva_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen'"; done; done
 ```
 
 ### smartsva predi
 ```
 for svs in 131 212 258; do for tran in clr_scale; do for phen in bmi_corrected; do qsub -cwd -V -N "svapred$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k7 BatchCorrected '$phen' smartsva_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen'"; done; done; done
 
+```
+
+### Refactor
+```
+for tran in clr_scale; do for svs in 1 2 3 4 5 6 7 8 9 10; do for phen in bmi_corrected; do qsub -cwd -V -N "mpred$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k7 BatchCorrected bmi_corrected refactor_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen'"; done; done; done
+```
+### Refactor protext
+```
+for tran in clr_scale; do for svs in 1 2 3 4 5 6 7 8 9 20 30 40; do for phen in bmi_corrected; do qsub -cwd -V -N "mpred$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k7 BatchCorrected bmi_corrected refactor_protect_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen'"; done; done
 ```
 
 ## many methods
@@ -598,6 +608,9 @@ for method in minerva; do for tran in clr_scale; do for sv in 1 2 3 4 5 6 7 8 9 
 #### Hispanic
 ```
 for method in minerva; do for tran in clr_scale; do for sv in 1 2 3 ; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg Hispanic -arg "$method" -arg $sv -arg 'extraction_robot..exp.' -arg 1 -arg 1 -arg bmi_v2 -arg 0 -arg "$tran"; done; done; done
+
+# binary
+for method in minerva; do for tran in clr_scale; do for sv in 1 2 3 ; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg Hispanic -arg "$method" -arg $sv -arg 'extraction_robot..exp.' -arg 1 -arg 1 -arg antibiotic -arg 0 -arg "$tran"; done; done; done
 ```
 
 
@@ -739,11 +752,11 @@ bc raw&bmc&ComBat&limma (k=6): DONE
 bc raw&bmc&ComBat&limma (k=7): DONE
 
 
-bc Minerva bmi(k=6): 1-10,20,30,40,50, 100, 120,140 (3051232-3051249)
+bc Minerva bmi(k=6): DONE
 bc Minerva bmi (k=7): 1-10,20,30,40,50, 100, 120,140 (3051216 - 3051230)
-bc refactor bmi (k=6): 1-10,20,30,40,50,100, 120,140 (3051290 -  3051306 )
+bc refactor bmi (k=6): 1-10,20,30,40,50,100, 120,140 (3051290 -  3051306 )(DONE: 3,5,6,8,9,10)
 bc refactor bmi (k=7):1-10,20,30,40,50,100, 120,140 (3051253 - 3051249)
-bc refactor_protect bmi (k=6): 1-10,20,30,40,50,100, 120,140 (3051307 ... )
+bc refactor_protect bmi (k=6): 1-10,20,30,40,50,100, 120,140 (3051307 ... )  
 bc refactor_protect bmi (k=7):1-10,20,30,40,50,100, 120,140 (3051253- 3051284)
 
 
@@ -752,12 +765,21 @@ prediction minerva (k=7): 1-9,20,30,40,120,140  (10, 100, 50: done) (3026924-302
 
 
 
+# RUNNING Hispanic
+bc minerva bmi (k=6): (3052259-3052261)
+bc minerva antibiotic (k=6): ( 3052244 -3052247)
 
 
 
 
 
 
+# prediction running
+prediction minerva (k=6): 10,50,100,120,140 (3056711-15), 1-9, 20,30,40 (3056716-27)
+predictin refactor (k=6): (3056729 - 38)
+
+
+========================
 
 
 classification Minerva (k=7): 1-9,20,30,40,50, (3013741- 3013754)
@@ -771,7 +793,7 @@ plot smartsva now:
 
 prediction Smartsva (k=6): 1-10,30,40,50,120,140 (3024000 - 3024030)
 prediction Smartsva (k=7): 1-10,30,40,50,100 (3025279 )
-prediction minerva (k=6): 1-9,20,30,40,50,120,140  (10 done) (3024230 - 3024252) 
+
 
 prediction raw&bmc&ComBat&limma (k=6)
 prediction raw&bmc&ComBat&limma (k=7)

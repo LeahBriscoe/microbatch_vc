@@ -45,6 +45,10 @@ methods = args[5].split("&")
 n_repeats = int(args[6])
 data_type = args[7]
 batch_def_folder = args[8]
+label_pos_or_neg = int(args[9])
+target_label = list(args[10])
+
+print(target_label
 
 
 data_folder = greater_folder + "/data/" + study_name + "/"   
@@ -60,6 +64,13 @@ if column_of_interest == "antibiotic" and "AGP" in study_name:
     #Counter(metadata["antibiotic"])
     metadata[column_of_interest] = bin_antibiotic
     pos_label = 1 #"Healthy"#'1-2' #'0-0.5'#'Omnivore' # '0-1.5'
+
+# if column_of_interest == "antibiotic" and "Hispanic" in study_name:
+#     bin_antibiotic = utils.binarize_labels_mod(metadata["antibiotic"],pos_labels =['1'],none_labels = ["Not provided",float("Nan"),'not provided'])
+
+#     #Counter(metadata["antibiotic"])
+#     metadata[column_of_interest] = bin_antibiotic
+#     pos_label = 1 #"Healthy"#'1-2' #'0-0.5'#'Omnivore' # '0-1.5'
 elif column_of_interest == "age_of_reloc":
     bin_column_of_interest = utils.binarize_labels_mod(metadata["agegroup_c6_v2.x"],pos_labels =['1','2','3','4'],none_labels = ["not applicable",float("Nan"),'not provided'])
 
@@ -67,10 +78,16 @@ elif column_of_interest == "age_of_reloc":
     column_of_interest = column_of_interest
     pos_label = 1 #"Healthy"#'1-2' #'0-0.5'#'Omnivore' # '0-1.5'
 else:
-    bin_column_of_interest = utils.binarize_labels_mod(metadata[column_of_interest],pos_labels =['Yes'],none_labels = ["not applicable",float("Nan"),'not provided'])
+	if label_pos_or_neg:
+    	bin_column_of_interest = utils.binarize_labels_mod(metadata[column_of_interest],pos_labels =target_label,none_labels = ["not applicable",float("Nan"),'not provided'])
+    else:
+    	bin_column_of_interest = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],neg_labels =target_label)
+    
     metadata[column_of_interest] = bin_column_of_interest
     column_of_interest = column_of_interest
     pos_label = 1 #"Healthy"#'1-2' #'0-0.5'#'Omnivore' # '0-1.5
+
+print(Counter(metadata[column_of_interest] ))
 
 names = ["Random Forest","Naive Bayes"]
 all_methods_metrics = dict()

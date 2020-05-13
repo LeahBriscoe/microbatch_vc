@@ -29,13 +29,20 @@ def mean_confidence_interval(data, confidence=0.95):
     h = se * scipy.stats.t.ppf((1 + confidence) / 2., n-1)
     return m, m-h, m+h
 
-def binarize_labels_mod(labels,pos_labels,none_labels):
+def binarize_labels_mod(labels,pos_labels = [],none_labels,neg_labels = []):
     new_labels = []
     for lab in labels:
-        if lab in pos_labels:
-            new_labels.append(1)
-        elif lab in none_labels:
+        if lab in none_labels:
             new_labels.append(None)
-        else:
-            new_labels.append(0)
+        elif len(pos_labels) > 0:
+            if lab in pos_labels:
+                new_labels.append(1)
+            else:
+                new_labels.append(0)
+        elif len(neg_labels) > 0:
+            if lab in neg_labels:
+                new_labels.append(0)
+            else:
+                new_labels.append(1)
+
     return new_labels

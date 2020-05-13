@@ -77,11 +77,9 @@ res$HMP_2012.metaphlan_bugs_list.stool
 ### +++++++++++#####
 
 
-all_relab = readRDS( "~/Documents/curatedMetagenomicData/allrelab.rds")
-all_counts = readRDS( "~/Documents/curatedMetagenomicData/allcounts.rds")
-combined_metadata = readRDS( "~/Documents/curatedMetagenomicData/meta.rds")
-
-
+all_relab = readRDS( "~/Documents/curatedMetagenomicData/Dataset1/allrelab.rds")
+all_counts = readRDS( "~/Documents/curatedMetagenomicData/Dataset1/allcounts.rds")
+combined_metadata = readRDS( "~/Documents/curatedMetagenomicData/Dataset1/meta.rds")
 
 
 phyloseq_ob <- all_counts[[1]]
@@ -106,27 +104,58 @@ dim(species_table)
 
 samples  = intersect(select_samples$sampleID,colnames(species_table))
 row.names(select_samples) = select_samples$sampleID
-dim(metadata)
-metadata = metadata
+
+intersect_samples = intersect(colnames(species_table),select_samples$sampleID)
+
+metadata = select_samples %>% filter(sampleID %in% intersect_samples)
+main_datasets = c("ZellerG_2014","YuJ_2015","FengQ_2015","VogtmannE_2016","HanniganGD_2017",
+                  "ThomasAM_2018a", "ThomasAM_2018b")
+main_metadata = select_samples %>% filter(dataset_name %in% main_datasets)
+main_otu_table = species_table[,main_metadata$sampleID]
+#dataset_names = names(table(select_samples$dataset_name))
+#dataset_names[grepl("Vogt",dataset_names)]
+
+metadata_other = metadata %>% filter(!(sampleID %in% main_metadata$sampleID))
+metadata_other = metadata_other %>% distinct(sampleID,.keep_all = TRUE)
+dim(metadata_other)
+dim(main_metadata)
+otu_table_other = species_table[,metadata_other$sampleID]
+
+metadata = rbind(metadata_other,main_metadata)
+otu_table = cbind(otu_table_other,main_otu_table)
 
 
-
-metadata = select_samples %>% filter(dataset_name %in% c("ZellerG_2014","FengQ_2015"))
-
-otu_table = species_table[,samples_doub$sampleID]
 row.names(metadata ) = metadata$sampleID
+
 sum(table(metadata$disease_subtype))
 dim(otu_table)
+
+# zeller good
+# yu good
+# feng good
+# thomas defined
+
+table(select_samples$dataset_name)
+
+table(main_metadata %>% filter(dataset_name =="ZellerG_2014") %>% select(disease_subtype))
+
 new_bin_crc = sapply(metadata$disease_subtype,function(x){
   if(is.na(x)){
     return("H")
+  }else if (x == "carcinoma" | x == "adenocarcinoma"){
+    return("CRC")
   }else{
-    return(x)
+    return(NA)
   }
 })
+table(new_bin_crc)
 metadata$bin_crc = new_bin_crc 
-dir.create("~/Documents/MicroBatch/microbatch_vc/data/curator_fengzeller")
-saveRDS(otu_table,"~/Documents/MicroBatch/microbatch_vc/data/curator_fengzeller/otu_table.rds")
-saveRDS(metadata,"~/Documents/MicroBatch/microbatch_vc/data/curator_fengzeller/metadata.rds")
-write.table(otu_table,"~/Documents/MicroBatch/microbatch_vc/data/curator_fengzeller/otu_table.txt",sep = "\t",quote = FALSE)
-write.table(metadata,"~/Documents/MicroBatch/microbatch_vc/data/curator_fengzeller/metadata.txt",sep = "\t",quote = FALSE)
+
+new_dir = "~/Documents/MicroBatch/microbatch_vc/data/curator_all"
+dir.create(new_dir)
+saveRDS(otu_table,paste0(new_dir,"/otu_table.rds"))
+saveRDS(metadata,paste0(new_dir,"/metadata.rds"))
+write.table(otu_table,paste0(new_dir,"/otu_table.txt"),sep = "\t",quote = FALSE)
+write.table(metadata,paste0(new_dir,"/metadata.txt"),sep = "\t",quote = FALSE)
+dim(main_metadata)
+dim(otu_table)

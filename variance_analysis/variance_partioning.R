@@ -47,10 +47,10 @@ if(data_type == "kmer"){
 }else{
   input_folder =  paste0(otu_input_folder,"/",batch_def_folder)
 }
-total_metadata = readRDS(paste0(otu_input_folder,"/metadata.rds"))
+total_metadata = readRDS(paste0(kmer_input_folder,"/metadata.rds"))
 # =========================================================================== #
 #getting read depth
-otu_table = readRDS(paste0(otu_input_folder , "/otu_table.rds"))
+otu_table = readRDS(paste0(kmer_input_folder , "/kmer_table.rds"))
 total_metadata$librarysize = colSums(otu_table)
 
 # ============================================================================== #
@@ -93,7 +93,7 @@ total_metadata_mod = process_model_matrix(total_metadata = total_metadata,
                                           binary_vars=binary_vars,
                                           categorical_vars =categorical_vars,
                                           numeric_vars = numeric_vars)
-
+print(dim(total_metadata_mod))
 total_metadata_mod_formula = as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod), collapse = " + ")))
 
 # ============================================================================== #
@@ -162,6 +162,15 @@ for(i in 1:length(batch_corrected_data_input)){
   input_abundance_table = batch_corrected_data_input[[methods_list[i]]]
   input_metadata_table = total_metadata_mod
   
+  common_samples = intersect(colnames(input_abundance_table ),row.names(input_metadata_table))
+  print("common samples")
+  print(length(common_samples))
+  input_abundance_table  = input_abundance_table[,common_samples]
+  input_metadata_table = input_metadata_table[common_samples,]
+  
+  print(dim(input_abundance_table))
+  print(dim( input_metadata_table))
+  
   if(apply_bootstrap){
     
     samples_picked = sample(1:ncol(input_abundance_table),as.integer(bootstrap_prop*ncol(input_abundance_table)))
@@ -173,7 +182,8 @@ for(i in 1:length(batch_corrected_data_input)){
     input_metadata_table = input_metadata_table[sample_names_picked,]
   }
   
-  dim(input_abundance_table)
+  print(dim(input_abundance_table))
+  print(dim(input_metadata_table))
   # remove any features with 0 variance in uncorrected data
   yes_no_na = apply(input_metadata_table,1,function(x){
     any(is.na(x))

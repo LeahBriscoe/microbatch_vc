@@ -46,9 +46,9 @@ n_repeats = int(args[6])
 data_type = args[7]
 batch_def_folder = args[8]
 label_pos_or_neg = int(args[9])
-target_label = list(args[10])
+target_label = args[10]
 
-print(target_label
+print(target_label)
 
 
 data_folder = greater_folder + "/data/" + study_name + "/"   
@@ -78,10 +78,10 @@ elif column_of_interest == "age_of_reloc":
     column_of_interest = column_of_interest
     pos_label = 1 #"Healthy"#'1-2' #'0-0.5'#'Omnivore' # '0-1.5'
 else:
-	if label_pos_or_neg:
-    	bin_column_of_interest = utils.binarize_labels_mod(metadata[column_of_interest],pos_labels =target_label,none_labels = ["not applicable",float("Nan"),'not provided'])
+    if label_pos_or_neg:
+        bin_column_of_interest = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],pos_labels =target_label)
     else:
-    	bin_column_of_interest = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],neg_labels =target_label)
+        bin_column_of_interest = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],neg_labels =target_label)
     
     metadata[column_of_interest] = bin_column_of_interest
     column_of_interest = column_of_interest

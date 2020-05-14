@@ -212,8 +212,65 @@ Rscript batch_correction_pipeline_basic.R kmer 5 /u/home/b/briscoel/project-halp
  1010  unzip allbiom.zip
  
  /u/scratch/b/briscoel/KmerCounting/AGP_QIITA
+```
+for file in SRA/*fsa; do echo "$file" | sed -r "s/.+\/(.+)\..+/\1/" >> SRR_Acc_List.txt; done
+
+for file in /u/scratch/b/briscoel/KmerCounting/AGP_QIITA/processed_data/*biom ; do echo "$file" | sed -r "s/.+\/(.+)\..+/\1/" >> biom_list.txt; done
+```
+
+```
+require(phyloseq)
+biom_collection = list()
+
+biom_dir = "/u/scratch/b/briscoel/KmerCounting/AGP_QIITA/processed_data"
+
+biom_files = list.files(path = biom_dir,pattern= "*biom")
+for(b in 1:length(biom_files)){
+	print(b)
+	biom_path = paste0(biom_dir,"/",biom_files[b])
+	mapping_path =
+	biom_collection[[b]] = import_biom(biom_path)
+	if(b == 1){
+		build_biom =biom_collection[[b]]
+	}else{
+		build_biom = merge_phyloseq(build_biom, biom_collection[[b]] )
+	}
+	
+}
+```
+#more data?
+```
+require(phyloseq)
+biom_collection = list()
+
+biom_dir = "/u/scratch/b/briscoel/KmerCounting/AGP_QIITA/BIOM"
+mapping_dir = "/u/scratch/b/briscoel/KmerCounting/AGP_QIITA/mapping_files"
+
+biom_files = list.files(path = biom_dir,pattern= "*biom")
+for(b in 1:length(biom_files)){
+	print(b)
+	biom_path = paste0(biom_dir,"/",biom_files[b])
+	biom_path = paste0(biom_dir,"/",biom_files[b])
+	mapping_path =
+	biom_collection[[b]] = import_biom(biom_path)
+	if(b == 1){
+		build_biom =biom_collection[[b]]
+	}else{
+		build_biom = merge_phyloseq(build_biom, biom_collection[[b]] )
+	}
+	
+}
+```
 
 
+```
+build_biom
+phyloseq-class experiment-level object
+otu_table()   OTU Table:         [ 26096 taxa and 7969 samples ]
+tax_table()   Taxonomy Table:    [ 26096 taxa by 7 taxonomic ranks ]
+
+Greengenes_13_8-97_97_otus
+```
 ##<a name ="hmp1">HMP data sources</a>
 1. [scripts](#hmp_scripts)
 2. [Data files](#hmpdatafiles)
@@ -500,8 +557,10 @@ qsub -cwd -V -N "basicpred$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel
 
 #### All unsupervisedMethods
 
-for svs in 1; do for tran in clr_scale; do for phen in antibiotic; do for method in minerva; do qsub -cwd -V -N "svapred$svs$tran$phen" -l h_data=16G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch Hispanic_k6 BatchCorrected '$phen' '$method'_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen' 1 1" ; done; done; done; done
-
+Testing area
+```
+for svs in 1; do for tran in clr_scale; do for phen in antibiotic; do for method in minerva; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch Hispanic_k6 BatchCorrected '$phen' '$method'_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen' 1 1" ; done; done; done; done
+```
 
 ```
 for svs in 50 100; do for tran in clr_scale; do for phen in bin_antibiotic_last_year; do for method in smartsva refactor refactor_protect minerva; do qsub -cwd -V -N "svapred$svs$tran$phen" -l h_data=16G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k6 BatchCorrected '$phen' '$method'_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen'"; done; done; done; done
@@ -578,6 +637,9 @@ for method in minerva; do for tran in clr_scale; do for sv in 1 2 3 4 5 6 7 8 9 
 
 # binary
 for method in minerva; do for tran in clr_scale; do for sv in 3 4 5 6 7 8 9 10 20 30 40 50 100 120 140 ; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg Hispanic -arg "$method" -arg $sv -arg 'extraction_robot..exp.' -arg 1 -arg 1 -arg antibiotic -arg 0 -arg "$tran"; done; done; done
+
+
+for method in minerva; do for tran in clr_scale; do for sv in 3 4 5 6 7 8 9 10 20 30 40 50 100 120 140 ; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg Hispanic -arg "$method" -arg $sv -arg 'extraction_robot..exp.' -arg 1 -arg 1 -arg antibiotic -arg 0 -arg "$tran"; done; done; done
 ```
 
 
@@ -591,18 +653,38 @@ for method in smartsva; do for tran in clr_scale; do for sv in 1 2 3 4 5 6 7 8 9
 
 # binary
 for method in refactor smartsva; do for sv in 3 4 5 6 7 8 9 10 20 30 40 50 100 120 140 ; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg Hispanic -arg "$method" -arg $sv -arg 'extraction_robot..exp.' -arg 1 -arg 1 -arg antibiotic -arg 0 -arg "$tran"; done; done; done
-``
+```
 
 
 #### Many methods
+
 ```
 for method in refactor refactor_protect minerva smartsva; do for pheno in antibiotic bmi_v2; do for sv in 1 2 3 4 5 6 7 8 9 10 20 30 40 50 100 120 140; do for k in 7; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg Hispanic -arg "$method" -arg $sv -arg 'extraction_robot..exp.' -arg 1 -arg 1 -arg $phen -arg 0 -arg clr_scale; done; done; done; done
+```
+ 
  ```
- ```
-for method in raw bmc ComBat limma; do for phen in antibiotic bmi_v2; do for sv in 1; do for k in 6 7; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg Hispanic -arg "$method" -arg $sv -arg 'extraction_robot..exp.' -arg 1 -arg 1 -arg "$phen" -arg 0 -arg clr_scale; done; done; done; done
+for method in raw bmc ComBat limma; do for phen in antibiotic bmi_v2; do for sv in 1; do for k in 6; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg Hispanic -arg "$method" -arg $sv -arg 'extraction_robot..exp.' -arg 1 -arg 1 -arg "$phen" -arg 0 -arg clr_scale; done; done; done; done
 
-
  ```
+M6abx
+
+```
+for method in minerva smartsva; do for phen in M6abx; do for sv in 1; do for k in 6; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_max -arg "$method" -arg $sv -arg 'extraction_robot..exp.' -arg 1 -arg 1 -arg $phen -arg 0 -arg clr_scale; done; done; done; done
+```
+Income 
+```
+for method in minerva smartsva; do for tran in clr_scale; do for sv in 2 3 4 5 6 7 8 9 10; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg Hispanic -arg "$method" -arg $sv -arg 'extraction_robot..exp.' -arg 1 -arg 1 -arg income_c3_v2 -arg 0 -arg "$tran" -arg 1 -arg 1; done; done; done
+```
+
+Metabolit necp:
+```
+for method in minerva smartsva; do for tran in clr_scale; do for sv in 1; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg Hispanic -arg "$method" -arg $sv -arg 'extraction_robot..exp.' -arg 1 -arg 1 -arg mets_necp_v2 -arg 0 -arg "$tran" -arg 1 -arg 1; done; done; done
+
+```
+Metabolit idf:
+```
+for method in minerva smartsva; do for tran in clr_scale; do for sv in 2 3 4 5 6 7 8 9 10; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg Hispanic -arg "$method" -arg $sv -arg 'extraction_robot..exp.' -arg 1 -arg 1 -arg mets_idf3_v2 -arg 0 -arg "$tran" -arg 1 -arg 1; done; done; done
+```
 
 
 
@@ -690,11 +772,9 @@ example input within R script
 2784472 : scale
 2820920: refactor none
 
-
-
-
+```
 qsub -cwd -V -N pred -l h_data=16G,time=100:00:00,highp -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_Hfilter_kmer BatchCorrected bmi_corrected '$method'_first100filter_TRUE_trans_'$tran' 10 kmer Instrument"
-
+```
 
 
 
@@ -751,7 +831,16 @@ prediction minerva (k=6): 10,50,100,120,140 (3056711-15), 1-9, 20,30,40 (3056716
 predictin refactor (k=6): (3056729 - 38)
 
 
+#RUN NEW PHENOTYPES
 
+
+## BC
+mets_idf3_v2: complete 1-10 for minerva and smartsva
+protect_mets_necp_v2: 3183623 - 3183624
+income_c3_v2: 3183605  - 3183622
+M6abx: 3183598  3183599
+
+Hispanic antibiotic: 3183658 (just testing the ordinaty phenotype but with parameters specified)
 
 ========================
 
@@ -795,7 +884,30 @@ Hispanic antibiotic: 2080 1766
 
 # Issues:
 Fix batch correction script to handle antibiotic speciic case for AGP:
+See if smartsva protection with factors vs numbers is different
+CHeck hispanic data
 
+Other phenotypes:
+"mets_idf3_v2",0,"none","1","1")
+"mets_necp_v2",0,"none","1","1")
+
+income_c3_v2 ,0, 1, 1 ( 1 = lowest income level)
+
+table(total_metadata$med_stomach)
+
+
+NCEP ATP III definition, metabolic syndrome 
+hypertension2_v2
+hypertmed_self_v2
+
+
+
+
+
+
+
+
+TOMORROW: check classifier output then run minerva classification with 6 months agp vs not
 
 
 

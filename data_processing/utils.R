@@ -137,14 +137,40 @@ binarize_metadata <- function(labels,pos_labels, neg_labels,pos_indicator,neg_in
     }
   })
 }
-process_model_matrix <- function(total_metadata =NULL,binary_vars=NULL,categorical_vars = NULL,numeric_vars = NULL,integer_vars = NULL){
+process_model_matrix <- function(total_metadata =NULL,binary_vars=NULL,categorical_vars = NULL,numeric_vars = NULL,integer_vars = NULL,
+                                 label_pos_or_neg=NULL,target_label=NULL){
   #,
   for(b_v in binary_vars){
+    #b_v = "antibiotic"
+    #target_label = "1"
+    #label_pos_or_neg = 1
+    
     data_na_included = as.character(total_metadata[,b_v])
     data_na_included[data_na_included == "Other" | data_na_included == "Not provided" | data_na_included == "other" 
                      | data_na_included == '' | data_na_included == 'not applicable' | data_na_included == 'not provided'] = NA
     #temp = to.dummy(as.factor(data_na_included),paste0(b_v,"_"))[,-1,drop=FALSE]
-    temp = as.integer(as.factor(data_na_included))
+    
+    if(length(target_label) > 0){
+      if( label_pos_or_neg){
+        print("Positive")
+        data_na_included = sapply(data_na_included,function(x){
+          if(is.na(x)){return(x)}
+          else if(x %in% target_label){return(1)}
+          else{return(0)}
+        })
+      }else{
+        data_na_included = sapply(data_na_included,function(x){
+          if(is.na(x)){return(x)}
+          else if(x %in% target_label){return(0)}
+          else{return(1)}
+        })
+      }
+      
+      
+    }
+    #might keep
+    #temp = as.integer(as.factor(data_na_included))
+    temp = as.character(data_na_included)
     #print(colnames(temp))
     assign(b_v ,temp)
   }

@@ -5,14 +5,20 @@ print(args)
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
 #          "bmc&ComBat",10,1)
 
-# args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-# "AGP_Hfilter", "smartsva",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"none")
+
+# args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+# "AGP_Hfilter", "smartsva",20,"Instrument",1,1,"M6abx",0,"none")
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-# "Hispanic", "minerva",10,"Instrument",1,1,"antibiotic",0,"clr_scale")
+# "Hispanic", "smartsva",10,"Instrument",1,1,"antibiotic",0,"none","1","1")
+# args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+#          "Hispanic", "smartsva",10,"Instrument",1,1,"mets_idf3_v2",0,"none",1,"1")
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 #          "Hispanic", "raw",10,"extraction_robot..exp.",1,1,"bmi_v2",0,"clr_scale")
 # 
 
+#table(total_metadata$income_c5_v2.x)
+#table(total_metadata$income_v2.x)
+#table(total_metadata$diabetes3_v2)
 
 # args = c("otu", 6, "/u/home/b/briscoel/project-halperin/MicroBatch", "AGP_Hfilter",
 #          "smartsva_clr",10,"Instrument",1, "bmi_corrected",0)
@@ -29,8 +35,14 @@ batch_column = args[7]
 save_PC_scores = as.logical(as.integer(args[8]))#TRUE
 filter_low_counts = as.logical(as.integer(args[9]))
 covariate_interest = args[10]
+
 use_RMT = as.logical(as.integer(args[11]))
 transformation = args[12]
+if(length(args)> 12){
+  label_pos_or_neg = as.logical(as.integer(args[13]))
+  target_label = args[14]
+}
+
 
 # ============================================================================== #
 # load packages and functions
@@ -144,10 +156,25 @@ if(grepl(covariate_interest, "bmi")){
   #covariate_interest = "host_body_mass_index"
   total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,numeric_vars =  covariate_interest)
   
+}else if(grepl(covariate_interest, "M6abx")){
+  total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,binary_vars = "antibiotic_history",
+                                                     label_pos_or_neg = 0,target_label = c("I have not taken antibiotics in the past year.","Year"))
 }else{
-  total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,binary_vars = covariate_interest)
+  if(length(args)> 12){
+    total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,binary_vars = covariate_interest,
+                                                       label_pos_or_neg = label_pos_or_neg,target_label = target_label)
+    
+  }else{
+    total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,binary_vars = covariate_interest)
+    
+  }
+  #table(total_metadata_mod_interest)
+  
 }
 
+
+table(total_metadata$hypertension2_v2)
+table(total_metadata$m)
 
 bio_signal_formula_interest <- as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod_interest), collapse = " + ")))
 
@@ -311,7 +338,7 @@ for(m in 1:length(methods_list)){
       sva_result= run_sva(mat = input_abundance_table, metadata_mod=total_metadata_mod_interest,bio_signal_formula = bio_signal_formula_interest,num_pcs=num_pcs)
 
     }
-      
+    #table(as.factor(total_metadata_mod_interest))
     svobj = sva_result$sv.obj
     sv_object_output =  svobj
     row.names(sv_object_output$sv) = colnames(input_abundance_table)

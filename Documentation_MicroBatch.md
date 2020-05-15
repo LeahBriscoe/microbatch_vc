@@ -505,10 +505,11 @@ done
 ### minerva predi
 ```
 for tran in clr_scale; do for svs in 1 2 3 4 5 6 7 8 9 20 30 40; do for phen in bmi_corrected; do qsub -cwd -V -N "mpred$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k6 BatchCorrected bmi_corrected minerva_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen'"; done; done; done
+
+#testing
+for tran in clr_scale; do for svs in 1 ; do for phen in bmi_corrected; do qsub -cwd -V -N "mpred$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k6 BatchCorrected bmi_corrected minerva_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen' L1"; done; done; done
 ```
 
-/u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_max -arg "rawfilter_TRUE_trans_clr_scale" -arg Instrument -arg BatchCorrected -arg 0 -arg 1 -arg 0
-/u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_max -arg "minerva_first1filter_TRUE_trans_clr_scale" -arg protect_bin_antibiotic_last_year -arg BatchCorrected -arg 0 -arg 1 -arg 0
 
 #### Hispanic
 ```
@@ -553,13 +554,37 @@ qsub -cwd -V -N "basicpred$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel
 
 ### <a name =classpred> Classification </a>
 
+Testing area
+mets_idf3_v2 income_c3_v2
+bmigrp_c4_v2.x
 
+
+
+
+diabetes3_v2:  3186758-3186778
+```
+for svs in 1 2 3 4 5 6 7 8 9 10; do for tran in clr_scale; do for phen in "diabetes3_v2"; do for method in minerva smartsva; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch Hispanic_k6 BatchCorrected '$phen' '$method'_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen' 1 3" ; done; done; done; done
+
+for svs in 1; do for tran in clr_scale; do for phen in "income_c3_v2"; do for method in raw; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch Hispanic_k6 BatchCorrected '$phen' '$method'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen' 1 1" ; done; done; done; done
+
+```
+ hypertension2_v2: 3186780  3186789 
+```
+for svs in 1 2 3 4 5 6 7 8 9 10; do for tran in clr_scale; do for phen in "hypertension2_v2"; do for method in minerva; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch Hispanic_k6 BatchCorrected '$phen' '$method'_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen' 1 1" ; done; done; done; done
+
+```
+
+
+```
+for svs in 1 2 3 4 5 6 7 8 9 10; do for tran in clr_scale; do for phen in "elevated_bp_selfmeds_v2"; do for method in minerva smartsva; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch Hispanic_k6 BatchCorrected '$phen' '$method'_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen' 1 1" ; done; done; done; done
+```
 
 #### All unsupervisedMethods
 
 Testing area
 ```
 for svs in 1; do for tran in clr_scale; do for phen in antibiotic; do for method in minerva; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch Hispanic_k6 BatchCorrected '$phen' '$method'_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen' 1 1" ; done; done; done; done
+
 ```
 
 ```
@@ -685,8 +710,27 @@ Metabolit idf:
 ```
 for method in minerva smartsva; do for tran in clr_scale; do for sv in 2 3 4 5 6 7 8 9 10; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg Hispanic -arg "$method" -arg $sv -arg 'extraction_robot..exp.' -arg 1 -arg 1 -arg mets_idf3_v2 -arg 0 -arg "$tran" -arg 1 -arg 1; done; done; done
 ```
+idf3
 
+"bmigrp_c4_v2.x"3184226
+```
+for method in minerva smartsva; do for tran in clr_scale; do for sv in 1; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg Hispanic -arg "$method" -arg $sv -arg 'extraction_robot..exp.' -arg 1 -arg 1 -arg "bmigrp_c4_v2.x" -arg 0 -arg "$tran" -arg 1 -arg 4; done; done; done
+```
 
+diabetes3_v2: 3186342  - 3186372 
+```
+for method in raw; do for tran in clr_scale; do for sv in 1; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg Hispanic -arg "$method" -arg $sv -arg 'extraction_robot..exp.' -arg 1 -arg 1 -arg diabetes3_v2 -arg 0 -arg "$tran" -arg 1 -arg 3; done; done; done
+```
+
+hypertension2_v2: 3186376 
+```
+for method in minerva smartsva; do for tran in clr_scale; do for sv in 1 2 3 4 5 6 7 8 9 10; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg Hispanic -arg "$method" -arg $sv -arg 'extraction_robot..exp.' -arg 1 -arg 1 -arg hypertension2_v2 -arg 0 -arg "$tran" -arg 1 -arg 1; done; done; done
+```
+elevated_bp_selfmeds_v2
+```
+
+for method in minerva smartsva; do for tran in clr_scale; do for sv in 1 2 3 4 5 6 7 8 9 10; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg Hispanic -arg "$method" -arg $sv -arg 'extraction_robot..exp.' -arg 1 -arg 1 -arg elevated_bp_selfmeds_v2 -arg 0 -arg "$tran" -arg 1 -arg 1; done; done; done
+```
 
 # raw, combat, bmc, limma
 ```
@@ -721,6 +765,20 @@ done
 
 
 # Variance 
+
+```
+/u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_max -arg "rawfilter_TRUE_trans_clr_scale" -arg Instrument -arg BatchCorrected -arg 0 -arg 1 -arg 0
+
+
+3190185
+/u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_max -arg "minerva_first1filter_TRUE_trans_clr_scale" -arg protect_bin_antibiotic_last_year -arg BatchCorrected -arg 0 -arg 1 -arg 0
+```
+
+## varpar hispanic
+```
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg Hispanic -arg "minerva_first1filter_TRUE_trans_clr_scale" -arg protect_diabetes3_v2 -arg BatchCorrected -arg 0 -arg 1 -arg 0
+```
 
 ```
 
@@ -839,8 +897,16 @@ mets_idf3_v2: complete 1-10 for minerva and smartsva
 protect_mets_necp_v2: 3183623 - 3183624
 income_c3_v2: 3183605  - 3183622
 M6abx: 3183598  3183599
-
+bmigrp_c4_v2.x :3184226- 3184243 
 Hispanic antibiotic: 3183658 (just testing the ordinaty phenotype but with parameters specified)
+
+# CLASS
+
+
+mets_idf3_v2-income_c3_v2: 3183757 - 3183799 
+L1 pred: 3184250
+bmigrp_c4_v2.x :3184255 3184274
+
 
 ========================
 

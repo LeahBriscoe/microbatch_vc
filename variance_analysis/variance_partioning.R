@@ -5,6 +5,10 @@ print(args)
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
 #          "bmc&ComBat",10,1)
 
+# args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"Hispanic",
+#          "minerva_first1filter_TRUE_trans_clr_scale","protect_diabetes3_v2",
+#          "BatchCorrected",0,1,0)
+
 # args = c("otu", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_otumatch_noabx",
 #          "raw&bmc&ComBat&limma",'Instrument',"BatchCorrected",1)
 #args[5] = "no_scale_clr&no_scale_no_clr"
@@ -39,8 +43,8 @@ source(paste0(batch_script_folder,"/batch_correction_source.R"))
 # ============================================================================== #
 # define input folder
 
-otu_input_folder = paste0(microbatch_folder,'/data/',study_name, '_otu')
-kmer_input_folder = paste0(microbatch_folder,'/data/',study_name,'_k',kmer_len)
+otu_input_folder = paste0(microbatch_folder,'data/',study_name, '_otu')
+kmer_input_folder = paste0(microbatch_folder,'data/',study_name,'_k',kmer_len)
 
 if(data_type == "kmer"){
   input_folder = paste0(kmer_input_folder,"/",batch_def_folder)
@@ -50,8 +54,11 @@ if(data_type == "kmer"){
 total_metadata = readRDS(paste0(kmer_input_folder,"/metadata.rds"))
 # =========================================================================== #
 #getting read depth
-otu_table = readRDS(paste0(kmer_input_folder , "/kmer_table.rds"))
-total_metadata$librarysize = colSums(otu_table)
+if(grepl("AGP",study_name)){
+  otu_table = readRDS(paste0(kmer_input_folder , "/kmer_table.rds"))
+  total_metadata$librarysize = colSums(otu_table)
+  
+}
 
 # ============================================================================== #
 # read in data
@@ -84,41 +91,87 @@ if(use_quant_norm){
 
 # ============================================================================== #
 # make model matrix
+if(grepl("AGP",study_name)){
+  binary_vars = c("collection_AM","bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year","sex")
+  categorical_vars = c("race.x","bin_bowel_movement",
+                       "collection_year","Instrument")
+  numeric_vars = c("bmi_corrected","age_corrected","librarysize")
+  
+}else if(grepl("Hispanic",study_name)){
+  collection_year = format(as.Date(total_metadata$collection_timestamp, format="%m/%d/%Y"), "%Y")
+  total_metadata$collection_year = collection_year
+  
+  binary_vars = c("antibiotic","sex")
+  categorical_vars = c("collection_year","hispanic_origin.x","frequency_bowel_movement.y","diabetes3_v2",
+                       "mastermix_lot..exp.","processing_robot..exp.","extraction_robot..exp.",
+                       "center")
+  numeric_vars = c("bmi_v2","age_v2.x","librarysize")
 
-binary_vars = c("collection_AM","bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year","sex")
-categorical_vars = c("race.x","bin_bowel_movement",
-                     "collection_year","Instrument")
-numeric_vars = c("bmi_corrected","age_corrected","librarysize")
+}
+
+
+
+
 total_metadata_mod = process_model_matrix(total_metadata = total_metadata,
                                           binary_vars=binary_vars,
                                           categorical_vars =categorical_vars,
                                           numeric_vars = numeric_vars)
-print(dim(total_metadata_mod))
+
+# for(i in colnames(total_metadata_mod)[1:10]){
+#   print(table(total_metadata_mod[,i]))
+#   print(table(total_metadata[,i]))
+# }
+
 total_metadata_mod_formula = as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod), collapse = " + ")))
 
 # ============================================================================== #
 # cleaning data
 replacement_year = total_metadata$collection_year
-replacement_year[replacement_year < 2012 | replacement_year > 2020] = NA
+if(grepl("AGP",study_name)){
+  replacement_year[replacement_year < 2012 | replacement_year > 2020] = NA
+  
+}
 total_metadata$collection_year = replacement_year
 
-
-total_metadata_mod$librarysize = scale(total_metadata_mod$librarysize)
-
-total_metadata_mod$bmi_corrected =scale(total_metadata_mod$bmi_corrected)
-
-total_metadata_mod$age_corrected =scale(total_metadata_mod$age_corrected)
-
+if(grepl("AGP",study_name)){
+  total_metadata_mod$librarysize = scale(total_metadata_mod$librarysize)
+  
+  total_metadata_mod$bmi_corrected =scale(total_metadata_mod$bmi_corrected)
+  
+  total_metadata_mod$age_corrected =scale(total_metadata_mod$age_corrected)
+  
+  
+}else if(grepl("Hispanic",study_name)){
+  total_metadata_mod$librarysize = scale(total_metadata_mod$librarysize)
+  
+  total_metadata_mod$bmi_v2 =scale(total_metadata_mod$bmi_v2)
+  
+  total_metadata_mod$age_v2.x =scale(total_metadata_mod$age_v2.x)
+  
+  
+}
 
 
 # ============================================================================== #
 # define fixed and random
+if(grepl("AGP",study_name)){
+  random_effects_tech = c("collection_year","Instrument") # "center_project_name","collection_days")#"Instrument",
+  random_effects_bio = c("race.x","bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year","bin_bowel_movement") #"diet_type.x","artificial_sweeteners"
+  
+  fixed_effects_tech = c("librarysize","collection_AM")
+  fixed_effects_bio = c("sex","bmi_corrected","age_corrected")
+  
+}else if(grepl("Hispanic",study_name)){
+  random_effects_tech = c("collection_year","mastermix_lot..exp.","processing_robot..exp.",
+                          "extraction_robot..exp.", "center") # "center_project_name","collection_days")#"Instrument",
+  
+  random_effects_bio = c("hispanic_origin.x","diabetes3_v2","antibiotic","frequency_bowel_movement.y","sex") 
+  fixed_effects_tech = c("librarysize")
+  fixed_effects_bio = c("bmi_v2","age_v2.x")
 
-random_effects_tech = c("collection_year","Instrument") # "center_project_name","collection_days")#"Instrument",
-random_effects_bio = c("race.x","bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year","bin_bowel_movement") #"diet_type.x","artificial_sweeteners"
 
-fixed_effects_tech = c("librarysize","collection_AM")
-fixed_effects_bio = c("sex","bmi_corrected","age_corrected")
+}
+
 
 
 
@@ -204,8 +257,7 @@ for(i in 1:length(batch_corrected_data_input)){
   
   
 
-  dim(input_abundance_table)
-  dim(input_metadata_table)
+
   
   varPartMetaData = fitExtractVarPartModel(formula = formula_input,
                                            exprObj = input_abundance_table, data = data.frame(input_metadata_table))

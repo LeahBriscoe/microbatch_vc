@@ -45,8 +45,9 @@ methods = args[5].split("&")
 n_repeats = int(args[6])
 data_type = args[7]
 batch_def_folder = args[8]
-label_pos_or_neg = int(args[9])
-target_label = args[10]
+if len(args) > 9:
+	label_pos_or_neg = int(args[9])
+	target_label = args[10]
 
 print(target_label)
 
@@ -78,11 +79,15 @@ elif column_of_interest == "age_of_reloc":
     column_of_interest = column_of_interest
     pos_label = 1 #"Healthy"#'1-2' #'0-0.5'#'Omnivore' # '0-1.5'
 else:
-    if label_pos_or_neg:
-        bin_column_of_interest = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],pos_labels =target_label)
+    if len(args) > 9:
+        if label_pos_or_neg:
+            print("positive")
+            bin_column_of_interest = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],pos_labels =[target_label])
+        else:
+            bin_column_of_interest = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],neg_labels =[target_label])
     else:
-        bin_column_of_interest = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],neg_labels =target_label)
-    
+        bin_column_of_interest = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'])
+
     metadata[column_of_interest] = bin_column_of_interest
     column_of_interest = column_of_interest
     pos_label = 1 #"Healthy"#'1-2' #'0-0.5'#'Omnivore' # '0-1.5

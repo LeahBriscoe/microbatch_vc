@@ -170,7 +170,7 @@ process_model_matrix <- function(total_metadata =NULL,binary_vars=NULL,categoric
     }
     #might keep
     #temp = as.integer(as.factor(data_na_included))
-    temp = as.character(data_na_included)
+    temp = as.character(as.integer(as.factor(data_na_included))-1)
     #print(colnames(temp))
     assign(b_v ,temp)
   }

@@ -4,12 +4,14 @@ print(args)
 #args = c("otu", "WR_AD","~/Documents/MicroBatch/", "0-0.5","1-2","01/07/2016","DiseaseState","study")
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
 #          "bmc&ComBat",10,1)
-
+#table(total_metadata$abdominal_obesity_idf_v2.y)
+#table(total_metadata$diabetes_self_v2)
+#table(total_metadata$diabetes_lab_v2.x)
 
 # args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "AGP_Hfilter", "smartsva",20,"Instrument",1,1,"M6abx",0,"none")
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-# "Hispanic", "smartsva",10,"Instrument",1,1,"antibiotic",0,"none","1","1")
+# "Hispanic", "smartsva",10,"Instrument",1,1,"bmigrp_c4_v2.x",0,"none","1","4")
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 #          "Hispanic", "smartsva",10,"Instrument",1,1,"mets_idf3_v2",0,"none",1,"1")
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
@@ -161,6 +163,7 @@ if(grepl(covariate_interest, "bmi")){
                                                      label_pos_or_neg = 0,target_label = c("I have not taken antibiotics in the past year.","Year"))
 }else{
   if(length(args)> 12){
+    
     total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,binary_vars = covariate_interest,
                                                        label_pos_or_neg = label_pos_or_neg,target_label = target_label)
     
@@ -173,8 +176,6 @@ if(grepl(covariate_interest, "bmi")){
 }
 
 
-table(total_metadata$hypertension2_v2)
-table(total_metadata$m)
 
 bio_signal_formula_interest <- as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod_interest), collapse = " + ")))
 

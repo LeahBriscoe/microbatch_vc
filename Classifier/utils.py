@@ -31,11 +31,14 @@ def mean_confidence_interval(data, confidence=0.95):
 
 def binarize_labels_mod(labels,none_labels, pos_labels = [],neg_labels = []):
     new_labels = []
+    print("length pos labels")
+    print(len(pos_labels))
     for lab in labels:
         if lab in none_labels:
             new_labels.append(None)
         elif len(pos_labels) > 0:
             if str(lab) in pos_labels:
+                #print("truth")
                 new_labels.append(1)
             else:
                 new_labels.append(0)
@@ -44,5 +47,10 @@ def binarize_labels_mod(labels,none_labels, pos_labels = [],neg_labels = []):
                 new_labels.append(0)
             else:
                 new_labels.append(1)
+        else:
+            new_labels.append(lab)
 
     return new_labels
+
+
+

@@ -29,7 +29,7 @@ from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 
 from sklearn import metrics
 from sklearn.metrics import mean_squared_error 
-from sklearn.linear_model import LinearRegression
+from sklearn import linear_model
 import sys
 
 args = sys.argv
@@ -43,6 +43,7 @@ methods = args[5].split("&")
 n_cvs = int(args[6])
 data_type = args[7]
 batch_def_folder = args[8]
+lin_model = args[9].strip()
 
 
 data_folder = greater_folder + "/data/" + study_name + "/"
@@ -53,7 +54,7 @@ metadata = pd.read_csv(data_folder + "metadata.txt",delimiter="\t")
 metadata["continuous_var"] = [float('Nan') if i == 'not applicable' or i == 'not provided' or 
                               i == "Not provided" or i== "Unspecified" or i == "Not applicable" 
                               else float(i) for i in list(metadata[column_of_interest])]
-names = ["Linear Regression"]
+
 all_methods_stats = dict()
 
 
@@ -101,7 +102,11 @@ for cv in range(n_cvs):
             X_train, X_test = X[train_index,], X[test_index,]
             y_train, y_test = y[train_index], y[test_index]
 
-            reg = LinearRegression().fit(X_train, y_train)
+            if lin_model == "L1":
+                reg = linear_model.Lasso(alpha=0.5).fit(X_train, y_train)
+            else:
+
+                reg = linear_model.LinearRegression().fit(X_train, y_train)
             pred = reg.predict(X_test)
             all_methods_stats[method]['pearson'].append(np.corrcoef(x=list(y_test),y=list(pred))[0,1])
             all_methods_stats[method]['mse'].append(mean_squared_error(list(y_test),list(pred) ))
@@ -110,7 +115,7 @@ for cv in range(n_cvs):
         #all_methods_stats[method]['pearson'] = cv_pearson
         #all_methods_stats[method]['mse'] = cv_mse
         
-            pickle.dump( all_methods_stats[method], open( data_folder + data_type + "_" + prefix_name + "_" + column_of_interest + "_" + method + "_pearson_and_mse.pkl", "wb" ) )
+            pickle.dump( all_methods_stats[method], open( data_folder + data_type + "_" + prefix_name + "_" + column_of_interest + "_" + method + "_lin_model_" + lin_model + "_pearson_and_mse.pkl", "wb" ) )
         
 
 

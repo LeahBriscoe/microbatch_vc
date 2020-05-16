@@ -5,9 +5,9 @@ print(args)
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
 #          "bmc&ComBat",10,1)
 
-# args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"Hispanic",
-#          "minerva_first1filter_TRUE_trans_clr_scale","protect_diabetes3_v2",
-#          "BatchCorrected",0,1,0)
+args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Hispanic",
+         "minerva_first1filter_TRUE_trans_clr_scale","protect_diabetes3_v2",
+         "BatchCorrected",0,1,0)
 
 # args = c("otu", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_otumatch_noabx",
 #          "raw&bmc&ComBat&limma",'Instrument',"BatchCorrected",1)
@@ -43,8 +43,8 @@ source(paste0(batch_script_folder,"/batch_correction_source.R"))
 # ============================================================================== #
 # define input folder
 
-otu_input_folder = paste0(microbatch_folder,'data/',study_name, '_otu')
-kmer_input_folder = paste0(microbatch_folder,'data/',study_name,'_k',kmer_len)
+otu_input_folder = paste0(microbatch_folder,'/data/',study_name, '_otu')
+kmer_input_folder = paste0(microbatch_folder,'/data/',study_name,'_k',kmer_len)
 
 if(data_type == "kmer"){
   input_folder = paste0(kmer_input_folder,"/",batch_def_folder)
@@ -104,7 +104,14 @@ if(grepl("AGP",study_name)){
   binary_vars = c("antibiotic","sex")
   categorical_vars = c("collection_year","hispanic_origin.x","frequency_bowel_movement.y","diabetes3_v2",
                        "mastermix_lot..exp.","processing_robot..exp.","extraction_robot..exp.",
-                       "center")
+                       "center","prep","tm300_8_tool..exp.","extractionkit_lot..exp.","plating..exp.","primer_date..exp.","primer_plate..exp.","run_prefix..exp.")
+  
+  
+  # categorical_vars = c("hispanic_origin.x","frequency_bowel_movement.y","diabetes3_v2",
+  #                      "mastermix_lot..exp.","processing_robot..exp.","extraction_robot..exp.",
+  #                      "center","prep","tm300_8_tool..exp.","extractionkit_lot..exp.","plating..exp.","primer_date..exp.","primer_plate..exp.","run_prefix..exp.")
+  # 
+  
   numeric_vars = c("bmi_v2","age_v2.x","librarysize")
 
 }
@@ -133,23 +140,28 @@ if(grepl("AGP",study_name)){
 }
 total_metadata$collection_year = replacement_year
 
-if(grepl("AGP",study_name)){
-  total_metadata_mod$librarysize = scale(total_metadata_mod$librarysize)
-  
-  total_metadata_mod$bmi_corrected =scale(total_metadata_mod$bmi_corrected)
-  
-  total_metadata_mod$age_corrected =scale(total_metadata_mod$age_corrected)
-  
-  
-}else if(grepl("Hispanic",study_name)){
-  total_metadata_mod$librarysize = scale(total_metadata_mod$librarysize)
-  
-  total_metadata_mod$bmi_v2 =scale(total_metadata_mod$bmi_v2)
-  
-  total_metadata_mod$age_v2.x =scale(total_metadata_mod$age_v2.x)
-  
-  
+
+for(n in numeric_vars){
+  total_metadata_mod[,n] = scale(total_metadata_mod[,n])
 }
+# if(grepl("AGP",study_name)){
+#   
+#   total_metadata_mod$librarysize = scale(total_metadata_mod$librarysize)
+#   
+#   total_metadata_mod$bmi_corrected =scale(total_metadata_mod$bmi_corrected)
+#   
+#   total_metadata_mod$age_corrected =scale(total_metadata_mod$age_corrected)
+#   
+#   
+# }else if(grepl("Hispanic",study_name)){
+#   total_metadata_mod$librarysize = scale(total_metadata_mod$librarysize)
+#   
+#   total_metadata_mod$bmi_v2 =scale(total_metadata_mod$bmi_v2)
+#   
+#   total_metadata_mod$age_v2.x =scale(total_metadata_mod$age_v2.x)
+#   
+#   
+# }
 
 
 # ============================================================================== #
@@ -163,7 +175,7 @@ if(grepl("AGP",study_name)){
   
 }else if(grepl("Hispanic",study_name)){
   random_effects_tech = c("collection_year","mastermix_lot..exp.","processing_robot..exp.",
-                          "extraction_robot..exp.", "center") # "center_project_name","collection_days")#"Instrument",
+                          "extraction_robot..exp.", "center","prep") # "center_project_name","collection_days")#"Instrument",
   
   random_effects_bio = c("hispanic_origin.x","diabetes3_v2","antibiotic","frequency_bowel_movement.y","sex") 
   fixed_effects_tech = c("librarysize")

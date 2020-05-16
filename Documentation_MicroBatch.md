@@ -655,6 +655,8 @@ for method in refactor refactor_protect; do for sv in 3 4 5 6 7 8 9 10 20 30 40 
 
 ```
 for method in minerva; do for tran in clr_scale; do for sv in 1 2 3 4 5 6 7 8 9 10 20 30 40 50 100 120 140; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_max -arg "$method" -arg $sv -arg Instrument -arg 1 -arg 1 -arg bmi_corrected -arg 0 -arg "$tran"; done; done; done
+
+for method in minerva; do for tran in clr_scale; do for sv in 1 2 3 4 5 6 7 8 9 10 20 30 40 50 100 120 140; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_max -arg "$method" -arg $sv -arg Instrument -arg 1 -arg 1 -arg bin_antibiotic_last_year -arg 0 -arg "$tran"; done; done; done
 ```
 
 ```
@@ -718,8 +720,9 @@ for method in minerva smartsva; do for tran in clr_scale; do for sv in 1; do /u/
 ```
 
 diabetes3_v2: 3186342  - 3186372 
+3191500 - 3191502
 ```
-for method in raw; do for tran in clr_scale; do for sv in 1; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg Hispanic -arg "$method" -arg $sv -arg 'extraction_robot..exp.' -arg 1 -arg 1 -arg diabetes3_v2 -arg 0 -arg "$tran" -arg 1 -arg 3; done; done; done
+for method in raw; do for tran in clr_scale; do for sv in 1; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg Hispanic -arg "$method" -arg $sv -arg 'mastermix_lot..exp.' -arg 1 -arg 1 -arg diabetes3_v2 -arg 0 -arg "$tran" -arg 1 -arg 3; done; done; done
 ```
 
 hypertension2_v2: 3186376 
@@ -730,6 +733,8 @@ elevated_bp_selfmeds_v2
 ```
 
 for method in minerva smartsva; do for tran in clr_scale; do for sv in 1 2 3 4 5 6 7 8 9 10; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg Hispanic -arg "$method" -arg $sv -arg 'extraction_robot..exp.' -arg 1 -arg 1 -arg elevated_bp_selfmeds_v2 -arg 0 -arg "$tran" -arg 1 -arg 1; done; done; done
+
+
 ```
 
 # raw, combat, bmc, limma
@@ -774,10 +779,16 @@ done
 /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_max -arg "minerva_first1filter_TRUE_trans_clr_scale" -arg protect_bin_antibiotic_last_year -arg BatchCorrected -arg 0 -arg 1 -arg 0
 ```
 
-## varpar hispanic
+```
+for method in smartsva minerva; do for sv in 1 2 3 4 5 6 7 8 9 10; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_max -arg "$method"_first"$sv"filter_TRUE_trans_clr_scale -arg protect_bin_antibiotic_last_year -arg BatchCorrected -arg 0 -arg 1 -arg 0; done; done
 ```
 
-/u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg Hispanic -arg "minerva_first1filter_TRUE_trans_clr_scale" -arg protect_diabetes3_v2 -arg BatchCorrected -arg 0 -arg 1 -arg 0
+## varpar hispanic
+```
+ 3191621  - 3191628 - 3191620 minerva;
+for method in minerva smartsva; do for sv in 1; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg Hispanic -arg "$method"_first"sv"filter_TRUE_trans_clr_scale -arg protect_diabetes3_v2 -arg BatchCorrected -arg 1 -arg 1 -arg 0; done; done
+
+for method in raw; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg Hispanic -arg "$method"filter_TRUE_trans_clr_scale -arg protect_diabetes3_v2 -arg BatchCorrected -arg 1 -arg 1 -arg 0; done
 ```
 
 ```
@@ -967,7 +978,167 @@ hypertension2_v2
 hypertmed_self_v2
 
 
+[1] "yogurt"
+data_na_included
+  1   2 
+777 987 
 
+[1] "sex"
+data_na_included
+female   male 
+  1133    635 
+  
+  [1] "med_stomach"
+data_na_included
+   1    2 
+ 530 1233 
+ 
+ 
+ [1] "ifg_ncep_selfmeds_v2"
+data_na_included
+  0   1 
+804 960 
+
+
+[1] "high_trig_v2"
+data_na_included
+   0    1 
+1282  481 
+
+
+[1] "high_total_chol2_v2"
+data_na_included
+  0   1 
+860 905 
+
+
+[1] "high_total_chol2"
+data_na_included
+  0   1 
+897 868 
+
+[1] "gol1"
+data_na_included
+   2    3 
+ 696 1072 
+ 
+ [1] "gle4"
+data_na_included
+   .    1    2 
+   5  529 1234 
+   
+   
+   [1] "frequency_bowel_movement.y"
+data_na_included
+  1   2   3 
+695 653 195 
+
+
+[1] "education_c2_v1"
+data_na_included
+   1    2 
+ 693 1068 
+[1] 142
+
+
+[1] "dyslipidemia_v2"
+data_na_included
+   0    1 
+1147  616 
+
+
+[1] "dm_trt"
+data_na_included
+   0    1 
+1090  253 
+
+[1] "dm_aware_v2"
+data_na_included
+   0    1 
+1314  454 
+
+[1] "current_smoker_v2"
+data_na_included
+   0    1 
+1535  233 
+
+
+[1] "ckd2_v2"
+data_na_included
+   0    1 
+1522  245 
+
+[1] "abdominal_obesity_ncep_v2"
+data_na_included
+   0    1 
+ 543 1218 
+ 
+ 
+ [1] "placeofbirth_group.x"
+data_na_included
+Central Ameri          Cuba Dominica Repu        Mexico Other country   Puerto Rico South America US east coast 
+          162           212           127           763             8           149           122            63 
+US other loca US west coast 
+           76            83 
+[1] 82
+[1] "nativity_subscore_mesa_v2.x"
+data_na_included
+   0    1    2    3 
+ 123  381 1034  225 
+ 
+ 
+ 
+ [1] "tm300_8_tool..exp."
+data_na_included
+208484Z 311318B 316322F 
+    948     284     663 
+    
+    
+    [1] "runid..exp."
+data_na_included
+171114_M00436_0298_000000000-BDDWR 171208_M04586_0076_000000000-BHJPV 180316_M05314_0071_000000000-BMR6D 
+                               189                                571                                565 
+180319_M05314_0072_000000000-BMWVJ 
+                               570 
+                               
+                               
+                               [1] "run_prefix..exp."
+data_na_included
+           BG_1_20_S1_L001         BG_15-19_2_S1_L001  Burk_Gold_16S_3-8_S1_L001 Burk_Gold_16S_9-14_S1_L001 
+                       189                        571                        565                        570
+                       
+                       
+  [1] "primer_plate..exp."
+data_na_included
+  1   2   3   4   5   6   7   8 
+ 94 190 287 188 283 286 284 283 
+[1] 52
+
+
+
+ "primer_date..exp."
+data_na_included
+81717 90117 92917 
+ 1421   379    95 
+ 
+ 
+ [1] "plating..exp."
+data_na_included
+    CC     CH    LDG LDG/MB     MB  MB_CC 
+    94    377    851     96    382     95 
+    
+    
+ [1] "extractionkit_lot..exp."
+data_na_included
+157022405 157022406 
+      853      1042 
+      
+      
+      
+      [1] "charlson_v2.x"
+data_na_included
+   0    1    2    3    4    5    6    7 
+1013  486  154   77   21   11    5    1                    
 
 
 

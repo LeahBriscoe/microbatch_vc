@@ -3,9 +3,13 @@ args = commandArgs(trailingOnly=TRUE)
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
 #          "bmc&ComBat",10,1)
 
-args = c("AGP_Hfilter", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_Hfilter_otu&AGP_Hfilter_k6&AGP_Hfilter_k7",
-         "raw&clr@raw&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10@raw&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10",
-         'Instrument&Instrument&Instrument',"0","") #filter_FALSE_filter_FALSE
+# args = c("AGP_Hfilter", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_max_k6",
+#          "raw&clr@raw&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10@raw&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10",
+#          'Instrument&Instrument&Instrument',"0","") #filter_FALSE_filter_FALSE
+args = c("Hispanic_k6", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Hispanic_k6",
+         "rawfilter_TRUE_trans_clr_scale&minerva_first1filter_TRUE_trans_clr_scale",
+         'protect_diabetes3_v2',"0","filter_FALSE") #filter_FALSE_filter_FALSE
+
 # 
 # 
 # args = c("AGP_Hfilter_otu", 6, "/u/home/b/briscoel/project-halperin/MicroBatch/", "AGP_Hfilter_otu",
@@ -16,10 +20,11 @@ args = c("AGP_Hfilter", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_v
 # ============================================================================== #
 # user input
 plot_folder = args[1]#"kmer"
+
 kmer_len = args[2]#6
 microbatch_folder = args[3]#'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/'
 study_list = unlist(strsplit(args[4],"&"))
-
+study_name = study_list
 
 methods_list_list = unlist(strsplit(args[5],"@"))
 methods_list = sapply(methods_list_list ,function(x){strsplit(x,"&")})#c("ComBat_with_batch2")#"pca_regress_out_scale","clr_pca_regress_out_no_scale","clr_pca_regress_out_scale") #)#,
@@ -50,12 +55,28 @@ source(paste0(batch_script_folder,"/batch_correction_source.R"))
 # ============================================================================== #
 # define fixed and random
 
-random_effects_tech = c("collection_year","Instrument") # "center_project_name","collection_days")#"Instrument",
-random_effects_bio = c("race.x","bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year","bin_bowel_movement") #"diet_type.x","artificial_sweeteners"
-
-fixed_effects_tech = c("librarysize","collection_AM")
-fixed_effects_bio = c("sex","bmi_corrected","age_corrected")
-
+# random_effects_tech = c("collection_year","Instrument") # "center_project_name","collection_days")#"Instrument",
+# random_effects_bio = c("race.x","bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year","bin_bowel_movement") #"diet_type.x","artificial_sweeteners"
+# 
+# fixed_effects_tech = c("librarysize","collection_AM")
+# fixed_effects_bio = c("sex","bmi_corrected","age_corrected")
+if(grepl("AGP",study_name)){
+  random_effects_tech = c("collection_year","Instrument") # "center_project_name","collection_days")#"Instrument",
+  random_effects_bio = c("race.x","bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year","bin_bowel_movement") #"diet_type.x","artificial_sweeteners"
+  
+  fixed_effects_tech = c("librarysize","collection_AM")
+  fixed_effects_bio = c("sex","bmi_corrected","age_corrected")
+  
+}else if(grepl("Hispanic",study_name)){
+  random_effects_tech = c("collection_year","mastermix_lot..exp.","processing_robot..exp.",
+                          "extraction_robot..exp.", "center") # "center_project_name","collection_days")#"Instrument",
+  
+  random_effects_bio = c("hispanic_origin.x","diabetes3_v2","antibiotic","frequency_bowel_movement.y","sex") 
+  fixed_effects_tech = c("librarysize")
+  fixed_effects_bio = c("bmi_v2","age_v2.x")
+  
+  
+}
 
 
 # ============================================================================== #
@@ -79,7 +100,7 @@ for(s in 1:length(study_list)){
   for(m in 1:length(study_methods_list)){
 
     print( study_methods_list[m])
-    retrieve_varpars[[paste0(study_list[s],study_methods_list[m])]] = readRDS(paste0(input_folder ,"/varpart_quant",use_quant_norm ,"_",study_methods_list[m],last_name, ".rds"))
+    retrieve_varpars[[paste0(study_list[s],study_methods_list[m])]] = readRDS(paste0(input_folder ,"/varpart_quant",use_quant_norm ,"_",study_methods_list[m],"_",last_name, ".rds"))
     
   }
   
@@ -97,16 +118,25 @@ for( t in 1:length(varpar_types )){
   
   vp = retrieve_varpars[[varpar_types[t]]]
   row.names(vp) = paste0("Feature",1:nrow(vp))
-  vp = vp[order(vp$bmi_corrected,decreasing = TRUE),]
+  if(grepl("AGP",study_name)){
+    vp = vp[order(vp$bmi_corrected,decreasing = TRUE),]
+    top_5 = c("Instrument","collection_year","race.x", "librarysize","Residuals")
+  }else if(grepl("Hispanic",study_name)){
+    vp = vp[order(vp$bmi_v2,decreasing = TRUE),]
+    top_5 = c( "antibiotic","librarysize","frequency_bowel_movement.y","hispanic_origin.x",
+               "mastermix_lot..exp.","Residuals" )
+  }
+  
   
   ggsave(filename = paste0(plot_path,'/barplots_kmer_variance_',varpar_types[t],'.pdf'), 
          plot = plotPercentBars( vp[1:20,]) )
   ggsave(filename = paste0(plot_path,'/plot_kmer_variance_partition_',varpar_types[t],'.pdf'),
          plot = plotVarPart( vp ))
   head(vp)
+  plotVarPart( vp )
   
   #top_5 = names(sort(colMeans(vp),decreasing=TRUE))[1:5]
-  top_5 = c("Residuals","Instrument","collection_year","race.x", "librarysize" )
+  
   ggsave(filename = paste0(plot_path,'/top5_plot_kmer_variance_partition_',varpar_types[t],'.pdf'),
          plot = plotVarPart( vp[,top_5] ))
   
@@ -120,14 +150,13 @@ varpar_types
 to_plot_spec = melt(retrieve_varpars)
 to_plot_spec[1:4,]
 to_plot = melt(var_pars_tech_bio,id.vars = c("bio_variability_explained","tech_variability_explained"))
-# to_plot_filter = to_plot %>% filter(L1 %in% c("AGP_Hfilter_oturaw" , "AGP_Hfilter_otuComBat","AGP_Hfilter_otulimma" ,
+# to_plot = to_plot %>% filter(L1 %in% c("AGP_Hfilter_oturaw" , "AGP_Hfilter_otuComBat","AGP_Hfilter_otulimma" ,
 #                                               "AGP_Hfilter_otuclr_pca_regress_out_scale_first10" , "AGP_Hfilter_k6raw",
 #                                               "AGP_Hfilter_k6clr_pca_regress_out_scale_first10" ))
 
 names(var_pars_tech_bio)
-table(to_plot_spec$variables)
 
-to_plot_filter = to_plot %>% filter(L1 %in% c("AGP_Hfilter_k7raw",
+to_plot = to_plot %>% filter(L1 %in% c("AGP_Hfilter_k7raw",
                                               "AGP_Hfilter_k7clr_pca_regress_out_scale_first10"))
 to_plot_spec_bmi = to_plot_spec %>% filter(L1 %in% c("AGP_Hfilter_k7raw",
                                               "AGP_Hfilter_k7clr_pca_regress_out_no_scale_first10"),variable == "bmi_corrected")
@@ -135,17 +164,13 @@ to_plot_spec_bmi = to_plot_spec %>% filter(L1 %in% c("AGP_Hfilter_k7raw",
 to_plot_spec_bmi = to_plot_spec %>% filter(L1 %in% c("AGP_Hfilter_k7raw",
                                                      "AGP_Hfilter_k7clr_pca_regress_out_no_scale_first10"),variable == "Instrument")
 
-
-table(to_plot_spec$variable)
-table(to_plot_filter$L1)
-
-kmer_to_plot_filter = to_plot_filter
+kmer_to_plot = to_plot
 
 
 ### SPEC
 
-to_plot_filter$L1 = factor(to_plot_filter$L1, levels =unique( to_plot_filter$L1))
-p<-ggplot(to_plot_filter ,aes(x=bio_variability_explained,y= tech_variability_explained,color=L1)) + ggtitle("Variance") 
+to_plot$L1 = factor(to_plot$L1, levels =unique( to_plot$L1))
+p<-ggplot(to_plot ,aes(x=bio_variability_explained,y= tech_variability_explained,color=L1)) + ggtitle("Variance") 
 p<-p + geom_point() + theme_bw() #+ theme(legend.position = "none") #+ stat_ellipse()#+ scale_color_manual(values=c("#999999", "#56B4E9"))
 p
 ggsave(filename = paste0(plot_path,'/scatter_',varpar_types[1],'.pdf'), 
@@ -154,23 +179,12 @@ ggsave(filename = paste0(plot_path,'/scatter_',varpar_types[1],'.pdf'),
 
 
 
-
-#to_plot_filter = to_plot
-# ============================================================================== #
-# scatter
-
-to_plot_filter$L1 = factor(to_plot_filter$L1, levels =unique( to_plot_filter$L1))
-p<-ggplot(to_plot_filter ,aes(x=bio_variability_explained,y= tech_variability_explained,color=L1)) + ggtitle("Variance") 
-p<-p + geom_point() + theme_bw() #+ theme(legend.position = "none") #+ stat_ellipse()#+ scale_color_manual(values=c("#999999", "#56B4E9"))
-p
-ggsave(filename = paste0(plot_path,'/scatter_',varpar_types[1],'.pdf'), 
-       plot = p )
 
 
 # ============================================================================== #
 # bio
 
-p<-ggplot(to_plot_filter ,aes(x=L1,y=bio_variability_explained,color=L1)) + ggtitle("Bio") 
+p<-ggplot(to_plot ,aes(x=L1,y=bio_variability_explained,color=L1)) + ggtitle("Bio") 
 p<-p + geom_boxplot() + theme_bw() + theme(text = element_text(size=15),axis.text.x = element_text(angle = 90, hjust = 1)) # + scale_color_manual(values=c("#999999", "#56B4E9"))
 p  #legend.position = "right",
 ggsave(filename = paste0(plot_path,'/Bio_',varpar_types[1],'.pdf'), 
@@ -178,13 +192,13 @@ ggsave(filename = paste0(plot_path,'/Bio_',varpar_types[1],'.pdf'),
 # ============================================================================== #
 #tech 
 
-p<-ggplot(to_plot_filter ,aes(x=L1,y=tech_variability_explained,color=L1)) + ggtitle("Tech") 
+p<-ggplot(to_plot ,aes(x=L1,y=tech_variability_explained,color=L1)) + ggtitle("Tech") 
 p<-p + geom_boxplot() + theme_bw() + theme(text = element_text(size=15),axis.text.x = element_text(angle = 90, hjust = 1)) #+ scale_color_manual(values=c("#999999", "#56B4E9"))
 p
 ggsave(filename = paste0(plot_path,'/Tech_',varpar_types[1],'.pdf'), 
        plot = p )
 
-hist(var_pars_tech_bio$AGP_Hfilter_k6raw$bio_variability_explained,breaks=100)
-wilcox.test(var_pars_tech_bio$AGP_Hfilter_k6raw$bio_variability_explained, 
-            var_pars_tech_bio$AGP_Hfilter_k6clr_pca_regress_out_scale_first10$bio_variability_explained)
+
+wilcox.test(var_pars_tech_bio[[1]]$bio_variability_explained, 
+            var_pars_tech_bio[[2]]$bio_variability_explained)
 

@@ -17,7 +17,22 @@ print(args)
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 #          "Hispanic", "raw",10,"extraction_robot..exp.",1,1,"bmi_v2",0,"clr_scale")
 # 
-
+# 
+# count = 1
+# for(c in 1:length(colnames(total_metadata))){
+#   data_na_included = as.character(total_metadata[,colnames(total_metadata)[c]])
+#   data_na_included[data_na_included == "Other" | data_na_included == "Not provided" | data_na_included == "other" 
+#                    | data_na_included == '' | data_na_included == 'not applicable' | data_na_included == 'not provided'
+#                    | data_na_included == 'Not applicable'| data_na_included == 'Unspecified'] = NA
+#   
+#   if(length(table(data_na_included))< 15 &length(table(data_na_included))> 1){
+#     print(c)
+#     print(colnames(total_metadata)[c])
+#     print(table(data_na_included))
+#     count = count + 1
+#   }
+# }
+technical_variabels = c("")
 #table(total_metadata$income_c5_v2.x)
 #table(total_metadata$income_v2.x)
 #table(total_metadata$diabetes3_v2)

@@ -5,9 +5,9 @@ print(args)
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
 #          "bmc&ComBat",10,1)
 
-args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Hispanic",
-         "minerva_first1filter_TRUE_trans_clr_scale","protect_diabetes3_v2",
-         "BatchCorrected",0,1,0)
+# args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Hispanic",
+#          "minerva_first1filter_TRUE_trans_clr_scale","protect_diabetes3_v2",
+#          "BatchCorrected",0,1,0)
 
 # args = c("otu", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_otumatch_noabx",
 #          "raw&bmc&ComBat&limma",'Instrument',"BatchCorrected",1)

@@ -8,8 +8,8 @@ print(args)
 #table(total_metadata$diabetes_self_v2)
 #table(total_metadata$diabetes_lab_v2.x)
 
-# args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-# "AGP_Hfilter", "smartsva",20,"Instrument",1,1,"M6abx",0,"none")
+# args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+# "AGP_max", "smartsva",20,"Instrument",1,1,"M6abx",0,"none")
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "Hispanic", "smartsva",10,"Instrument",1,1,"bmigrp_c4_v2.x",0,"none","1","4")
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
@@ -112,6 +112,9 @@ if(data_type == "kmer"){
 }
 total_metadata = readRDS(paste0(input_folder,"/metadata.rds"))
 
+
+
+
 if(grepl("reprocess",study_name)){
   collection_date=as.Date(total_metadata$collection_timestamp, format="%Y-%m-%d %H:%M")
   collection_year = as.integer(format(as.Date(collection_date, format="%m/%d/%Y"), "%Y"))
@@ -135,6 +138,10 @@ if(grepl("AGP",study_name)){
 
 
 input_abundance_table = get(paste0(data_type,"_table"))
+# tissue_filder
+tissue_samples = unlist(total_metadata %>% filter(total_metadata$body_habitat.x == "UBERON:feces") %>% select(Run))
+input_abundance_table = input_abundance_table[,tissue_samples]
+total_metadata = total_metadata[tissue_samples,]
 
 #dim(input_abundance_table)
 

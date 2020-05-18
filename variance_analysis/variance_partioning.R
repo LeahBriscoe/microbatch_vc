@@ -94,7 +94,7 @@ if(use_quant_norm){
 if(grepl("AGP",study_name)){
   binary_vars = c("collection_AM","bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year","sex")
   categorical_vars = c("race.x","bin_bowel_movement",
-                       "collection_year","Instrument")
+                       "collection_year","Instrument","body_habitat.x")
   numeric_vars = c("bmi_corrected","age_corrected","librarysize")
   
 }else if(grepl("Hispanic",study_name)){
@@ -167,7 +167,7 @@ for(n in numeric_vars){
 # ============================================================================== #
 # define fixed and random
 if(grepl("AGP",study_name)){
-  random_effects_tech = c("collection_year","Instrument") # "center_project_name","collection_days")#"Instrument",
+  random_effects_tech = c("collection_year","Instrument","body_habitat.x") # "center_project_name","collection_days")#"Instrument",
   random_effects_bio = c("race.x","bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year","bin_bowel_movement") #"diet_type.x","artificial_sweeteners"
   
   fixed_effects_tech = c("librarysize","collection_AM")

@@ -9,7 +9,7 @@ print(args)
 #table(total_metadata$diabetes_lab_v2.x)
 
 # args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-# "AGP_max", "smartsva",20,"Instrument",1,1,"M6abx",0,"none")
+# "AGP_max", "smartsva",20,"Instrument",1,1,"bmi_corrected",0,"none")
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "Hispanic", "smartsva",10,"Instrument",1,1,"bmigrp_c4_v2.x",0,"none","1","4")
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
@@ -32,7 +32,7 @@ print(args)
 #     count = count + 1
 #   }
 # }
-technical_variabels = c("")
+
 #table(total_metadata$income_c5_v2.x)
 #table(total_metadata$income_v2.x)
 #table(total_metadata$diabetes3_v2)
@@ -59,7 +59,6 @@ if(length(args)> 12){
   label_pos_or_neg = as.logical(as.integer(args[13]))
   target_label = args[14]
 }
-
 
 # ============================================================================== #
 # load packages and functions
@@ -144,7 +143,7 @@ input_abundance_table = input_abundance_table[,tissue_samples]
 total_metadata = total_metadata[tissue_samples,]
 
 #dim(input_abundance_table)
-
+#dim(input_abundance_table)
 
 batch_labels = as.integer(droplevels(as.factor(total_metadata[,batch_column])))
 
@@ -175,12 +174,12 @@ if(grepl(study_name,"AGP")){
 }
 
 
-if(grepl(covariate_interest, "bmi")){
+if(grepl("bmi",covariate_interest)){
  
   #covariate_interest = "host_body_mass_index"
   total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,numeric_vars =  covariate_interest)
   
-}else if(grepl(covariate_interest, "M6abx")){
+}else if(grepl("M6abx",covariate_interest)){
   total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,binary_vars = "antibiotic_history",
                                                      label_pos_or_neg = 0,target_label = c("I have not taken antibiotics in the past year.","Year"))
 }else{

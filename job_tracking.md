@@ -96,7 +96,7 @@ done
 ```
 
 
-
+```
 qsub -cwd -V -N Cal -l h_data=16G,time=100:00:00,highp -pe shared 4 -M briscoel -m beas -b y "
 
 /u/home/b/briscoel/project-halperin/MicroBatch/submit_jellyfish.sh SRR_Acc_List.txt 6
@@ -109,9 +109,27 @@ qsub -cwd -V -N Cal -l h_data=16G,time=100:00:00,highp -pe shared 4 -M briscoel 
 python /u/home/b/briscoel/project-halperin/MicroBatch/ProcessKmerTable.py SRR_Acc_List.txt 7
 
 python /u/home/b/briscoel/project-halperin/MicroBatch/ProcessKmerTable_double.py SRR_Acc_List.txt 7
+```
+
+## PTB
+
+3235665 -  3235667 
+```
+for method in minerva smartsva raw refactor; do for phen in preg_outcome; do for tran in clr_scale; do for sv in 1; do for k in 6; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg PTBmeta -arg "$method" -arg $sv -arg study -arg 1 -arg 1 -arg "$phen" -arg 0 -arg "$tran" -arg 1 -arg preterm; done; done; done; done; done
+
+for method in refactor; do for phen in preg_outcome; do for tran in clr_scale; do for sv in 1 2 3 4 5 6 7 8 9 10; do for k in 6 7; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 16 -t 100 -hp -v 3.6.0 -arg kmer -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg PTBmeta -arg "$method" -arg $sv -arg study -arg 1 -arg 1 -arg "$phen" -arg 0 -arg "$tran" -arg 1 -arg preterm; done; done; done; done; done
 
 
 
+```
+
+# CLASS
+```
+#unsupervised
+for svs in 1; do for tran in clr_scale; do for phen in preg_outcome; do for method in minerva smartsva; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch PTBmeta_k'$k' BatchCorrected '$phen' '$method'_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen' 1 preterm"; done; done; done; done
 
 
-_1_counts
+#raw
+for svs in 1; do for tran in clr_scale; do for phen in preg_outcome; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch PTBmeta_k6 BatchCorrected '$phen' '$method'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen' 1 preterm"; done; done; done; done
+
+```

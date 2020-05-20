@@ -9,13 +9,16 @@ print(args)
 #table(total_metadata$diabetes_lab_v2.x)
 
 # args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-# "AGP_max", "smartsva",20,"Instrument",1,1,"bmi_corrected",0,"none")
+# "AGP_max", "refactor",20,"Instrument",1,1,"bmi_corrected",0,"none")
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "Hispanic", "smartsva",10,"Instrument",1,1,"bmigrp_c4_v2.x",0,"none","1","4")
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 #          "Hispanic", "smartsva",10,"Instrument",1,1,"mets_idf3_v2",0,"none",1,"1")
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 #          "Hispanic", "raw",10,"extraction_robot..exp.",1,1,"bmi_v2",0,"clr_scale")
+
+# args = c("kmer", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+#          "PTBmeta", "refactor",10,"study",1,1,"preg_outcome",0,"clr_scale",1,"preterm")
 # 
 # 
 # count = 1
@@ -138,9 +141,13 @@ if(grepl("AGP",study_name)){
 
 input_abundance_table = get(paste0(data_type,"_table"))
 # tissue_filder
-tissue_samples = unlist(total_metadata %>% filter(total_metadata$body_habitat.x == "UBERON:feces") %>% select(Run))
-input_abundance_table = input_abundance_table[,tissue_samples]
-total_metadata = total_metadata[tissue_samples,]
+
+if(grepl("AGP",study_name)){
+  tissue_samples = unlist(total_metadata %>% filter(total_metadata$body_habitat.x == "UBERON:feces") %>% select(Run))
+  input_abundance_table = input_abundance_table[,tissue_samples]
+  total_metadata = total_metadata[tissue_samples,]
+  
+}
 
 #dim(input_abundance_table)
 #dim(input_abundance_table)
@@ -189,7 +196,13 @@ if(grepl("bmi",covariate_interest)){
                                                        label_pos_or_neg = label_pos_or_neg,target_label = target_label)
     
   }else{
-    total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,binary_vars = covariate_interest)
+    if(grepl("gest_age",covariate_interest)){
+      total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,numeric_vars =  covariate_interest)
+      
+    }else{
+      total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,binary_vars = covariate_interest)
+      
+    }
     
   }
   #table(total_metadata_mod_interest)
@@ -396,17 +409,25 @@ for(m in 1:length(methods_list)){
     }else{
       num_factors = num_pcs
     }
+
     
+    sd_list = sqrt(rowSds(input_abundance_table))
+    print(paste0("mean(sd):",mean(sd_list)))
+    #hist(sd_list,breaks = 100)
+    if(grepl(study_name,"AGP")){
+      refactor_res = refactor(input_abundance_table, k=num_factors,sd_threshold = 0.001)
+    }else{
+      refactor_res = refactor(input_abundance_table, k=num_factors,sd_threshold = 0.02)
+    }
     
-    refactor_res = refactor(input_abundance_table[,1:30], k=num_factors)
     #write.table(input_abundance_table,"~/Downloads/RefactorExample.txt",quote = FALSE,sep = "\t")
     
-    sum(rowSums(input_abundance_table[,1:30])==0)
+    #sum(rowSums(input_abundance_table[,1:30])==0)
     
     RC = refactor_res$scores
     mat_scaled_corrected<- t(resid(lm(t(input_abundance_table) ~ ., data=data.frame(RC))))
     
-    row.names(refactor_res$scores) = colnames(input_abundance_table)
+    #row.names(refactor_res$scores) = colnames(input_abundance_table)
     sv_object_output= refactor_res
     
     #row.names(sv_object_output$scores) = row.names(input_abundance_table)

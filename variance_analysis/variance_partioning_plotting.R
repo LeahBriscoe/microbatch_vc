@@ -6,9 +6,9 @@ args = commandArgs(trailingOnly=TRUE)
 # args = c("AGP_Hfilter", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_max_k6",
 #          "raw&clr@raw&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10@raw&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10",
 #          'Instrument&Instrument&Instrument',"0","") #filter_FALSE_filter_FALSE
-args = c("Hispanic_k6", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Hispanic_k6",
-         "rawfilter_TRUE_trans_clr_scale&minerva_first1filter_TRUE_trans_clr_scale",
-         'protect_diabetes3_v2',"0","filter_FALSE") #filter_FALSE_filter_FALSE
+# args = c("Hispanic_k6", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Hispanic_k6",
+#          "rawfilter_TRUE_trans_clr_scale&minerva_first1filter_TRUE_trans_clr_scale",
+#          'protect_diabetes3_v2',"0","filter_FALSE") #filter_FALSE_filter_FALSE
 
 # 
 # 
@@ -20,7 +20,6 @@ args = c("Hispanic_k6", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_v
 # ============================================================================== #
 # user input
 plot_folder = args[1]#"kmer"
-
 kmer_len = args[2]#6
 microbatch_folder = args[3]#'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/'
 study_list = unlist(strsplit(args[4],"&"))

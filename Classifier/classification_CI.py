@@ -33,6 +33,7 @@ from sklearn.linear_model import LinearRegression
 import sys
 from collections import Counter
 
+occurrences = lambda s, lst: (i for i,e in enumerate(lst) if e == s)
 
 args = sys.argv
 print(args)
@@ -78,6 +79,21 @@ elif column_of_interest == "age_of_reloc":
     metadata[column_of_interest] = bin_column_of_interest
     column_of_interest = column_of_interest
     pos_label = 1 #"Healthy"#'1-2' #'0-0.5'#'Omnivore' # '0-1.5'
+elif "trimester" in column_of_interest:
+    #"1st trimester"
+    eligible_rows = metadata['trimester'][metadata['trimester'] == column_of_interest].index.values
+    metadata = metadata.loc[eligible_rows]
+
+    bin_column_of_interest = utils.binarize_labels_mod(metadata["preg_outcome"],none_labels = ["not applicable",float("Nan"),'not provided'],pos_labels =[target_label])
+    metadata[column_of_interest] = bin_column_of_interest
+    column_of_interest = column_of_interest
+    pos_label = target_label   
+
+    for method in methods:
+        eligible_columns_temp = [col for col in eligible_rows if col in methods_dict[method].columns]
+        methods_dict[method] = methods_dict[method][eligible_columns_temp]  
+
+
 else:
     if len(args) > 9:
         if label_pos_or_neg:
@@ -122,7 +138,14 @@ for method in methods:
     for i in range(2):
         eligible_columns_all = metadata[column_of_interest][metadata[column_of_interest] == i].index.values
         eligible_columns = [col for col in eligible_columns_all if col in methods_dict[method].columns]
-        
+        if "trimester" in column_of_interest:
+            X_host = eligible_columns
+            y_host = list(metadata.loc[eligible_columns]["host_id"])
+
+            new_eligibility = []
+            for s in list(set(y_host)):
+                new_eligibility.extend(random.sample(list(occurrences(s,y_host)),1))
+            eligible_columns = list(np.array(X_host)[new_eligibility])
         
         bootstrap_sample_size = int(bootstrap_prop * len(eligible_columns))
         sampled_columns += random.sample(list(eligible_columns), bootstrap_sample_size)

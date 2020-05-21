@@ -53,6 +53,21 @@ metadata1$study = "Romero"
 metadata2 = read.csv(paste0(kmer_input_folders[2],'/SraRunTable.csv'),header =TRUE,fill=TRUE,na.strings=c("NA", "-", "?"),stringsAsFactors = FALSE)
 metadata2$study = "Callahan"
 
+
+# ============================================================================== #
+# filter callahan to vaginal only
+metadata2  = metadata2[metadata2$env_biome == "vagina",]
+
+metadata1$GA_weeks
+gest_age_collection_wk = sapply(metadata2$gest_day_collection,function(x){
+  if(x == "not applicable"){
+    return(NA)
+  }else{
+    return(round(as.numeric(x)/7,0))
+  }
+})
+metadata2$gest_age_collection_wk = gest_age_collection_wk
+
 metadata1$Gestational_age_delivery_in_weeks
 gest_age_delivery_wk = sapply(metadata2$gest_day_delivery,function(x){
   if(x == "not applicable"){
@@ -63,6 +78,14 @@ gest_age_delivery_wk = sapply(metadata2$gest_day_delivery,function(x){
 })
 metadata2$gest_age_delivery_wk = gest_age_delivery_wk
 
+
+# ============================================================================== #
+# host
+metadata1$hostID = as.integer(as.factor(paste0(metadata1$birthweight_grams,metadata1$Age)))
+#metadata2$host_subject_id
+
+
+
 #length(metadata1$Birth_Route)
 #metadata2$term_vs_preterm_delivery
 
@@ -70,12 +93,49 @@ full_metadata = data.frame(SampleID = c(metadata1$Run,metadata2$Run),
                             preg_outcome = c(metadata1$Pregnancy_outcome,metadata2$term_vs_preterm_delivery),
                             study =c(metadata1$study,metadata2$study),
                             gest_age_delivery_wk = c(metadata1$Gestational_age_delivery_in_weeks,metadata2$gest_age_delivery_wk),
-                            race = c(metadata1$race,metadata2$race),
-                            age = c(metadata1$Age,metadata2$Age),
+                            gest_age_collection_wk = c(metadata1$GA_weeks,metadata2$gest_age_collection_wk),
+                           race = c(metadata1$race,metadata2$race),
+                           age = c(metadata1$Age,metadata2$Age),
                            bases_lib_size = c(metadata1$Bases,metadata2$Bases),
-                           Instrument = c(metadata1$Instrument,metadata2$Instrument))
+                           Instrument = c(metadata1$Instrument,metadata2$Instrument),
+                           host_id = c(metadata1$hostID,metadata2$host_subject_id))
 
 
+
+
+# ============================================================================== #
+# trimester
+#range(as.numeric(full_metadata$gest_age_collection_wk),na.rm = TRUE)
+trimester_assn <- sapply(full_metadata$gest_age_collection_wk, function(t){
+
+  x = as.numeric(t)
+  #print(x)
+  if(is.na(x)){
+    return(NA)
+  }else if(x < 9 | x > 36){
+    return(NA)
+  }else if(x >= 9 & x <= 13){
+    return("1st trimester")
+  }else if(x >= 14 & x <= 25){
+    return("2nd trimester")
+  }else if(x >= 26 & x <= 36){
+    return("3rd trimester")
+  }else{
+    return(NA)
+  }
+})
+
+
+full_metadata$trimester = trimester_assn
+
+# unique in 3rd trimester
+# unique in 2nd trimester
+# unique in 1st trimester
+#sum(table(full_metadata %>% filter(trimester == "3rd trimester") %>% select(host_id)) != 0)
+#full_metadata %>% filter(trimester == "3rd trimester", host_id == "ST03")
+#length(unique(full_metadata$host_id))
+# ============================================================================== #
+# race fix
 new_race = sapply(full_metadata$race,function(x){
   temp = as.character(x)
   if(grepl("American Indian",temp)){
@@ -90,7 +150,7 @@ new_race = sapply(full_metadata$race,function(x){
     return(temp)
   }
 })
-
+full_metadata$race = new_race
 
 new_preg_outcome= sapply(full_metadata$preg_outcome,function(x){
   if(x == "PTB" | x == "Preterm"){
@@ -103,8 +163,12 @@ new_preg_outcome= sapply(full_metadata$preg_outcome,function(x){
 })
 full_metadata$preg_outcome = new_preg_outcome
 row.names(full_metadata) = full_metadata$SampleID
-full_metadata = full_metadata[colnames(kmer_table),]
+
+common_samples = intersect(row.names(full_metadata),colnames(kmer_table))
+full_metadata = full_metadata[common_samples,]
 total_metadata = full_metadata
+
+kmer_table = kmer_table[,common_samples]
 
 
 # ============================================================================== #
@@ -129,4 +193,18 @@ saveRDS(total_metadata,paste0(kmer_output_folder,"/metadata.rds"))
 
 write.table(total_metadata,paste0(kmer_output_folder,"/metadata.txt"),sep="\t",quote=FALSE)
 
+
+
+# ============================================================================== #
+# common
+# otu_table <- read.csv(paste0(folder,"PTB_Kosti/Callahan_Stout_penn_romero_relmen_koren_ucsf_hmp_close_ref_otu_table.csv"),
+#          sep=",",header =TRUE,
+#          fill=TRUE,na.strings=c("NA", "-", "?"),stringsAsFactors = FALSE,row.names = 1)
+# 
+# otu_map_table <- read.csv(paste0(folder,"PTB_Kosti/map_weeks_trimester_1_2_3_vaginal.csv"),
+#                              sep=",",header =TRUE,
+#                              fill=TRUE,na.strings=c("NA", "-", "?"),stringsAsFactors = FALSE,row.names = 1)
+# 
+# dim(otu_table)
+# otu_map_table[1:4,1:4]
 

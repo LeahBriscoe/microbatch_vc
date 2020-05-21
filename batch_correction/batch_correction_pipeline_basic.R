@@ -108,6 +108,7 @@ if(data_type == "kmer"){
 
 }else{
   dir.create(paste0(otu_input_folder,"/",batch_column))
+  dir.create(paste0(otu_input_folder,"/protect_",covariate_interest))
   
   input_folder = otu_input_folder
   otu_table = readRDS(paste0(otu_input_folder,"/otu_table", file_type,".rds"))

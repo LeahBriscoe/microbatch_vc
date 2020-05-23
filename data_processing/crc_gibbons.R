@@ -18,11 +18,13 @@ dir.create(otu_output_folder)
 otu_files = "otu_table.txt"
 otu_current = read.csv(paste0(folder,otu_files),sep="\t",header =TRUE,fill=TRUE,na.strings=c("NA", "-", "?"),stringsAsFactors = FALSE)
 #replace samplenames
-colnames(otu_current) = gsub("\\.","-",colnames(otu_current))
+colnames(otu_current) = gsub("\\.","_",colnames(otu_current))
 
 # ============================================================================== #
 # load metadata
 metadata = read.csv(paste0(folder,'metadata.txt'),sep="\t",header =TRUE,fill=TRUE,na.strings=c("NA", "-", "?"),stringsAsFactors = FALSE)
+row.names(metadata ) = gsub("-","_",row.names(metadata ))
+
 all(colnames(otu_current) == row.names(metadata))
 bin_crc = sapply(metadata$DiseaseState,function(x){
   if(x == "CRC"){

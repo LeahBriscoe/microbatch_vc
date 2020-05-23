@@ -9,7 +9,7 @@
 4. [Hispanic Community Health](#bashoneline)
 5. [PCA experiment](#pcaexperiment)
 6. [Scripts](#scripts)
-7. 
+7. [CRC data](#crcdata)
 
 ##<a name ="hoffman">Hoffman Starting Commands</a>
 1. [Running deblur](#deblur)
@@ -65,6 +65,17 @@ portal_client --manifest hmp_manifest_3523275bd8.tsv --user briscoel --endpoint-
  1009  mv allbiom allbiom.zip
  1010  unzip allbiom.zip
 
+### <a name ="crcdata">CRC Data</a>
+
+qsub -cwd -V -N Bax -l h_data=8G,time=100:00:00,highp -M briscoel -m beas -b y "~/project-halperin/MicroBatch/sra_fetch.sh SRR_Acc_List.txt"
+
+qsub -cwd -V -N Zeller -l h_data=8G,time=100:00:00,highp -M briscoel -m beas -b y "~/project-halperin/MicroBatch/sra_fetch.sh SRR_Acc_List.txt"
+
+
+
+```
+qsub -cwd -V -N Zeller -l h_data=16G,time=100:00:00,highp -pe shared 4 -M briscoel -m beas -b y "./submit_jellifish.sh SRR_Acc_List.txt"
+```
 
 ### <a name ="agpcommands">Commands</a>
 
@@ -639,7 +650,7 @@ qsub -cwd -V -N "suppred$svs$tran$phen" -l h_data=8G,time=24:00:00 -M briscoel -
 
 3215697 - 3215704
 ```
-for method in minerva smartsva refactor raw; do for tran in clr_scale; do for sv in 1; do for k in 6 7; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_max -arg "$method" -arg $sv -arg Instrument -arg 1 -arg 1 -arg bmi_corrected -arg 0 -arg "$tran"; done; done; done; done
+for method in minerva raw; do for tran in clr_scale; do for sv in 1 2; do for k in 6; do for phen in bmi_corrected bin_antibiotic_last_year; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_max -arg "$method" -arg $sv -arg Instrument -arg 1 -arg 1 -arg $phen -arg 0 -arg "$tran"; done; done; done; done; done
 
 3214815
 for method in minerva smartsva refactor; do for tran in clr_scale; do for sv in 2 3 4 5 6 7 8 9 10; do for k in 6 7; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_max -arg "$method" -arg $sv -arg Instrument -arg 1 -arg 1 -arg bmi_corrected -arg 0 -arg "$tran"; done; done; done; done
@@ -797,7 +808,7 @@ for method in raw; do for sv in 1; do for phen in bin_antibiotic_last_year; do /
 ```
 
 ```
-for method in smartsva minerva; do for sv in 1 2 3 4 5 6 7 8 9 10; do for phen in bin_antibiotic_last_year bmi_corrected; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_max -arg "$method"_first"$sv"filter_TRUE_trans_clr_scale -arg protect_"$phen" -arg BatchCorrected -arg 1 -arg 1 -arg 0; done; done; done
+for method in smartsva minerva; do for sv in 2; do for phen in bin_antibiotic_last_year bmi_corrected; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_max -arg "$method"_first"$sv"filter_TRUE_trans_clr_scale -arg protect_"$phen" -arg BatchCorrected -arg 1 -arg 1 -arg 0; done; done; done
 
 
 for method in raw; do for sv in 1; do for phen in bin_antibiotic_last_year bmi_corrected; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_max -arg "$method"filter_TRUE_trans_clr_scale -arg protect_"$phen" -arg BatchCorrected -arg 1 -arg 1 -arg 0; done; done; done

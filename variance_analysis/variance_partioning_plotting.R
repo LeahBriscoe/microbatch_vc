@@ -10,6 +10,10 @@ args = commandArgs(trailingOnly=TRUE)
 #          "rawfilter_TRUE_trans_clr_scale&minerva_first1filter_TRUE_trans_clr_scale",
 #          'protect_diabetes3_v2',"0","filter_FALSE") #filter_FALSE_filter_FALSE
 
+args = c("AGP_max", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_max_k6",
+         "rawfilter_TRUE_trans_clr_scale&minerva_first2filter_TRUE_trans_clr_scale",
+         'protect_bin_antibiotic_last_year',"1","filter_FALSE") #filter_FALSE_filter_FALSE
+
 # 
 # 
 # args = c("AGP_Hfilter_otu", 6, "/u/home/b/briscoel/project-halperin/MicroBatch/", "AGP_Hfilter_otu",
@@ -60,11 +64,13 @@ source(paste0(batch_script_folder,"/batch_correction_source.R"))
 # fixed_effects_tech = c("librarysize","collection_AM")
 # fixed_effects_bio = c("sex","bmi_corrected","age_corrected")
 if(grepl("AGP",study_name)){
+  
   random_effects_tech = c("collection_year","Instrument") # "center_project_name","collection_days")#"Instrument",
   random_effects_bio = c("race.x","bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year","bin_bowel_movement") #"diet_type.x","artificial_sweeteners"
   
-  fixed_effects_tech = c("librarysize","collection_AM")
-  fixed_effects_bio = c("sex","bmi_corrected","age_corrected")
+  fixed_effects_tech = c("librarysize")#,"collection_AM")
+  fixed_effects_bio = c("bmi_corrected","age_corrected") #"sex",
+  
   
 }else if(grepl("Hispanic",study_name)){
   random_effects_tech = c("collection_year","mastermix_lot..exp.","processing_robot..exp.",
@@ -112,18 +118,23 @@ for(s in 1:length(study_list)){
 require(reshape2)
 varpar_types  = names(retrieve_varpars)
 var_pars_tech_bio = list()
+pretty_titles = c("Variance explained by technical variables before correction", "Variance explained by technical variables after MINERVA")
 for( t in 1:length(varpar_types )){
+  
   print(varpar_types[t])
   
   vp = retrieve_varpars[[varpar_types[t]]]
   row.names(vp) = paste0("Feature",1:nrow(vp))
   if(grepl("AGP",study_name)){
     vp = vp[order(vp$bmi_corrected,decreasing = TRUE),]
-    top_5 = c("Instrument","collection_year","race.x", "librarysize","Residuals")
+    top_5 = c("Instrument","collection_year","librarysize","Residuals")
+    top_5_pretty = c("Instrument","Collection year","Library Size","Residuals")
   }else if(grepl("Hispanic",study_name)){
     vp = vp[order(vp$bmi_v2,decreasing = TRUE),]
     top_5 = c( "antibiotic","librarysize","frequency_bowel_movement.y","hispanic_origin.x",
                "mastermix_lot..exp.","Residuals" )
+    top_5_pretty = c("antibiotic","librarysize","frequency_bowel_movement.y","hispanic_origin.x",
+                     "mastermix_lot..exp.","Residuals")
   }
   
   
@@ -131,13 +142,15 @@ for( t in 1:length(varpar_types )){
          plot = plotPercentBars( vp[1:20,]) )
   ggsave(filename = paste0(plot_path,'/plot_kmer_variance_partition_',varpar_types[t],'.pdf'),
          plot = plotVarPart( vp ))
-  head(vp)
-  plotVarPart( vp )
   
-  #top_5 = names(sort(colMeans(vp),decreasing=TRUE))[1:5]
+  vp5 = vp[,top_5] 
+
+  p <- plotVarPart(vp5) + theme(text = element_text(size=16),axis.text.x= element_text(size=14),plot.title = element_text(size=17)) +
+    scale_x_discrete(labels=top_5_pretty) + ggtitle(pretty_titles[t]) +
+    xlab("Known technical variables") + ylab("Proportion of feature variance") 
   
   ggsave(filename = paste0(plot_path,'/top5_plot_kmer_variance_partition_',varpar_types[t],'.pdf'),
-         plot = plotVarPart( vp[,top_5] ))
+         plot = p,width = 7, height = 6)
   
   
   var_pars_tech_bio[[varpar_types[t]]] = data.frame(bio_variability_explained = rowSums(as.matrix(retrieve_varpars[[varpar_types[t]]])[,biological_vars]),
@@ -155,49 +168,97 @@ to_plot = melt(var_pars_tech_bio,id.vars = c("bio_variability_explained","tech_v
 
 names(var_pars_tech_bio)
 
-to_plot = to_plot %>% filter(L1 %in% c("AGP_Hfilter_k7raw",
-                                              "AGP_Hfilter_k7clr_pca_regress_out_scale_first10"))
-to_plot_spec_bmi = to_plot_spec %>% filter(L1 %in% c("AGP_Hfilter_k7raw",
-                                              "AGP_Hfilter_k7clr_pca_regress_out_no_scale_first10"),variable == "bmi_corrected")
+# 
+# to_plot = to_plot %>% filter(L1 %in% c("AGP_Hfilter_k7raw",
+#                                               "AGP_Hfilter_k7clr_pca_regress_out_scale_first10"))
+# to_plot_spec_bmi = to_plot_spec %>% filter(L1 %in% c("AGP_Hfilter_k7raw",
+#                                               "AGP_Hfilter_k7clr_pca_regress_out_no_scale_first10"),variable == "bmi_corrected")
+# 
+# to_plot_spec_bmi = to_plot_spec %>% filter(L1 %in% c("AGP_Hfilter_k7raw",
+#                                                      "AGP_Hfilter_k7clr_pca_regress_out_no_scale_first10"),variable == "Instrument")
 
-to_plot_spec_bmi = to_plot_spec %>% filter(L1 %in% c("AGP_Hfilter_k7raw",
-                                                     "AGP_Hfilter_k7clr_pca_regress_out_no_scale_first10"),variable == "Instrument")
-
+clean_names = c("Raw","MINERVA")
+newL1 <- sapply(as.character(to_plot$L1),function(x){
+  if(x == paste0(study_name,methods_list[[1]][1])){
+    return(clean_names[1])
+  }else{
+    return(clean_names[2])
+  }
+})
+table(newL1)
+to_plot$L1 = newL1
 kmer_to_plot = to_plot
 
 
 ### SPEC
-
+#colnames(to_plot) = c("Variance Explained by Biological Variables","Variance Explained by Technical Variables","Method")
+#title = "Temperatures\n", 
 to_plot$L1 = factor(to_plot$L1, levels =unique( to_plot$L1))
 p<-ggplot(to_plot ,aes(x=bio_variability_explained,y= tech_variability_explained,color=L1)) + ggtitle("Variance") 
-p<-p + geom_point() + theme_bw() #+ theme(legend.position = "none") #+ stat_ellipse()#+ scale_color_manual(values=c("#999999", "#56B4E9"))
+p<-p + geom_point() + theme_bw()+ theme(text = element_text(size=20)) #+ theme(legend.position = "none") #+ stat_ellipse()#+ scale_color_manual(values=c("#999999", "#56B4E9"))
+p <- p + labs(x = "Prop. variance biological", y = "Prop. variance technical", color = "Method")
 p
 ggsave(filename = paste0(plot_path,'/scatter_',varpar_types[1],'.pdf'), 
-       plot = p )
+       plot = p ) 
+
+raw = to_plot %>% filter(L1 == "Raw")
+not_raw = to_plot %>% filter(L1 == "MINERVA")
+head(raw)
+head(not_raw)
+
+not_raw$tech_ratio = log(not_raw$tech_variability_explained/raw$tech_variability_explained)
+not_raw$bio_ratio = log(not_raw$bio_variability_explained/raw$bio_variability_explained)
+
+not_raw$L1 =  factor(not_raw$L1, levels =unique( not_raw$L1))
 
 
 
+axis_group = sapply(1:nrow(not_raw),function(i){
+  if( not_raw$tech_ratio[i] < 0 & not_raw$bio_ratio[i] > 0 ){ return("bingo")}
+  else{return("nah")}
+})
 
+paste0("Less tech, more bio ", sum(axis_group == "bingo")/length(axis_group))
+paste0("less tech ",sum(not_raw$tech_ratio < 0)/nrow(not_raw))
+paste0("more bio ",sum(not_raw$bio_ratio > 0)/nrow(not_raw))
 
+p<-ggplot(not_raw ,aes(x=bio_ratio,y= tech_ratio,color=axis_group)) + ggtitle("Variance attributed to different variables") 
+p<-p + geom_point() + theme_bw()+ theme(text = element_text(size=20)) #+ theme(legend.position = "none") #+ stat_ellipse()#+ scale_color_manual(values=c("#999999", "#56B4E9"))
+p <- p + labs(x = "Fold increase in prop. variance biological", y = "Fold increase in prop. variance technical", color = "Method")
+p <- p + scale_color_manual(values=c("red","black"))
+p
+ggsave(filename = paste0(plot_path,'/scatter_ratio_',varpar_types[1],'.pdf'), 
+       plot = p ) 
+
+# ============================================================================== #
 
 # ============================================================================== #
 # bio
 
-p<-ggplot(to_plot ,aes(x=L1,y=bio_variability_explained,color=L1)) + ggtitle("Bio") 
-p<-p + geom_boxplot() + theme_bw() + theme(text = element_text(size=15),axis.text.x = element_text(angle = 90, hjust = 1)) # + scale_color_manual(values=c("#999999", "#56B4E9"))
+p<-ggplot(to_plot ,aes(x=Method,y=bio_variability_explained,color=Method)) + ggtitle("Bio") 
+p<-p + geom_boxplot() + theme_bw() + 
+  theme(text = element_text(size=20),axis.text.x = element_text(angle = 90, hjust = 1)) +
+  ggtitle("Biological variability explained") +
+  xlab("Method") + ylab("Proportion variance") # + scale_color_manual(values=c("#999999", "#56B4E9"))
 p  #legend.position = "right",
 ggsave(filename = paste0(plot_path,'/Bio_',varpar_types[1],'.pdf'), 
        plot = p )
+
+wilcox.test(var_pars_tech_bio[[1]]$bio_variability_explained, 
+            var_pars_tech_bio[[2]]$bio_variability_explained)
 # ============================================================================== #
 #tech 
 
-p<-ggplot(to_plot ,aes(x=L1,y=tech_variability_explained,color=L1)) + ggtitle("Tech") 
-p<-p + geom_boxplot() + theme_bw() + theme(text = element_text(size=15),axis.text.x = element_text(angle = 90, hjust = 1)) #+ scale_color_manual(values=c("#999999", "#56B4E9"))
+p<-ggplot(to_plot ,aes(x=Method,y=tech_variability_explained,color=Method)) + ggtitle("Tech") 
+p<-p + geom_boxplot() + theme_bw() + 
+  theme(text = element_text(size=20),axis.text.x = element_text(angle = 90, hjust = 1)) +
+  ggtitle("Technical variability explained") +
+  xlab("Method") + ylab("Proportion variance") #+ scale_color_manual(values=c("#999999", "#56B4E9"))
 p
 ggsave(filename = paste0(plot_path,'/Tech_',varpar_types[1],'.pdf'), 
        plot = p )
 
 
-wilcox.test(var_pars_tech_bio[[1]]$bio_variability_explained, 
-            var_pars_tech_bio[[2]]$bio_variability_explained)
+wilcox.test(var_pars_tech_bio[[1]]$tech_variability_explained, 
+            var_pars_tech_bio[[2]]$tech_variability_explained)
 

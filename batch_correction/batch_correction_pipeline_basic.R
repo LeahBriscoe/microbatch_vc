@@ -9,7 +9,7 @@ print(args)
 #table(total_metadata$diabetes_lab_v2.x)
 
 # args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-# "AGP_max", "refactor",20,"Instrument",1,1,"bmi_corrected",0,"none")
+# "AGP_max", "minerva_plus",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"none",1,0.2,0)
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "Hispanic", "smartsva",10,"Instrument",1,1,"bmigrp_c4_v2.x",0,"none","1","4")
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
@@ -59,8 +59,13 @@ covariate_interest = args[10]
 use_RMT = as.logical(as.integer(args[11]))
 transformation = args[12]
 if(length(args)> 12){
-  label_pos_or_neg = as.logical(as.integer(args[13]))
-  target_label = args[14]
+  subsample_bool = as.logical(as.integer(args[13]))
+  subsample_prop =as.numeric(args[14])
+  subsample_seed = as.integer(args[15])
+}
+if(length(args)> 15){
+  label_pos_or_neg = as.logical(as.integer(args[16]))
+  target_label = args[17]
 }
 
 # ============================================================================== #
@@ -84,10 +89,14 @@ kmer_input_folder = paste0(microbatch_folder,'/data/',study_name,'_k',kmer_len)
 if(grepl("kmer",data_type)){
   
   output_folder = kmer_input_folder
+  
 }else{
   output_folder = otu_input_folder
 }
-
+if(subsample_bool){
+  output_folder = paste0(output_folder, "_subsample_",as.integer(100*subsample_prop),"_seed_",subsample_seed)
+  dir.create(output_folder)
+}
 #otu_table_norm = readRDS(paste0(otu_input_folder,"/otu_table_norm.rds"))
 #otu_table = readRDS(paste0(otu_input_folder,"/otu_table.rds"))
 
@@ -100,8 +109,8 @@ if(grepl("clr",transformation)){
   file_type = "_norm"
 }
 if(data_type == "kmer"){
-  dir.create(paste0(kmer_input_folder,"/",batch_column))
-  dir.create(paste0(kmer_input_folder,"/protect_",covariate_interest))
+  #dir.create(paste0(output_folder,"/",batch_column))
+  dir.create(paste0(output_folder,"/protect_",covariate_interest))
   
   input_folder = kmer_input_folder
   kmer_table = readRDS(paste0(kmer_input_folder,"/kmer_table", file_type,".rds"))
@@ -116,7 +125,7 @@ if(data_type == "kmer"){
 total_metadata = readRDS(paste0(input_folder,"/metadata.rds"))
 
 
-
+table(total_metadata$bin_antibiotic_last_year)
 
 if(grepl("reprocess",study_name)){
   collection_date=as.Date(total_metadata$collection_timestamp, format="%Y-%m-%d %H:%M")
@@ -141,6 +150,28 @@ if(grepl("AGP",study_name)){
 
 
 input_abundance_table = get(paste0(data_type,"_table"))
+
+
+###@@@@@
+
+if(subsample_bool){
+  set.seed(subsample_seed)
+  subsample_samples = sample(colnames(input_abundance_table),size = as.integer(subsample_prop*ncol(input_abundance_table)))
+  
+  input_abundance_table = input_abundance_table[,subsample_samples]
+  
+  total_metadata = total_metadata[subsample_samples,]
+  
+  saveRDS(total_metadata,paste0(output_folder,"/metadata.rds"))
+  
+  write.table(total_metadata,paste0(output_folder,"/metadata.txt"),sep="\t",quote=FALSE)
+  
+
+}
+
+#####@@@
+
+
 # tissue_filder
 
 if(grepl("AGP",study_name)){
@@ -191,7 +222,7 @@ if(grepl("bmi",covariate_interest)){
   total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,binary_vars = "antibiotic_history",
                                                      label_pos_or_neg = 0,target_label = c("I have not taken antibiotics in the past year.","Year"))
 }else{
-  if(length(args)> 12){
+  if(length(args)> 15){
     
     total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,binary_vars = covariate_interest,
                                                        label_pos_or_neg = label_pos_or_neg,target_label = target_label)
@@ -260,6 +291,10 @@ if(!grepl("reprocess",study_name) & grepl("AGP",study_name)){
 
 print("dimensions")
 print(dim(input_abundance_table))
+
+
+
+
 for(m in 1:length(methods_list)){
   sv_object_output = c()
   
@@ -347,6 +382,35 @@ for(m in 1:length(methods_list)){
     
     
     batch_corrected_output = regress_out(pca_res$pca_score,data=t(pca_res$transformed_data),pc_index = c(1:num_factors))
+  }else if(methods_list[m] == "minerva_plus"){
+    set.seed(0)
+    pca_res = 0
+    if(use_RMT){
+      fileConn<-file( paste0(output_folder,"/",batch_column,"/NumSV_smartsva_clr",".txt"),"r")
+      line = readLines(fileConn, n = 1)
+      close(fileConn)
+      num_factors = as.integer(line)
+    }else{
+      num_factors = num_pcs
+    }
+    
+    
+    pca_res = pca_method(input_abundance_table,clr_transform = FALSE,center_scale_transform = FALSE,num_pcs = num_factors )
+    
+    sv_object_output = pca_res
+    
+    #$#$#$
+    
+    if(grepl("bmi",covariate_interest)){
+      corr_minerva = cor(total_metadata_mod_interest,pca_res$pca_score[,1:num_factors])
+      
+    }else{
+      corr_minerva = cor(as.integer(total_metadata_mod_interest[,1])-1,pca_res$pca_score[,1:num_factors])
+      
+    }
+    
+    #$#$#
+    batch_corrected_output = regress_out(pca_res$pca_score,data=t(pca_res$transformed_data),pc_index = which(abs(corr_minerva)< 0.03))
   }else if(methods_list[m] == "limma"){
     #table(batch_labels2)
     batch_corrected_output = run_limma(mat = input_abundance_table, batch_labels)
@@ -483,6 +547,8 @@ for(m in 1:length(methods_list)){
   #             sep = "\t",quote = FALSE)
 
   }
+  
+
   
   
   

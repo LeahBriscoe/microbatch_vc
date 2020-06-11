@@ -40,9 +40,9 @@ n_repeats = int(args[6])
 data_type = args[7]
 batch_def_folder = args[8]
 if len(args) > 9:
-	label_pos_or_neg = int(args[9])
-	target_label = args[10]
-print(target_label)
+    label_pos_or_neg = int(args[9])
+    target_label = args[10]
+    print(target_label)
 data_folder = greater_folder + "/data/" + study_name + "/"   
 plot_folder = greater_folder + "/plots/" + study_name + "/" #+ 
 methods_dict = utils.load_data(data_folder,prefix_name,methods,batch_column = batch_def_folder)
@@ -81,6 +81,8 @@ elif "trimester" in column_of_interest:
         methods_dict[method] = methods_dict[method][eligible_columns_temp]  
 elif column_of_interest == "preg_outcome_sub":
     bin_column_of_interest = utils.binarize_labels_mod(metadata["preg_outcome"],none_labels = ["not applicable",float("Nan"),'not provided'],pos_labels =[target_label])
+    metadata[column_of_interest] = bin_column_of_interest
+    pos_label = 1 #"Healthy"#'1-2' #'0-0.5'#'Omnivore' # '0-1.5
 else:
     if len(args) > 9:
         if label_pos_or_neg:
@@ -110,7 +112,7 @@ for method in methods:
     for i in range(2):
         eligible_columns_all = metadata[column_of_interest][metadata[column_of_interest] == i].index.values
         eligible_columns = [col for col in eligible_columns_all if col in methods_dict[method].columns]
-        print(eligible_columns)
+        #print(eligible_columns)
         if "sub" in column_of_interest:
             X_host = eligible_columns
             y_host = list(metadata.loc[eligible_columns]["host_id"])

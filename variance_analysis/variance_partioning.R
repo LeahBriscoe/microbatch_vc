@@ -2,8 +2,9 @@ rm(list = ls())
 args = commandArgs(trailingOnly=TRUE)
 print(args)
 #args = c("otu", "WR_AD","~/Documents/MicroBatch/", "0-0.5","1-2","01/07/2016","DiseaseState","study")
-# args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/',"AGP_max",
-#          "bmc&ComBat",10,1)
+# args = c("kmer", 5,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
+#          "minerva_first1filter_TRUE_trans_clr_scale","protect_bmi_corrected","BatchCorrected",
+#          0,0,0)
 
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Hispanic",
 #          "minerva_first1filter_TRUE_trans_clr_scale","protect_diabetes3_v2",
@@ -92,10 +93,19 @@ if(use_quant_norm){
 # ============================================================================== #
 # make model matrix
 if(grepl("AGP",study_name)){
-  binary_vars = c("collection_AM","bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year","sex")
+  replacement_year = total_metadata$collection_year
+  replacement_year[replacement_year < 2012 | replacement_year > 2020] = NA
+  total_metadata$collection_year = replacement_year
+  
+  #"collection_AM",
+  binary_vars = c("bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year")#,"sex")
   categorical_vars = c("race.x","bin_bowel_movement",
-                       "collection_year","Instrument","body_habitat.x")
+                       "collection_year","Instrument")
   numeric_vars = c("bmi_corrected","age_corrected","librarysize")
+  
+  
+ 
+  
   
 }else if(grepl("Hispanic",study_name)){
   collection_year = format(as.Date(total_metadata$collection_timestamp, format="%m/%d/%Y"), "%Y")
@@ -114,6 +124,10 @@ if(grepl("AGP",study_name)){
   
   numeric_vars = c("bmi_v2","age_v2.x","librarysize")
 
+}else if(grepl("CRC",study_name)){
+  binary_vars = c("bin_crc_normal","bin_crc_adenomaORnormal")
+  categorical_vars = c("study")
+  numeric_vars = c("bmi_corrected","library_size")
 }
 
 
@@ -133,12 +147,6 @@ total_metadata_mod_formula = as.formula(paste0(" ~ ",paste(colnames(total_metada
 
 # ============================================================================== #
 # cleaning data
-replacement_year = total_metadata$collection_year
-if(grepl("AGP",study_name)){
-  replacement_year[replacement_year < 2012 | replacement_year > 2020] = NA
-  
-}
-total_metadata$collection_year = replacement_year
 
 
 for(n in numeric_vars){
@@ -167,11 +175,11 @@ for(n in numeric_vars){
 # ============================================================================== #
 # define fixed and random
 if(grepl("AGP",study_name)){
-  random_effects_tech = c("collection_year","Instrument","body_habitat.x") # "center_project_name","collection_days")#"Instrument",
+  random_effects_tech = c("collection_year","Instrument") # "center_project_name","collection_days")#"Instrument",
   random_effects_bio = c("race.x","bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year","bin_bowel_movement") #"diet_type.x","artificial_sweeteners"
   
-  fixed_effects_tech = c("librarysize","collection_AM")
-  fixed_effects_bio = c("sex","bmi_corrected","age_corrected")
+  fixed_effects_tech = c("librarysize")#,"collection_AM")
+  fixed_effects_bio = c("bmi_corrected","age_corrected") #"sex",
   
 }else if(grepl("Hispanic",study_name)){
   random_effects_tech = c("collection_year","mastermix_lot..exp.","processing_robot..exp.",
@@ -207,25 +215,30 @@ formula_input = paste0(formula_random, " + ", formula_fixed)
 
 # ============================================================================== #
 # var par
-#length(batch_corrected_data_input)
+#length(batch_correocted_data_input)
 
 #row.names(batch_corrected_data_input[[methods_list[4]]])
 collect_var_pars_full_BC = list()
 if(use_quant_norm){
   batch_corrected_data_input = batch_corrected_data_quant_norm
+  
 }else if(use_std){
   batch_corrected_data_input = batch_corrected_data_scale
 }else{
   batch_corrected_data_input = batch_corrected_data
 }
+
+
 length(collect_var_pars_full_BC )
 for(i in 1:length(batch_corrected_data_input)){
+  colnames(batch_corrected_data_input[[methods_list[i]]]) = colnames(batch_corrected_data[[methods_list[i]]])
   print(methods_list[i])
   varPartMetaData = c()
   input_abundance_table = c()
   
   input_abundance_table = batch_corrected_data_input[[methods_list[i]]]
   input_metadata_table = total_metadata_mod
+  
   
   common_samples = intersect(colnames(input_abundance_table ),row.names(input_metadata_table))
   print("common samples")
@@ -255,11 +268,19 @@ for(i in 1:length(batch_corrected_data_input)){
   })
   input_abundance_table = input_abundance_table[,!yes_no_na]
   input_metadata_table = input_metadata_table[!yes_no_na,]
+  print(dim(input_abundance_table))
+  print(dim(input_metadata_table))
+  
   
   input_abundance_table = input_abundance_table[rowVars(as.matrix(input_abundance_table)) > 10e-9,]
   
   if(filter_low_counts){
-    filter_at_least_two_samples_sub = (rowSums(input_abundance_table  > 0 ) > 2)
+    #filter_at_least_two_samples_sub = (rowSums(input_abundance_table  > 0 ) > 2)
+    filter_at_least_two_samples_sub = (rowVars(input_abundance_table) >2e-7 )
+    
+     #test = rowVars(input_abundance_table)
+     #sum(test  > 2e-7)
+     #hist(test,breaks=100)
     input_abundance_table = input_abundance_table[filter_at_least_two_samples_sub,]
     
   }
@@ -267,8 +288,30 @@ for(i in 1:length(batch_corrected_data_input)){
   #row.names(input_abundance_table) = paste0("OTU",1:nrow(input_abundance_table))
 
   
-  
 
+
+
+  # test = cor(input_abundance_table)
+  # test2 <- (test == 1)
+  # cols <- colSums(test2) 
+  # sort(cols,decreasing=TRUE)[1:10]
+  # 
+  # 
+  # fe <- apply(as.factor(input_metadata_table),2,as.numeric)
+  # dim(fe)
+  # 
+  # test = cor(as.numeric(as.factor(input_metadata_table)))
+  # test2 <- (test == 1)
+  # cols <- colSums(test2) 
+  # sort(cols,decreasing=TRUE)[1:10]
+  # 
+  # 
+  # 
+  # noncorrelated_samples = names(cols)[which(cols <= 1)]
+  # print(paste0("uncorre samples", length(noncorrelated_samples)))
+  # input_abundance_table <- input_abundance_table[,noncorrelated_samples]
+  # input_metadata_table <- input_metadata_table[noncorrelated_samples,]
+  # 
 
   
   varPartMetaData = fitExtractVarPartModel(formula = formula_input,

@@ -9,7 +9,7 @@ print(args)
 #table(total_metadata$diabetes_lab_v2.x)
 
 # args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-# "AGP_max", "minerva_plus",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"none",1,0.2,0)
+# "AGP_max", "ProtectPCA",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"none",1,0.2,0)
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "Hispanic", "smartsva",10,"Instrument",1,1,"bmigrp_c4_v2.x",0,"none","1","4")
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
@@ -158,13 +158,33 @@ if(subsample_bool){
   set.seed(subsample_seed)
   subsample_samples = sample(colnames(input_abundance_table),size = as.integer(subsample_prop*ncol(input_abundance_table)))
   
-  input_abundance_table = input_abundance_table[,subsample_samples]
+
   
-  total_metadata = total_metadata[subsample_samples,]
+  if(methods_list == "ProtectPCA"){
+    non_sample_index = which(!(colnames(input_abundance_table) %in% subsample_samples))
+    test_samples  = colnames(input_abundance_table)[non_sample_index]
+    train_samples = subsample_samples
+    
+    
+    test_abundance_table = input_abundance_table[,test_samples]
+    test_metadata = total_metadata[test_samples,]
+    
+    saveRDS(test_metadata,paste0(output_folder,"/metadata.rds"))
+    write.table(test_metadata,paste0(output_folder,"/metadata.txt"),sep="\t",quote=FALSE)
+    
+    #train_abundance_table = input_abundance_table[,subsample_samples]
+    #train_metadata = total_metadata[subsample_samples,]
+    
+  }else{
+    input_abundance_table = input_abundance_table[,subsample_samples]
+    total_metadata = total_metadata[subsample_samples,]
+    
+    saveRDS(total_metadata,paste0(output_folder,"/metadata.rds"))
+    
+    write.table(total_metadata,paste0(output_folder,"/metadata.txt"),sep="\t",quote=FALSE)
+    
+  }
   
-  saveRDS(total_metadata,paste0(output_folder,"/metadata.rds"))
-  
-  write.table(total_metadata,paste0(output_folder,"/metadata.txt"),sep="\t",quote=FALSE)
   
 
 }
@@ -382,7 +402,9 @@ for(m in 1:length(methods_list)){
     
     
     batch_corrected_output = regress_out(pca_res$pca_score,data=t(pca_res$transformed_data),pc_index = c(1:num_factors))
-  }else if(methods_list[m] == "minerva_plus"){
+  }else if(methods_list[m] == "ProtectPCA"){
+  
+    
     set.seed(0)
     pca_res = 0
     if(use_RMT){
@@ -399,18 +421,36 @@ for(m in 1:length(methods_list)){
     
     sv_object_output = pca_res
     
+    all_samples = colnames(input_abundance_table)
+    
+    
+    train_samples_final = intersect(train_samples,all_samples)
+    test_samples_final = intersect(test_samples,all_samples)
+    
+    
+    train_samples_index = which(colnames(input_abundance_table) %in% train_samples_final)
+    train_metadata_mod_interest = total_metadata_mod_interest[train_samples_index,,drop=FALSE]
+    train_pca_score = pca_res$pca_score[train_samples_final,]
+    
+    
+    test_samples_index = which(colnames(input_abundance_table) %in% test_samples_final)
+    test_pca_score = pca_res$pca_score[test_samples_final,]
+    
     #$#$#$
     
     if(grepl("bmi",covariate_interest)){
-      corr_minerva = cor(total_metadata_mod_interest,pca_res$pca_score[,1:num_factors])
+      corr_minerva = cor(train_metadata_mod_interest,train_pca_score[,1:num_factors])
+      protected_pc = which.max(abs(corr_minerva))
       
     }else{
-      corr_minerva = cor(as.integer(total_metadata_mod_interest[,1])-1,pca_res$pca_score[,1:num_factors])
-      
+      corr_minerva = cor(as.integer(train_metadata_mod_interest[,1])-1,train_pca_score[,1:num_factors])
+      protected_pc = which.max(abs(corr_minerva))
     }
     
     #$#$#
-    batch_corrected_output = regress_out(pca_res$pca_score,data=t(pca_res$transformed_data),pc_index = which(abs(corr_minerva)< 0.03))
+    
+    batch_corrected_output = regress_out(test_pca_score,data=t(pca_res$transformed_data[,test_samples_final]),pc_index =(protected_pc-1))
+    
   }else if(methods_list[m] == "limma"){
     #table(batch_labels2)
     batch_corrected_output = run_limma(mat = input_abundance_table, batch_labels)

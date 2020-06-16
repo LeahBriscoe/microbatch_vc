@@ -8,8 +8,8 @@ print(args)
 #table(total_metadata$diabetes_self_v2)
 #table(total_metadata$diabetes_lab_v2.x)
 
-# args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-# "AGP_max", "ProtectPCA",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"none",1,0.2,0)
+args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+"AGP_max", "PhenoCorrect",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"none",0,0,0,1, "Yes")
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "Hispanic", "smartsva",10,"Instrument",1,1,"bmigrp_c4_v2.x",0,"none","1","4")
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
@@ -97,6 +97,8 @@ if(subsample_bool){
   output_folder = paste0(output_folder, "_subsample_",as.integer(100*subsample_prop),"_seed_",subsample_seed)
   dir.create(output_folder)
 }
+
+
 #otu_table_norm = readRDS(paste0(otu_input_folder,"/otu_table_norm.rds"))
 #otu_table = readRDS(paste0(otu_input_folder,"/otu_table.rds"))
 
@@ -110,15 +112,11 @@ if(grepl("clr",transformation)){
 }
 if(data_type == "kmer"){
   #dir.create(paste0(output_folder,"/",batch_column))
-  dir.create(paste0(output_folder,"/protect_",covariate_interest))
   
   input_folder = kmer_input_folder
   kmer_table = readRDS(paste0(kmer_input_folder,"/kmer_table", file_type,".rds"))
 
 }else{
-  dir.create(paste0(otu_input_folder,"/",batch_column))
-  dir.create(paste0(otu_input_folder,"/protect_",covariate_interest))
-  
   input_folder = otu_input_folder
   otu_table = readRDS(paste0(otu_input_folder,"/otu_table", file_type,".rds"))
 }
@@ -160,7 +158,7 @@ if(subsample_bool){
   
 
   
-  if(methods_list == "ProtectPCA"){
+  if(methods_list == "ProtectPCA" | methods_list == "ProtectPCA_compare"){
     non_sample_index = which(!(colnames(input_abundance_table) %in% subsample_samples))
     test_samples  = colnames(input_abundance_table)[non_sample_index]
     train_samples = subsample_samples
@@ -449,7 +447,44 @@ for(m in 1:length(methods_list)){
     
     #$#$#
     
-    batch_corrected_output = regress_out(test_pca_score,data=t(pca_res$transformed_data[,test_samples_final]),pc_index =(protected_pc-1))
+    batch_corrected_output = regress_out(test_pca_score,data=t(pca_res$transformed_data[,test_samples_final]),pc_index =c(1:(protected_pc-1)))
+    
+  }else if(methods_list[m] == "ProtectPCA_compare"){
+    set.seed(0)
+    pca_res = 0
+    if(use_RMT){
+      fileConn<-file( paste0(output_folder,"/",batch_column,"/NumSV_smartsva_clr",".txt"),"r")
+      line = readLines(fileConn, n = 1)
+      close(fileConn)
+      num_factors = as.integer(line)
+    }else{
+      num_factors = num_pcs
+    }
+    
+    
+    pca_res = pca_method(input_abundance_table,clr_transform = FALSE,center_scale_transform = FALSE,num_pcs = num_factors )
+    
+    sv_object_output = pca_res
+    
+    all_samples = colnames(input_abundance_table)
+    
+    
+    train_samples_final = intersect(train_samples,all_samples)
+    test_samples_final = intersect(test_samples,all_samples)
+    
+    
+    train_samples_index = which(colnames(input_abundance_table) %in% train_samples_final)
+    train_metadata_mod_interest = total_metadata_mod_interest[train_samples_index,,drop=FALSE]
+    train_pca_score = pca_res$pca_score[train_samples_final,]
+    
+    
+    test_samples_index = which(colnames(input_abundance_table) %in% test_samples_final)
+    test_pca_score = pca_res$pca_score[test_samples_final,]
+    
+    
+    #$#$#
+    
+    batch_corrected_output = regress_out(test_pca_score,data=t(pca_res$transformed_data[,test_samples_final]),pc_index =c(1:num_factors))
     
   }else if(methods_list[m] == "limma"){
     #table(batch_labels2)
@@ -563,6 +598,37 @@ for(m in 1:length(methods_list)){
     sv_object_output= refactor_res
     #row.names(sv_object_output$scores) = row.names(input_abundance_table)
     batch_corrected_output = mat_scaled_corrected
+  }else if(methods_list[m ] =="PhenoCorrect"){
+
+    batch_labels_factor = factor(batch_labels)
+    batch_mat = model.matrix(~batch_labels_factor )
+    
+    
+    phen_correct<- t(resid(lm(as.numeric(total_metadata_mod_interest[,1]) ~ batch_mat)))
+    
+    
+    new_metadata = total_metadata[colnames(input_abundance_table),]
+    new_metadata[,covariate_interest] = phen_correct[1,]
+    
+    
+    output_folder = paste0(output_folder, "_",methods_list[m])
+    dir.create(output_folder)
+    saveRDS(new_metadata,paste0(output_folder,"/metadata.rds"))
+    write.table(new_metadata,paste0(output_folder,"/metadata.txt"),sep="\t",quote=FALSE)
+    
+    batch_corrected_output = input_abundance_table                            
+
+  }else if(methods_list[m ] == "DataAugmentation"){
+    batch_labels_factor = factor(batch_labels)
+    batch_mat = model.matrix(~batch_labels_factor )
+    input_abundance_table_aug = rbind(input_abundance_table,t(batch_mat[,2:ncol(batch_mat)]))
+    batch_corrected_output = input_abundance_table_aug
+
+    output_folder = paste0(output_folder, "_",methods_list[m])
+    dir.create(output_folder)
+    saveRDS(total_metadata,paste0(output_folder,"/metadata.rds"))
+    write.table(total_metadata,paste0(output_folder,"/metadata.txt"),sep="\t",quote=FALSE)
+    
   }
   #names(batch_corrected_outputs)
   batch_corrected_outputs[[methods_list[m]]] =  batch_corrected_output
@@ -571,8 +637,11 @@ for(m in 1:length(methods_list)){
   #batch_corrected_outputs[["smartsva_scale"]] = out_mat
   
   # make file_name
+  dir.create(paste0(output_folder,"/protect_",covariate_interest))
+  
+  
   extra_file_name= ""
-  if(grepl("pca",methods_list[m]) |grepl("refactor",methods_list[m]) |grepl("sva",methods_list[m]) | grepl("minerva",methods_list[m])){
+  if(grepl("pca",methods_list[m]) |grepl("refactor",methods_list[m]) |grepl("sva",methods_list[m]) | grepl("minerva",methods_list[m]) |grepl("Protect",methods_list[m]) ){
     extra_file_name = paste0(extra_file_name,"_first",num_factors)
   }
   extra_file_name = paste0(extra_file_name,"filter_",filter_low_counts, "_trans_",transformation)

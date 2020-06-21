@@ -53,4 +53,17 @@ def binarize_labels_mod(labels,none_labels, pos_labels = [],neg_labels = []):
     return new_labels
 
 
+def multiclassarize_labels_mod(labels,none_labels):
+    new_labels = []
+    print("length pos labels")
+    print(len(pos_labels))
+    for lab in labels:
+        if lab in none_labels:
+            new_labels.append(None)
+        else:
+            new_labels.append(lab)
+
+    return new_labels
+
+
 

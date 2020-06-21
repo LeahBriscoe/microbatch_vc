@@ -7,9 +7,11 @@ print(args)
 #table(total_metadata$abdominal_obesity_idf_v2.y)
 #table(total_metadata$diabetes_self_v2)
 #table(total_metadata$diabetes_lab_v2.x)
+# args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+# "AGP_max", "PhenoCorrect",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"none",0,0,0,1, "Yes")
 
 # args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-# "AGP_max", "PhenCorrect",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"none",0,0,0,1, "Yes")
+# "AGP_max", "PhenoCorrect",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"none",0,0,0,1, "Yes")
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "Hispanic", "smartsva",10,"Instrument",1,1,"bmigrp_c4_v2.x",0,"none","1","4")
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
@@ -605,18 +607,21 @@ for(m in 1:length(methods_list)){
     phen_correct<- t(resid(lm(as.numeric(total_metadata_mod_interest[,1]) ~ batch_mat)))
     
     # wrong approach:
-    #new_metadata = total_metadata[colnames(input_abundance_table),]
-    #new_metadata[,covariate_interest] = phen_correct[1,]
-    #batch_corrected_output = input_abundance_table 
+    new_metadata = total_metadata[colnames(input_abundance_table),]
+    new_metadata[,covariate_interest] = phen_correct[1,]
+    batch_corrected_output = input_abundance_table
     
     
     output_folder = paste0(output_folder, "_",methods_list[m])
     dir.create(output_folder)
-    saveRDS(total_metadata,paste0(output_folder,"/metadata.rds"))
-    write.table(total_metadata,paste0(output_folder,"/metadata.txt"),sep="\t",quote=FALSE)
+    saveRDS(new_metadata,paste0(output_folder,"/metadata.rds"))
+    write.table(new_metadata,paste0(output_folder,"/metadata.txt"),sep="\t",quote=FALSE)
     
-    batch_corrected_output = phen_correct                            
-
+    #phen_correct_matrix = as.matrix(phen_correct)  
+    #colnames(phen_correct_matrix) = colnames(input_abundance_table)
+    
+    #batch_corrected_output = phen_correct_matrix
+    
   }else if(methods_list[m ] == "DataAugmentation"){
     batch_labels_factor = factor(batch_labels)
     batch_mat = model.matrix(~batch_labels_factor )
@@ -637,13 +642,32 @@ for(m in 1:length(methods_list)){
     
     input_table_correct<- t(resid(lm(t(input_abundance_table) ~ batch_mat)))
     
-    output_folder = paste0(output_folder, "_",methods_list[m])
-    dir.create(output_folder)
+    #output_folder = paste0(output_folder, "_",methods_list[m])
+    #dir.create(output_folder)
     #saveRDS(new_metadata,paste0(output_folder,"/metadata.rds"))
     #write.table(new_metadata,paste0(output_folder,"/metadata.txt"),sep="\t",quote=FALSE)
     
     batch_corrected_output = input_table_correct 
    
+    
+  }else if(methods_list[m ] =="PredDomainPheno"){
+    
+    domain_pheno = paste0(batch_labels,"_",total_metadata_mod_interest[,1])
+    
+    new_metadata = total_metadata[colnames(input_abundance_table),]
+    new_metadata$domain_pheno = domain_pheno 
+    batch_corrected_output = input_abundance_table
+    
+    
+    output_folder = paste0(output_folder, "_",methods_list[m])
+    dir.create(output_folder)
+    saveRDS(new_metadata,paste0(output_folder,"/metadata.rds"))
+    write.table(new_metadata,paste0(output_folder,"/metadata.txt"),sep="\t",quote=FALSE)
+    
+    #phen_correct_matrix = as.matrix(phen_correct)  
+    #colnames(phen_correct_matrix) = colnames(input_abundance_table)
+    
+    #batch_corrected_output = phen_correct_matrix
     
   }
   #names(batch_corrected_outputs)

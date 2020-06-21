@@ -651,6 +651,9 @@ for method in smartsva minerva refactor; do for phen in bin_crc_adenomaORnormal;
 
 
 for method in ProtectPCA ProtectPCA_compare; do for phen in bin_crc_adenomaORnormal; do for tran in clr_scale; do for sv in 10; do for k in 7; do for seed in 1 2 3 4 5; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 8 -t 100 -hp -v 3.6.0 -arg kmer -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg CRC -arg "$method" -arg $sv -arg study -arg 1 -arg 1 -arg "$phen" -arg 0 -arg "$tran" -arg 1 -arg 0.20 -arg $seed -arg 1 -arg 1; done; done; done; done; done; done
+
+
+for method in PhenoCorrect DataAugmentation; do for phen in bin_crc_adenomaORnormal; do for tran in clr_scale; do for sv in 10; do for k in 7; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 8 -t 100 -hp -v 3.6.0 -arg kmer -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg CRC -arg "$method" -arg $sv -arg study -arg 1 -arg 1 -arg "$phen" -arg 0 -arg "$tran" -arg 0 -arg 0 -arg 0 -arg 1 -arg 1; done; done; done; done; done
 ```
 
 
@@ -658,6 +661,9 @@ for method in ProtectPCA ProtectPCA_compare; do for phen in bin_crc_adenomaORnor
  ```
  ###raw:  limma bmc ComBat: 3245962
 for svs in 1; do for tran in clr_scale; do for phen in bin_crc_normal bin_crc_adenomaORnormal; do for method in raw limma bmc ComBat; do for k in 8; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=3G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch CRC_k'$k' BatchCorrected '$phen' '$method'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen'"; done; done; done; done; done
+
+
+for svs in 1; do for tran in clr_scale; do for phen in bin_crc_adenomaORnormal; do for method in PhenoCorrect DataAugmentation; do for k in 7; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=3G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch CRC_k'$k'_'$method' BatchCorrected '$phen' '$method'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen'"; done; done; done; done; done
 
 
 for svs in 20 30 40 50; do for tran in clr_scale; do for phen in bin_crc_adenomaORnormal; do for method in minerva smartsva; do for k in 7; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=3G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch CRC_k'$k' BatchCorrected '$phen' '$method'_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen'"; done; done; done; done; done
@@ -717,6 +723,14 @@ for method in PhenoCorrect; do for phen in bin_crc_adenomaORnormal; do for tran 
 
 
 for method in minerva_plus; do for phen in bin_crc_normal bin_crc_adenomaORnormal; do for tran in clr_scale; do for sv in 1 2 3 4 5 6 7; do for k in 8; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 8 -t 100 -hp -v 3.6.0 -arg otu -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg CRC_thomas -arg "$method" -arg $sv -arg "dataset_name" -arg 1 -arg 1 -arg "$phen" -arg 0 -arg "$tran" -arg 0 -arg 0 -arg 0 -arg 1 -arg 1; done; done; done; done; done
+
+
+omainCorrect 
+for method in PhenoCorrect; do for phen in bin_crc_normal bin_crc_adenomaORnormal; do for tran in clr_scale; do for sv in 1; do for k in 8; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 8 -t 100 -hp -v 3.6.0 -arg otu -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg CRC_thomas -arg "$method" -arg $sv -arg "dataset_name" -arg 1 -arg 1 -arg "$phen" -arg 0 -arg "$tran" -arg 0 -arg 0 -arg 0 -arg 1 -arg 1; done; done; done; done; done
+
+
+
+
 ```
 ## Classification: bin_crc_normal bin_crc_adenomaORnormal
  ```
@@ -725,6 +739,16 @@ for svs in 1; do for tran in clr_scale; do for phen in bin_crc_adenomaORnormal; 
 
 
 for svs in 50; do for seed in 1 2 3 4 5; do for tran in clr_scale; do for phen in bin_crc_normal bin_crc_adenomaORnormal; do for method in ProtectPCA ProtectPCA_compare; do for k in 7; do qsub -cwd -V -N CRCThomaspred"$svs$tran$phen" -l h_data=3G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch CRC_thomas_otu_subsample_20_seed_'$seed' BatchCorrected '$phen' '$method'_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen'"; done; done; done; done; done; done
+
+# DomainCorrect
+
+for svs in 1; do for tran in clr_scale; do for phen in bin_crc_adenomaORnormal bin_crc_normal; do for method in DomainCorrect; do for k in 8; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=3G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch CRC_thomas_otu BatchCorrected '$phen' '$method'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen'"; done; done; done; done; done
+
+
+# PhenoCorrect
+
+for svs in 1; do for tran in clr_scale; do for phen in bin_crc_adenomaORnormal bin_crc_normal; do for method in PhenoCorrect; do for k in 8; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=3G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch CRC_thomas_otu_"$method" BatchCorrected '$phen' '$method'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen'"; done; done; done; done; done
+ 
  
 ```
 

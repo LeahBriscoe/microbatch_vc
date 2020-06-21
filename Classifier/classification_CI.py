@@ -187,6 +187,7 @@ for method in methods:
                 
                 accuracy_all.append(accuracy_score(y_test, y_scores))
             else:
+                accuracy_all.append(accuracy_score(y_test, y_scores))
                 y_scores_bin = clf.predict_proba(X_test).transpose()[1]
                 y_test_bin = utils.binarize_labels(y_test,pos_label =pos_label)
                 y_tr.append(y_test_bin)
@@ -203,8 +204,7 @@ for method in methods:
             #tpr_matrix.loc[cv_it,:] = tpr       
             cv_it += 1
 
-        if label_pos_or_neg == 3:
-            all_methods_auc_stats[method][names[classifier_it]]['accuracy'] = accuracy_all
+        all_methods_auc_stats[method][names[classifier_it]]['accuracy'] = accuracy_all
         else:
 
             fpr_all, tpr_all, thresholds_all = metrics.roc_curve(y_tr_all, y_pr_all)

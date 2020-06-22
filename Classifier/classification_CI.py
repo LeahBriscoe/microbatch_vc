@@ -45,6 +45,9 @@ if len(args) > 9:
     label_pos_or_neg = int(args[9])
     target_label = args[10]
     print(target_label)
+else:
+    label_pos_or_neg = 1
+    target_label = 1
 data_folder = greater_folder + "/data/" + study_name + "/"   
 plot_folder = greater_folder + "/plots/" + study_name + "/" #+ 
 methods_dict = utils.load_data(data_folder,prefix_name,methods,batch_column = batch_def_folder)
@@ -115,7 +118,10 @@ for method in methods:
     #sampled_columns = random.sample(list(methods_dict[method].columns), bootstrap_sample_size)
     # class respective subsampling
     sampled_columns = []
-    for i in range(2):
+    #for i in range(2):
+    np_interest =  np.array(metadata[column_of_interest])
+    unique_categories = np.unique(np_interest)
+    for i in unique_categories:
         eligible_columns_all = metadata[column_of_interest][metadata[column_of_interest] == i].index.values
         eligible_columns = [col for col in eligible_columns_all if col in methods_dict[method].columns]
         #print(eligible_columns)
@@ -127,7 +133,13 @@ for method in methods:
                 new_eligibility.extend(random.sample(list(occurrences(s,y_host)),1))
             eligible_columns = list(np.array(X_host)[new_eligibility])
             bootstrap_prop= 1
-        bootstrap_sample_size = int(bootstrap_prop * len(eligible_columns))
+        if label_pos_or_neg == 3:
+            category_counter = dict(Counter(metadata[column_of_interest]  ))
+            categorical_counts = [category_counter[key] for key in category_counter.keys()]
+            bootstrap_sample_size  = np.min(categorical_counts)
+            print("bootstrap size" + str(bootstrap_sample_size))
+        else:
+            bootstrap_sample_size = int(bootstrap_prop * len(eligible_columns))
         sampled_columns += random.sample(list(eligible_columns), bootstrap_sample_size)
         print(len(sampled_columns))
     X = np.array(methods_dict[method][sampled_columns].transpose())
@@ -135,6 +147,10 @@ for method in methods:
     na_mask = pd.isna(y)
     y = y[~na_mask]
     X = X[~na_mask,:]
+    print("Shapes")
+    print(y.shape)
+    print(X.shape)
+    
     rskf = model_selection.RepeatedStratifiedKFold(n_splits=5, n_repeats=n_repeats, random_state=123)
     h = .02  # step size in the mesh
     metric_classifier = pd.DataFrame(index = list(range(0,10)), columns= names)
@@ -181,13 +197,15 @@ for method in methods:
             #print(score)
             metric_classifier.loc[cv_it,names[classifier_it]] = score
             y_scores = clf.predict(X_test)
-            if label_pos_or_neg == 3:
-                print("Predicted labels multiclass?")
-                print(Counter(y_scores))
-                
-                accuracy_all.append(accuracy_score(y_test, y_scores))
-            else:
-                accuracy_all.append(accuracy_score(y_test, y_scores))
+            if label_pos_or_neg == 3 and target_label == "1or0":
+                y_scores = [0 if k[-1] == '0' else 1 for k in y_scores]
+                y_test = [0 if k[-1] == '0' else 1 for k in y_test]
+            
+            
+            accuracy_all.append(accuracy_score(y_test, y_scores))
+
+            if label_pos_or_neg != 3 or target_label == "1or0":
+            
                 y_scores_bin = clf.predict_proba(X_test).transpose()[1]
                 y_test_bin = utils.binarize_labels(y_test,pos_label =pos_label)
                 y_tr.append(y_test_bin)
@@ -205,7 +223,7 @@ for method in methods:
             cv_it += 1
 
         all_methods_auc_stats[method][names[classifier_it]]['accuracy'] = accuracy_all
-        else:
+        if label_pos_or_neg != 3 or target_label == "1or0":
 
             fpr_all, tpr_all, thresholds_all = metrics.roc_curve(y_tr_all, y_pr_all)
             tpr_i = []

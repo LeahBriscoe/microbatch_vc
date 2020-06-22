@@ -666,8 +666,18 @@ for svs in 1; do for tran in clr_scale; do for phen in bin_crc_normal bin_crc_ad
 
 for svs in 1; do for tran in clr_scale; do for phen in bin_crc_adenomaORnormal; do for method in DataAugmentation; do for k in 7; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=3G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch CRC_k'$k'_'$method' BatchCorrected '$phen' '$method'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen'"; done; done; done; done; done
 
+# phenocorrect
+for svs in 1; do for tran in clr_scale; do for phen in domain_pheno; do for method in PredDomainPheno; do for k in 7; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=3G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch CRC_k'$k'_'$method' BatchCorrected '$phen' '$method'filter_TRUE_trans_'$tran' 10 kmer protect_bin_crc_adenomaORnormal 3 1or0"; done; done; done; done; done
 
-for svs in 1; do for tran in clr_scale; do for phen in bin_crc_adenomaORnormal; do for method in PhenoCorrect; do for k in 7; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=3G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch CRC_k'$k'_'$method' BatchCorrected '$phen' '$method'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen' 3 0"; done; done; done; done; done
+for svs in 1; do for tran in clr_scale; do for phen in bin_crc_adenomaORnormal; do for method in raw; do for k in 7; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=3G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch CRC_k7 BatchCorrected '$phen' '$method'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen'"; done; done; done; done; done
+
+
+##  pheno correct continious and raw
+for svs in 1; do for tran in clr_scale; do for phen in bin_crc_adenomaORnormal; do for method in PhenoCorrect Raw; do for k in 8; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=3G,time=24:00:00 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch CRC_k7_'$method' BatchCorrected '$phen' '$method'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen' reg"; done; done; done; done; done
+
+for svs in 1; do for tran in clr_scale; do for phen in bin_crc_adenomaORnormal; do for method in raw; do for k in 8; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=3G,time=24:00:00 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch CRC_k7 BatchCorrected '$phen' '$method'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen' reg"; done; done; done; done; done
+
+
 
 
 

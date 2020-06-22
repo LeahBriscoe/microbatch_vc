@@ -61,7 +61,7 @@ def multiclassarize_labels_mod(labels,none_labels):
         if lab in none_labels:
             new_labels.append(None)
         else:
-            new_labels.append(lab)
+            new_labels.append("Value" + str(lab))
 
     return new_labels
 

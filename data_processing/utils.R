@@ -151,7 +151,7 @@ process_model_matrix <- function(total_metadata =NULL,binary_vars=NULL,categoric
     #temp = to.dummy(as.factor(data_na_included),paste0(b_v,"_"))[,-1,drop=FALSE]
     
     if(length(target_label) > 0){
-      if( label_pos_or_neg){
+      if( label_pos_or_neg == 1){
         print("Positive")
         data_na_included = sapply(data_na_included,function(x){
           if(is.na(x)){return(x)}
@@ -183,6 +183,7 @@ process_model_matrix <- function(total_metadata =NULL,binary_vars=NULL,categoric
     #temp = to.dummy(as.factor(data_na_included),paste0(c_v,"_"))[,-1,drop=FALSE]
     #print(colnames(temp))
     assign(c_v ,data_na_included)
+    
   }
   
   

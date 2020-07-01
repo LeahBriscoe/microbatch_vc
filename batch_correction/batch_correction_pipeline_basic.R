@@ -15,8 +15,10 @@ print(args)
 
 # args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "AGP_max", "PhenoCorrect",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"none",0,0,0,1, "Yes")
-# args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-# "Hispanic", "smartsva",10,"Instrument",1,1,"bmigrp_c4_v2.x",0,"none","1","4")
+# args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+# "Hispanic", "smartsva",10,"Instrument",1,1,"bmigrp_c4_v2.x",0,"none",0,0,0,3,1)#3,1)#"1","4")
+
+
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 #          "Hispanic", "smartsva",10,"Instrument",1,1,"mets_idf3_v2",0,"none",1,"1")
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
@@ -69,7 +71,7 @@ if(length(args)> 12){
   subsample_seed = as.integer(args[15])
 }
 if(length(args)> 15){
-  label_pos_or_neg = as.logical(as.integer(args[16]))
+  label_pos_or_neg = as.integer(args[16])
   target_label = args[17]
 }
 
@@ -247,8 +249,17 @@ if(grepl("bmi",covariate_interest)){
 }else{
   if(length(args)> 15){
     
-    total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,binary_vars = covariate_interest,
-                                                       label_pos_or_neg = label_pos_or_neg,target_label = target_label)
+    if( label_pos_or_neg == 3){
+      total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,categorical_vars = covariate_interest,
+                                                         label_pos_or_neg = label_pos_or_neg,target_label = target_label)
+      total_metadata_mod_interest = model.matrix(~factor(total_metadata_mod_interest[,1]))
+      colnames(total_metadata_mod_interest) = c("Intercept",paste0("Variable",c(1:(ncol(total_metadata_mod_interest)-1))))
+      
+    }else{
+      total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,binary_vars = covariate_interest,
+                                                         label_pos_or_neg = label_pos_or_neg,target_label = target_label)
+      
+    }
     
   }else{
     if(grepl("gest_age",covariate_interest)){
@@ -275,6 +286,8 @@ batch_labels = batch_labels[rowSums(is.na(total_metadata_mod_interest )) == 0]
 
 
 total_metadata_mod_interest= total_metadata_mod_interest[rowSums(is.na(total_metadata_mod_interest)) == 0,,drop=FALSE]
+
+
 
 if(filter_low_counts){
   if(grepl("clr",transformation)){
@@ -513,11 +526,21 @@ for(m in 1:length(methods_list)){
   }else if(methods_list[m] == "smartsva"){
     print("about to start smartsva")
     if(use_RMT){
+      
       sva_result= run_sva(mat = input_abundance_table, metadata_mod=total_metadata_mod_interest,bio_signal_formula = bio_signal_formula_interest,num_pcs=NULL)
     }else{
       sva_result= run_sva(mat = input_abundance_table, metadata_mod=total_metadata_mod_interest,bio_signal_formula = bio_signal_formula_interest,num_pcs=num_pcs)
-
+      
+      
+      
     }
+    #sva_result$corrected_data[1:4,1:4]
+    #total_metadata_mod_interest
+    
+    
+    #test =readRDS("~/Downloads/sva_numbers.rds")
+    #all(test$corrected_data == sva_result$corrected_data)
+    
     #table(as.factor(total_metadata_mod_interest))
     svobj = sva_result$sv.obj
     sv_object_output =  svobj

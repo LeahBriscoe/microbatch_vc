@@ -26,6 +26,7 @@ from sklearn import metrics
 from sklearn.metrics import mean_squared_error 
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import accuracy_score
+import math
 
 import sys
 from collections import Counter
@@ -48,6 +49,7 @@ if len(args) > 9:
 else:
     label_pos_or_neg = 1
     target_label = 1
+use_domain_pheno = False # for when running raw to compare to domain pheno
 data_folder = greater_folder + "/data/" + study_name + "/"   
 plot_folder = greater_folder + "/plots/" + study_name + "/" #+ 
 methods_dict = utils.load_data(data_folder,prefix_name,methods,batch_column = batch_def_folder)
@@ -119,10 +121,30 @@ for method in methods:
     # class respective subsampling
     sampled_columns = []
     #for i in range(2):
-    np_interest =  np.array(metadata[column_of_interest])
-    unique_categories = np.unique(np_interest)
+
+    if use_domain_pheno:
+        np_interest =  np.array(metadata['domain_pheno'] )
+        unique_categories = np.unique(np_interest)
+        
+    else:
+        np_interest =  np.array(metadata[column_of_interest])
+        unique_categories = np.unique(np_interest)
+        #print(unique_categories)
+        if len(args) <= 9:
+            unique_categories = [cat for cat in unique_categories if not math.isnan(cat)]
+
+    
+    
+    print(unique_categories)
+    
+    print(unique_categories)   
+
+
     for i in unique_categories:
-        eligible_columns_all = metadata[column_of_interest][metadata[column_of_interest] == i].index.values
+        if use_domain_pheno:
+            eligible_columns_all = metadata['domain_pheno'][metadata['domain_pheno'] == i].index.values
+        else:
+            eligible_columns_all = metadata[column_of_interest][metadata[column_of_interest] == i].index.values
         eligible_columns = [col for col in eligible_columns_all if col in methods_dict[method].columns]
         #print(eligible_columns)
         if "sub" in column_of_interest:
@@ -133,17 +155,33 @@ for method in methods:
                 new_eligibility.extend(random.sample(list(occurrences(s,y_host)),1))
             eligible_columns = list(np.array(X_host)[new_eligibility])
             bootstrap_prop= 1
-        if label_pos_or_neg == 3:
+
+        if use_domain_pheno:
+            category_counter = dict(Counter(metadata['domain_pheno']  ))
+            categorical_counts = [category_counter[key] for key in category_counter.keys()]
+        else:
             category_counter = dict(Counter(metadata[column_of_interest]  ))
             categorical_counts = [category_counter[key] for key in category_counter.keys()]
-            bootstrap_sample_size  = np.min(categorical_counts)
-            print("bootstrap size" + str(bootstrap_sample_size))
-        else:
-            bootstrap_sample_size = int(bootstrap_prop * len(eligible_columns))
+            #print(category_counter)
+            if len(args) <= 9:
+                categorical_counts = [category_counter[key] for key in category_counter.keys() if not math.isnan(key) ]
+        #print(category_counter)
+
+        #print(categorical_counts)
+        bootstrap_sample_size  = np.min(categorical_counts)
+        #print("bootstrap size" + str(bootstrap_sample_size))
+
+        # if label_pos_or_neg == 3:
+        # else:
+        #     bootstrap_sample_size = int(bootstrap_prop * len(eligible_columns))
         sampled_columns += random.sample(list(eligible_columns), bootstrap_sample_size)
-        print(len(sampled_columns))
+        #print(len(sampled_columns))
     X = np.array(methods_dict[method][sampled_columns].transpose())
     y = np.array(metadata.loc[sampled_columns][column_of_interest]) 
+
+    y_counter = dict(Counter(y))
+    print(y_counter)
+
     na_mask = pd.isna(y)
     y = y[~na_mask]
     X = X[~na_mask,:]
@@ -193,6 +231,21 @@ for method in methods:
             X_train, X_test = X[train_index,], X[test_index,]
             y_train, y_test = y[train_index], y[test_index]
             clf.fit(X_train, y_train)
+            if classifier_it == 0:
+                print("importance")
+                importances = clf.feature_importances_
+                print(type(importances))
+                std = np.std([clf.feature_importances_ for tree in clf.estimators_], axis=0)
+                indices = np.argsort(importances)[::-1]
+
+                # Print the feature ranking
+                print("Feature ranking:")
+
+                for f in range(X.shape[1]):
+                    print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
+                np.savetxt(data_folder +  data_type + "_" + prefix_name + "_" + column_of_interest + "_" + method + "_rf_importance.csv", importances, delimiter=',')
+                    
+
             score = clf.score(X_test, y_test)
             #print(score)
             metric_classifier.loc[cv_it,names[classifier_it]] = score
@@ -200,11 +253,24 @@ for method in methods:
             if label_pos_or_neg == 3 and target_label == "1or0":
                 y_scores = [0 if k[-1] == '0' else 1 for k in y_scores]
                 y_test = [0 if k[-1] == '0' else 1 for k in y_test]
+
+                category_counter = dict(Counter(y_scores  ))
+                print("y score counter")
+                print(category_counter )
+
+                print(y_scores[0:20])
+
+                category_counter = dict(Counter(y_test  ))
+                print("y test counter")
+                print(category_counter )
+                print(y_test[0:20])
+
             
             
             accuracy_all.append(accuracy_score(y_test, y_scores))
 
             if label_pos_or_neg != 3 or target_label == "1or0":
+                print("get auc")
             
                 y_scores_bin = clf.predict_proba(X_test).transpose()[1]
                 y_test_bin = utils.binarize_labels(y_test,pos_label =pos_label)

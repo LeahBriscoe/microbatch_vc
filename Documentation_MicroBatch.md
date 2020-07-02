@@ -575,14 +575,41 @@ Step 2: Regress BMI out of the
 6. [CRC Wirbel Prediction](#crcwirbelprediction)
 7. [Hispanic](#hispanicprediction)
 
+# Thomas kmer
+
+for method in bmc raw ComBat limma ;do for phen in bin_crc_normal bin_crc_adenomaORnormal; do for tran in clr_scale; do for sv in 1; do for k in 5 6 7 8; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 8 -t 100 -hp -v 3.6.0 -arg kmer -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg CRC -arg "$method" -arg $sv -arg study -arg 1 -arg 1 -arg "$phen" -arg 0 -arg "$tran" -arg 0 -arg 0 -arg 0 -arg 1 -arg 1; done; done; done; done; done
+
+
+for method in smartsva minerva refactor; do for phen in bin_crc_adenomaORnormal; do for tran in clr_scale; do for sv in 20 30 40 50; do for k in 7; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 8 -t 100 -hp -v 3.6.0 -arg kmer -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg CRC -arg "$method" -arg $sv -arg study -arg 1 -arg 1 -arg "$phen" -arg 0 -arg "$tran" -arg 0 -arg 0 -arg 0 -arg 1 -arg 1; done; done; done; done; done
+
+
+```
+COUNTER=0
+for method in minerva smartsva refactor; do for tran in clr_scale; do for sv in 1 2 3 4 5 6 7 8 9 10; do for k in 6 7; do for phen in bin_crc_adenomaORnormal; do COUNTER=$((COUNTER + 1)); echo "Text read from file: '$COUNTER'"; echo "kmer $k /u/home/b/briscoel/project-halperin/MicroBatch Thomas $method $sv study 1 1 $phen 0 $tran 0 0 0 1 CRC" > data_$COUNTER.in; done; done; done; done; done;
+
+qsub -cwd -V -N TK -l h_data=10G,time=100:00:00,highp -M briscoel -m beas -b y -t 1:60 "./run_bc.sh"
+
+
+```
+
+## Thomas k Class
+
+```
+for method in minerva smartsva refactor; do for svs in 1 2 3 4 5 6 7 8 9 10; do for tran in clr_scale; do for phen in bin_crc_adenomaORnormal; do qsub -cwd -V -N "$method$svs$tran$phen" -l h_data=16G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch Thomas_k6 BatchCorrected '$phen' Thomas'$method'_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen' 1 CRC"; done; done; done; done 
+```
+
+
+
 # <a name =hispanicprediction> Hispanic prediction </a>
 
 ## Batch correction:
 ```
-COUNTER=0
-for method in minerva smartsva refactor; do for tran in clr_scale clr; do for sv in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do for k in 5 6 7 8; do for phen in bin_antibiotic_last_year bmi_corrected; do COUNTER=$((COUNTER + 1)); echo "Text read from file: '$COUNTER'"; echo "kmer $k /u/home/b/briscoel/project-halperin/MicroBatch AGP_max $method $sv Instrument 1 1 $phen 0 $tran 0 0 0 1 Yes" > data_$COUNTER.in; done; done; done; done; done;
+COUNTER=1000
+for method in minerva smartsva refactor; do for tran in clr_scale; do for sv in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do for k in 5 6 7 8; do for phen in bmigrp_c4_v2.x; do COUNTER=$((COUNTER + 1)); echo "Text read from file: '$COUNTER'"; echo "kmer $k /u/home/b/briscoel/project-halperin/MicroBatch Hispanic $method $sv mastermix_lot..exp. 1 1 $phen 0 $tran 0 0 0 3 1" > data_$COUNTER.in; done; done; done; done; done;
 
-qsub -cwd -V -N BC -l h_data=10G,time=1:00:00 -M briscoel -m beas -b y -t 4:960 "./run_bc.sh"
+qsub -cwd -V -N BC -l h_data=10G,time=1:00:00 -M briscoel -m beas -b y -t 1000:1240 "./run_bc.sh"
+
+qsub -cwd -V -N His -l h_data=10G,time=1:00:00 -M briscoel -m beas -b y -t 1000:1003 "./run_bc.sh"
 
 ```
 
@@ -595,9 +622,16 @@ for method in minerva smartsva; do for tran in clr_scale; do for sv in 10; do fo
 
 
 COUNTER=0
-for method in minerva smartsva refactor; do for tran in clr_scale clr; do for sv in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do for k in 5 6 7 8; do for phen in bin_antibiotic_last_year bmi_corrected; do COUNTER=$((COUNTER + 1)); echo "Text read from file: '$COUNTER'"; echo "kmer $k /u/home/b/briscoel/project-halperin/MicroBatch AGP_max $method $sv Instrument 1 1 $phen 0 $tran 0 0 0 1 Yes" > data_$COUNTER.in; done; done; done; done; done;
+for method in minerva smartsva refactor; do for tran in clr_scale clr; do for sv in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do for k in 7 8; do for phen in bin_antibiotic_last_year bmi_corrected; do COUNTER=$((COUNTER + 1)); echo "Text read from file: '$COUNTER'"; echo "kmer $k /u/home/b/briscoel/project-halperin/MicroBatch AGP_max $method $sv Instrument 1 1 $phen 0 $tran 0 0 0 1 Yes" > data_$COUNTER.in; done; done; done; done; done;
 
-qsub -cwd -V -N BC -l h_data=10G,time=1:00:00 -M briscoel -m beas -b y -t 4:960 "./run_bc.sh"
+qsub -cwd -V -N BC -l h_data=20G,time=48:00:00,highp -M briscoel -m beas -b y -t 1:480 "./run_bc.sh"
+
+
+
+COUNTER=61
+for method in raw limma bmc ComBat; do for tran in clr_scale clr; do for sv in 1; do for k in 5 6 7 8; do for phen in bin_antibiotic_last_year bmi_corrected; do COUNTER=$((COUNTER + 1)); echo "Text read from file: '$COUNTER'"; echo "kmer $k /u/home/b/briscoel/project-halperin/MicroBatch AGP_max $method $sv Instrument 1 1 $phen 0 $tran 0 0 0 1 Yes" > data_$COUNTER.in; done; done; done; done; done;
+
+qsub -cwd -V -N AGP -l h_data=20G,time=100:00:00,highp -M briscoel -m beas -b y -t 61:125 "./run_bc.sh"
 
 
 ```
@@ -619,8 +653,12 @@ qsub -cwd -V -N BC -l h_data=48G,time=24:00:00 -M briscoel -m beas -b y -t 15:24
 
 
 ## Prediction: bmi_corrected
+### unsupervised
+```
+for method in smartsva minerva refactor; do for svs in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do for tran in clr_scale clr; do for phen in bmi_corrected; do qsub -cwd -V -N "PredAGP$svs$tran$phen" -l h_data=16G,time=24:00:00 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k6 BatchCorrected '$phen' '$method'_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen' reg"; done; done; done; done
+```
 
-### Unsupervised
+### Unsupervised seed
 ```
 for seed in 1 2 3 4 5; do for method in ProtectPCA ProtectPCA_compare; do for svs in 10; do for tran in clr_scale; do for phen in bmi_corrected; do qsub -cwd -V -N "AGP$svs$tran$phen" -l h_data=16G,time=24:00:00 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k6_subsample_20_seed_'$seed' BatchCorrected '$phen' '$method'_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen' reg"; done; done; done; done;done 
 ```

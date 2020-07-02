@@ -234,15 +234,15 @@ for method in methods:
             if classifier_it == 0:
                 print("importance")
                 importances = clf.feature_importances_
-                print(type(importances))
+                #print(type(importances))
                 std = np.std([clf.feature_importances_ for tree in clf.estimators_], axis=0)
                 indices = np.argsort(importances)[::-1]
 
                 # Print the feature ranking
                 print("Feature ranking:")
 
-                for f in range(X.shape[1]):
-                    print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
+                # for f in range(X.shape[1]):
+                #     print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
                 np.savetxt(data_folder +  data_type + "_" + prefix_name + "_" + column_of_interest + "_" + method + "_rf_importance.csv", importances, delimiter=',')
                     
 

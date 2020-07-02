@@ -137,10 +137,12 @@ for method in methods:
     
     print(unique_categories)
     
-    print(unique_categories)   
+    print("column of interest")
+    #print(metadata[column_of_interest])   
 
 
     for i in unique_categories:
+        #print(i)
         if use_domain_pheno:
             eligible_columns_all = metadata['domain_pheno'][metadata['domain_pheno'] == i].index.values
         else:
@@ -167,8 +169,14 @@ for method in methods:
                 categorical_counts = [category_counter[key] for key in category_counter.keys() if not math.isnan(key) ]
         #print(category_counter)
 
+
         #print(categorical_counts)
         bootstrap_sample_size  = np.min(categorical_counts)
+        bootstrap_sample_size  = np.min([bootstrap_sample_size,len(eligible_columns)])
+        #print("bootstrap_sample_size ")
+        #print(bootstrap_sample_size )
+        #print("length elidible_columns")
+        #print(len(eligible_columns))
         #print("bootstrap size" + str(bootstrap_sample_size))
 
         # if label_pos_or_neg == 3:

@@ -10,9 +10,12 @@ args = commandArgs(trailingOnly=TRUE)
 #          "rawfilter_TRUE_trans_clr_scale&minerva_first1filter_TRUE_trans_clr_scale",
 #          'protect_diabetes3_v2',"0","filter_FALSE") #filter_FALSE_filter_FALSE
 
-args = c("AGP_max", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_max_k6",
-         "rawfilter_TRUE_trans_clr_scale&minerva_first2filter_TRUE_trans_clr_scale",
-         'protect_bin_antibiotic_last_year',"1","filter_FALSE") #filter_FALSE_filter_FALSE
+# args = c("AGP_max", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_max_k6",
+#          "rawfilter_TRUE_trans_clr_scale&minerva_first2filter_TRUE_trans_clr_scale",
+#          'protect_bin_antibiotic_last_year',"1","filter_FALSE") #filter_FALSE_filter_FALSE
+args = c("Thomas", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Thomas_k6",
+         "rawfilter_TRUE_trans_clr_scale&minerva_first4filter_TRUE_trans_clr_scale",
+         'protect_bin_crc_adenomaORnormal',"1","filter_FALSE") #filter_FALSE_filter_FALSE
 
 # 
 # 
@@ -81,7 +84,16 @@ if(grepl("AGP",study_name)){
   fixed_effects_bio = c("bmi_v2","age_v2.x")
   
   
+}else if(grepl("Thomas",study_name)){
+  
+  random_effects_tech = c("Instrument",'CenterName',"study",'DNA_extraction_kit',"LibraryLayout") # "center_project_name","collection_days")#"Instrument",
+  
+  random_effects_bio = c('multi_crc_adenoma_normal',"gender") 
+  fixed_effects_tech = c("LibrarySize")
+  fixed_effects_bio = c("age","BMI")
+  
 }
+
 
 
 # ============================================================================== #
@@ -135,7 +147,12 @@ for( t in 1:length(varpar_types )){
                "mastermix_lot..exp.","Residuals" )
     top_5_pretty = c("antibiotic","librarysize","frequency_bowel_movement.y","hispanic_origin.x",
                      "mastermix_lot..exp.","Residuals")
+  }else if(grepl("Thomas",study_name)){
+    vp = vp[order(vp$BMI,decreasing = TRUE),]
+    top_5 = c( 'CenterName','DNA_extraction_kit',"Instrument","study","BMI",'multi_crc_adenoma_normal')
+    top_5_pretty = c( 'CenterName','DNA Extraction Kit',"Instrument","Study","BMI",'CRC Status')
   }
+  
   
   
   ggsave(filename = paste0(plot_path,'/barplots_kmer_variance_',varpar_types[t],'.pdf'), 

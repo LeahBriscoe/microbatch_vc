@@ -128,8 +128,11 @@ if(grepl("AGP",study_name)){
   binary_vars = c("bin_crc_normal","bin_crc_adenomaORnormal")
   categorical_vars = c("study")
   numeric_vars = c("bmi_corrected","library_size")
+}else if(grepl("Thomas",study_name)){
+  binary_vars = c("gender","LibraryLayout")
+  categorical_vars = c("study","Instrument",'multi_crc_adenoma_normal','CenterName','DNA_extraction_kit')
+  numeric_vars = c("LibrarySize")#,"age","BMI")
 }
-
 
 
 
@@ -189,6 +192,14 @@ if(grepl("AGP",study_name)){
   fixed_effects_tech = c("librarysize")
   fixed_effects_bio = c("bmi_v2","age_v2.x")
 
+
+}else if(grepl("Thomas",study_name)){
+  
+  random_effects_tech = c("Instrument",'CenterName',"study",'DNA_extraction_kit',"LibraryLayout") # "center_project_name","collection_days")#"Instrument",
+  
+  random_effects_bio = c('multi_crc_adenoma_normal',"gender") 
+  fixed_effects_tech = c("LibrarySize")
+  fixed_effects_bio = c()#"age","BMI")
 
 }
 

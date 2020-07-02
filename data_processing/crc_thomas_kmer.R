@@ -336,10 +336,14 @@ table(full_metadata_matrix$Instrument)
 bin_crc_normal = sapply(full_metadata_matrix$disease, function(x){
   if(grepl("CRC",x)){
     return("CRC")
+  }
+  if(grepl("adenoma",x)){
+    return(NA)
   }else{
     return("H")
   }
 })
+#table(bin_crc_normal)
 bin_crc_adenomaORnormal = sapply(full_metadata_matrix$disease, function(x){
   if(grepl("CRC",x)){
     return("CRC")
@@ -388,6 +392,5 @@ write.table(kmer_table,paste0(kmer_output_folder,"/kmer_table.txt"),sep="\t",quo
 saveRDS(total_metadata,paste0(kmer_output_folder,"/metadata.rds"))
 
 write.table(total_metadata,paste0(kmer_output_folder,"/metadata.txt"),sep = "\t",quote = FALSE)
-
 
 

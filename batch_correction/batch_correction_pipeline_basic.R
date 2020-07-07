@@ -1,4 +1,5 @@
 
+
 args = commandArgs(trailingOnly=TRUE)
 print(args)
 #args = c("otu", "WR_AD","~/Documents/MicroBatch/", "0-0.5","1-2","01/07/2016","DiseaseState","study")
@@ -11,12 +12,12 @@ print(args)
 # "CRC", "PhenoCorrect",10,"study",1,1,"bin_crc_adenomaORnormal",0,"clr_scale",0,0,0,1,1)
 
 # args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-# "AGP_max", "PhenoCorrect",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"none",0,0,0,1, "Yes")
+# "AGP_max", "minerva",20,"Instrument",1,1,"Abx6_12",0,"clr_scale",0,0,0,1,1)
 
 # args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "AGP_max", "PhenoCorrect",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"none",0,0,0,1, "Yes")
-# args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-# "Hispanic", "smartsva",10,"Instrument",1,1,"bmigrp_c4_v2.x",0,"none",0,0,0,3,1)#3,1)#"1","4")
+# args = c("kmer", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+# "T2D", "smartsva",10,"Instrument",1,1,"bmigrp_c4_v2.x",0,"none",0,0,0,3,1)#3,1)#"1","4")
 
 
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
@@ -105,7 +106,6 @@ if(subsample_bool){
   dir.create(output_folder)
 }
 
-
 #otu_table_norm = readRDS(paste0(otu_input_folder,"/otu_table_norm.rds"))
 #otu_table = readRDS(paste0(otu_input_folder,"/otu_table.rds"))
 
@@ -130,7 +130,6 @@ if(data_type == "kmer"){
 total_metadata = readRDS(paste0(input_folder,"/metadata.rds"))
 
 
-table(total_metadata$bin_antibiotic_last_year)
 
 if(grepl("reprocess",study_name)){
   collection_date=as.Date(total_metadata$collection_timestamp, format="%Y-%m-%d %H:%M")
@@ -243,9 +242,38 @@ if(grepl("bmi",covariate_interest)){
   #covariate_interest = "host_body_mass_index"
   total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,numeric_vars =  covariate_interest)
   
-}else if(grepl("M6abx",covariate_interest)){
-  total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,binary_vars = "antibiotic_history",
-                                                     label_pos_or_neg = 0,target_label = c("I have not taken antibiotics in the past year.","Year"))
+}else if(grepl("Abx0_6",covariate_interest)){
+  total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,categorical_vars = "antibiotic_history",
+                                                     label_pos_or_neg = 0)
+  new_metadata_interpretation = sapply(total_metadata_mod_interest[,1],function(x){
+    if(is.na(x)){
+      return(NA)
+    }else if(x == "I have not taken antibiotics in the past year." | 
+       x == "Year"){
+      return(0)
+    }else{
+      return(1)
+    }
+      
+  })
+  total_metadata_mod_interest[,1] = new_metadata_interpretation
+}else if(grepl("Abx6_12",covariate_interest)){
+  total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,categorical_vars = "antibiotic_history",
+                                                     label_pos_or_neg = 0)
+  new_metadata_interpretation = sapply(total_metadata_mod_interest[,1],function(x){
+    if(is.na(x)){
+      return(NA)
+    }else if(x == "I have not taken antibiotics in the past year."){
+      return(0)
+    }else if (x == "Year" | x == "6 months"){
+      return(1)
+    }else if ( x == "Week" | x == "Month"){
+      return(NA)
+    }
+    
+  })
+  #table(new_metadata_interpretation)
+  total_metadata_mod_interest[,1] = new_metadata_interpretation
 }else{
   if(length(args)> 15){
     
@@ -698,6 +726,20 @@ for(m in 1:length(methods_list)){
     
     #batch_corrected_output = phen_correct_matrix
     
+  }
+  
+  if(grepl("Abx",covariate_interest)){
+    
+    output_folder = paste0(output_folder, "_",covariate_interest)
+    dir.create(output_folder)
+    
+    new_metadata = total_metadata[colnames(input_abundance_table),]
+    old_colnames = colnames(new_metadata)
+    new_metadata = cbind(new_metadata,total_metadata_mod_interest[,1])
+    colnames(new_metadata) = c(old_colnames,covariate_interest)
+    batch_corrected_output = input_abundance_table
+    saveRDS(new_metadata,paste0(output_folder,"/metadata.rds"))
+    write.table(new_metadata,paste0(output_folder,"/metadata.txt"),sep="\t",quote=FALSE)
   }
   #names(batch_corrected_outputs)
   batch_corrected_outputs[[methods_list[m]]] =  batch_corrected_output

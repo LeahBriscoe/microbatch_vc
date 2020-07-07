@@ -90,7 +90,7 @@ if(grepl("AGP",study_name)){
   
   random_effects_bio = c('multi_crc_adenoma_normal',"gender") 
   fixed_effects_tech = c("LibrarySize")
-  fixed_effects_bio = c("age","BMI")
+  fixed_effects_bio = c()#"age","BMI")
   
 }
 
@@ -148,9 +148,9 @@ for( t in 1:length(varpar_types )){
     top_5_pretty = c("antibiotic","librarysize","frequency_bowel_movement.y","hispanic_origin.x",
                      "mastermix_lot..exp.","Residuals")
   }else if(grepl("Thomas",study_name)){
-    vp = vp[order(vp$BMI,decreasing = TRUE),]
-    top_5 = c( 'CenterName','DNA_extraction_kit',"Instrument","study","BMI",'multi_crc_adenoma_normal')
-    top_5_pretty = c( 'CenterName','DNA Extraction Kit',"Instrument","Study","BMI",'CRC Status')
+    vp = vp[order(vp$multi_crc_adenoma_normal,decreasing = TRUE),]
+    top_5 = c( 'CenterName','DNA_extraction_kit',"Instrument","study",'multi_crc_adenoma_normal') #"BMI"
+    top_5_pretty = c( 'CenterName','DNA Extraction Kit',"Instrument","Study",'CRC Status') #"BMI",
   }
   
   
@@ -252,7 +252,7 @@ ggsave(filename = paste0(plot_path,'/scatter_ratio_',varpar_types[1],'.pdf'),
 # ============================================================================== #
 # bio
 
-p<-ggplot(to_plot ,aes(x=Method,y=bio_variability_explained,color=Method)) + ggtitle("Bio") 
+p<-ggplot(to_plot ,aes(x=L1,y=bio_variability_explained,color=L1)) + ggtitle("Bio") 
 p<-p + geom_boxplot() + theme_bw() + 
   theme(text = element_text(size=20),axis.text.x = element_text(angle = 90, hjust = 1)) +
   ggtitle("Biological variability explained") +
@@ -266,7 +266,7 @@ wilcox.test(var_pars_tech_bio[[1]]$bio_variability_explained,
 # ============================================================================== #
 #tech 
 
-p<-ggplot(to_plot ,aes(x=Method,y=tech_variability_explained,color=Method)) + ggtitle("Tech") 
+p<-ggplot(to_plot ,aes(x=L1,y=tech_variability_explained,color=L1)) + ggtitle("Tech") 
 p<-p + geom_boxplot() + theme_bw() + 
   theme(text = element_text(size=20),axis.text.x = element_text(angle = 90, hjust = 1)) +
   ggtitle("Technical variability explained") +

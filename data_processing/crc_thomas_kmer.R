@@ -1,6 +1,20 @@
+table(combined_metadata %>% filter(antibiotics_current_use == "yes" | antibiotics_current_use == "no") %>% select(dataset_name))
+chosen_sets = combined_metadata %>% filter(antibiotics_current_use == "yes") %>% select(dataset_name)
+table(combined_metadata %>% filter(dataset_name %in% unique(chosen_sets[,1])) %>% select(dataset_name))
+table(combined_metadata %>% filter(dataset_name %in% unique(chosen_sets[,1])) %>% select(dataset_name))
+combined_metadata$NCBI_accession
+combined_metadata[1:4,]
+
+length(table(combined_metadata %>% filter(antibiotics_current_use == "yes") %>% select(dataset_name)))
+dim(combined_metadata %>% filter(antibiotics_current_use == "yes" | antibiotics_current_use == "no") %>% select(dataset_name))
+
+
+
+table(total_metadata$antibiotics_current_use)
+combined_metadata$
 # ============================================================================== #
 # user input
-kmer_len = 7
+kmer_len = 6
 # ============================================================================== #
 # load packages and functions
 script_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data_processing'

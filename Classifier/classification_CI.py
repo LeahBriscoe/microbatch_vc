@@ -31,20 +31,28 @@ import math
 import sys
 from collections import Counter
 occurrences = lambda s, lst: (i for i,e in enumerate(lst) if e == s)
+
+
+# example run of this script
+# ./classifier.py /u/home/b/briscoel/project-halperin/MicroBatch Thomas_k6 BatchCorrected bin_crc_normal rawfilter_TRUE_trans_none 10 kmer protect_bin_crc_normal 1 CRC
+# the matrix you provide should have k-mer in row, sample in column
+
 args = sys.argv
 print(args)
 print(len(args))
-greater_folder = args[1]
-study_name = args[2]
-prefix_name = args[3]
-column_of_interest = args[4]
-methods = args[5].split("&")
-n_repeats = int(args[6])
-data_type = args[7]
-batch_def_folder = args[8]
-if len(args) > 9:
-    label_pos_or_neg = int(args[9])
-    target_label = args[10]
+greater_folder = args[1] # what folder do you save your different datasets in
+study_name = args[2] # what is the name of the dataset (tells the program which folder to check)
+prefix_name = args[3] # what is the prefix of the file name
+column_of_interest = args[4] # what is the phenotype you are predicting (use the same name in the column of the metadata you want to predict), this programs reads from metadata.txt
+methods = args[5].split("&") # you can specify prediction with multiple matrices by separating with &. Just ignore the '&'
+n_repeats = int(args[6]) # number of different folds for cross validation. 5 or 10 is good. 
+data_type = args[7] # type of data. kmer vs OTU
+batch_def_folder = args[8] #which folder is the matrix saved in
+number_estimators_rf = int(args[9]) # number of estimators in random forest
+
+if len(args) > 10:
+    label_pos_or_neg = int(args[10]) # do you want to treat CRC as positive class or negative class? 
+    target_label = args[11] # phenotype representing positive class or negative class? eg. CRC eg. H
     print(target_label)
 else:
     label_pos_or_neg = 1
@@ -59,39 +67,8 @@ if column_of_interest == "antibiotic" and "AGP" in study_name:
     #Counter(metadata["antibiotic"])
     metadata[column_of_interest] = bin_antibiotic
     pos_label = 1 #"Healthy"#'1-2' #'0-0.5'#'Omnivore' # '0-1.5'
-# if column_of_interest == "antibiotic" and "Hispanic" in study_name:
-#     bin_antibiotic = utils.binarize_labels_mod(metadata["antibiotic"],pos_labels =['1'],none_labels = ["Not provided",float("Nan"),'not provided'])
-#     #Counter(metadata["antibiotic"])
-#     metadata[column_of_interest] = bin_antibiotic
-#     pos_label = 1 #"Healthy"#'1-2' #'0-0.5'#'Omnivore' # '0-1.5'
-elif column_of_interest == "age_of_reloc":
-    bin_column_of_interest = utils.binarize_labels_mod(metadata["agegroup_c6_v2.x"],pos_labels =['1','2','3','4'],none_labels = ["not applicable",float("Nan"),'not provided'])
-    metadata[column_of_interest] = bin_column_of_interest
-    column_of_interest = column_of_interest
-    pos_label = 1 #"Healthy"#'1-2' #'0-0.5'#'Omnivore' # '0-1.5'
-elif "trimester" in column_of_interest:
-    #"1st trimester"
-    if "trimester1" in column_of_interest:
-        trimester_selected = "1st trimester"
-    elif "trimester2" in column_of_interest: 
-        trimester_selected = "2nd trimester"
-    elif "trimester3" in column_of_interest:
-        trimester_selected = "3rd trimester"
-    eligible_rows = metadata['trimester'][metadata['trimester'] == trimester_selected].index.values
-    metadata = metadata.loc[eligible_rows]
-    bin_column_of_interest = utils.binarize_labels_mod(metadata["preg_outcome"],none_labels = ["not applicable",float("Nan"),'not provided'],pos_labels =[target_label])
-    metadata[column_of_interest] = bin_column_of_interest
-    column_of_interest = column_of_interest
-    pos_label = 1   
-    for method in methods:
-        eligible_columns_temp = [col for col in eligible_rows if col in methods_dict[method].columns]
-        methods_dict[method] = methods_dict[method][eligible_columns_temp]  
-elif column_of_interest == "preg_outcome_sub":
-    bin_column_of_interest = utils.binarize_labels_mod(metadata["preg_outcome"],none_labels = ["not applicable",float("Nan"),'not provided'],pos_labels =[target_label])
-    metadata[column_of_interest] = bin_column_of_interest
-    pos_label = 1 #"Healthy"#'1-2' #'0-0.5'#'Omnivore' # '0-1.5
 else:
-    if len(args) > 9:
+    if len(args) > 10:
         if label_pos_or_neg == 1:
             print("positive")
             bin_column_of_interest = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],pos_labels =[target_label])
@@ -110,7 +87,7 @@ names = ["Random Forest","Naive Bayes"]
 all_methods_metrics = dict()
 all_methods_means = pd.DataFrame(index = methods, columns= names)
 all_methods_auc_stats = dict()
-n_splits = 3
+
 bootstrap_prop = 0.80
 for method in methods:
     random.seed(30)
@@ -130,7 +107,7 @@ for method in methods:
         np_interest =  np.array(metadata[column_of_interest])
         unique_categories = np.unique(np_interest)
         #print(unique_categories)
-        if len(args) <= 9:
+        if len(args) <= 10:
             unique_categories = [cat for cat in unique_categories if not math.isnan(cat)]
 
     
@@ -165,7 +142,7 @@ for method in methods:
             category_counter = dict(Counter(metadata[column_of_interest]  ))
             categorical_counts = [category_counter[key] for key in category_counter.keys()]
             #print(category_counter)
-            if len(args) <= 9:
+            if len(args) <= 10:
                 categorical_counts = [category_counter[key] for key in category_counter.keys() if not math.isnan(key) ]
         #print(category_counter)
 
@@ -213,7 +190,7 @@ for method in methods:
 #         QuadraticDiscriminantAnalysis()]   
 #     "Naive Bayes","AdaBoost","RBF SVM","Linear SVM"
     classifiers = [
-        RandomForestClassifier(max_depth=5, random_state=0),
+        RandomForestClassifier(max_depth=5, random_state=0,n_estimators = number_estimators_rf),
         GaussianNB()]#,AdaBoostClassifier(),SVC(kernel="linear", C=0.025),SVC(gamma=2, C=1),KNeighborsClassifier(3)]
 #         MLPClassifier(alpha=1, max_iter=1000),
 #         AdaBoostClassifier()]

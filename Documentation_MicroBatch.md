@@ -682,22 +682,29 @@ qsub -cwd -V -N His -l h_data=10G,time=1:00:00 -M briscoel -m beas -b y -t 1000:
 
 # <a name =agpprediction> AGP prediction </a>
 
-## Batch correction: bmi_corrected
+## Batch correction: bmi_corrected, Abx0_6, Abx6_12
 ```
 for method in minerva smartsva; do for tran in clr_scale; do for sv in 10; do for k in 5 6 7 8; do for phen in bin_antibiotic_last_year bmi_corrected; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_max -arg "$method" -arg $sv -arg Instrument -arg 1 -arg 1 -arg $phen -arg 0 -arg "$tran"; done; done; done; done; done
 
 
-COUNTER=0
-for method in smartsva; do for tran in clr_scale clr; do for sv in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do for k in 7 8; do for phen in bin_antibiotic_last_year; do COUNTER=$((COUNTER + 1)); echo "Text read from file: '$COUNTER'"; echo "kmer $k /u/home/b/briscoel/project-halperin/MicroBatch AGP_max $method $sv Instrument 1 1 $phen 0 $tran 0 0 0 1 Yes" > data_$COUNTER.in; done; done; done; done; done;
+COUNTER=81
+for method in minerva; do for tran in clr_scale; do for sv in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do for k in 5; do for phen in Abx0_6 Abx6_12; do COUNTER=$((COUNTER + 1)); echo "Text read from file: '$COUNTER'"; echo "kmer $k /u/home/b/briscoel/project-halperin/MicroBatch AGP_max $method $sv Instrument 1 1 $phen 0 $tran 0 0 0 1 Yes" > data_$COUNTER.in; done; done; done; done; done;
 
-qsub -cwd -V -N BC -l h_data=20G,time=200:00:00,highp -M briscoel -m beas -b y -t 1:80 "./run_bc.sh"
+qsub -cwd -V -N BC -l h_data=20G,time=200:00:00,highp -M briscoel -m beas -b y -t 81:241 "./run_bc.sh"
 
 
 
-COUNTER=61
-for method in raw limma bmc ComBat; do for tran in clr_scale clr; do for sv in 1; do for k in 5 6 7 8; do for phen in bin_antibiotic_last_year bmi_corrected; do COUNTER=$((COUNTER + 1)); echo "Text read from file: '$COUNTER'"; echo "kmer $k /u/home/b/briscoel/project-halperin/MicroBatch AGP_max $method $sv Instrument 1 1 $phen 0 $tran 0 0 0 1 Yes" > data_$COUNTER.in; done; done; done; done; done;
 
-qsub -cwd -V -N AGP -l h_data=20G,time=100:00:00,highp -M briscoel -m beas -b y -t 61:125 "./run_bc.sh"
+COUNTER=81
+for method in minerva; do for tran in clr_scale; do for sv in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do for k in 7; do for phen in Abx0_6 Abx6_12; do COUNTER=$((COUNTER + 1)); echo "Text read from file: '$COUNTER'"; echo "kmer $k /u/home/b/briscoel/project-halperin/MicroBatch AGP_max $method $sv Instrument 1 1 $phen 0 $tran 0 0 0 1 Yes" > data_$COUNTER.in; done; done; done; done; done;
+
+qsub -cwd -V -N BC -l h_data=30G,time=200:00:00,highp -M briscoel -m beas -b y -t 81:121 "./run_bc.sh"
+
+
+COUNTER=241
+for method in raw limma bmc ComBat; do for tran in clr_scale; do for sv in 1; do for k in 5 6 7 8; do for phen in  Abx0_6 Abx6_12; do COUNTER=$((COUNTER + 1)); echo "Text read from file: '$COUNTER'"; echo "kmer $k /u/home/b/briscoel/project-halperin/MicroBatch AGP_max $method $sv Instrument 1 1 $phen 0 $tran 0 0 0 1 Yes" > data_$COUNTER.in; done; done; done; done; done;
+
+qsub -cwd -V -N AGP -l h_data=20G,time=24:00:00 -M briscoel -m beas -b y -t 242:273 "./run_bc.sh"
 
 
 ```
@@ -751,15 +758,15 @@ for prop in 20 40 60 80; do for method in raw; do for svs in 1; do for tran in c
 ```
 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
 
-for method in smartsva minerva refactor; do for svs in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do for tran in clr_scale; do for phen in bin_antibiotic_last_year; do ./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k6 BatchCorrected $phen "$method"_first"$svs"filter_TRUE_trans_"$tran" 10 kmer protect_"$phen" 1 Yes; done; done; done; done 
+for method in minerva; do for svs in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do for tran in clr_scale; do for phen in Abx0_6 Abx6_12; do ./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k"$k"_"$phen" BatchCorrected $phen "$method"_first"$svs"filter_TRUE_trans_"$tran" 10 kmer protect_"$phen" 1 Yes; done; done; done; done 
 
 
-for method in smartsva minerva refactor; do for svs in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do for tran in clr_scale; do for phen in bin_antibiotic_last_year; do qsub -cwd -V -N "svapred$svs$tran$phen" -l h_data=10G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k6 BatchCorrected '$phen' '$method'_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen' 1 Yes"; done; done; done; done 
+for method in minerva; do for svs in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do for tran in clr_scale; do for phen in Abx0_6 Abx6_12; do for k in 7; do qsub -cwd -V -N "svapred$svs$tran$phen" -l h_data=20G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k"$k"_"$phen" BatchCorrected '$phen' '$method'_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen' 1 1"; done; done; done; done; done
 
 
 
 
-for method in limma raw bmc ComBat; do for svs in 1; do for tran in clr_scale; do for phen in bin_antibiotic_last_year; do qsub -cwd -V -N "svapred$svs$tran$phen" -l h_data=16G,time=24:00:00,highp -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k7 BatchCorrected '$phen' '$method'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen' 1 Yes"; done; done; done; done
+for method in limma raw bmc ComBat; do for svs in 1; do for tran in clr_scale; do for phen in Abx0_6 Abx6_12; do for k in 7; do qsub -cwd -V -N "svapred$svs$tran$phen" -l h_data=16G,time=24:00:00,highp -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k"$k"_"$phen" BatchCorrected '$phen' '$method'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen' 1 1"; done; done; done; done; done
 
 ```
 #### run  test

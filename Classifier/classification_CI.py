@@ -34,25 +34,53 @@ occurrences = lambda s, lst: (i for i,e in enumerate(lst) if e == s)
 
 
 # example run of this script
-# ./classifier.py /u/home/b/briscoel/project-halperin/MicroBatch Thomas_k6 BatchCorrected bin_crc_normal rawfilter_TRUE_trans_none 10 kmer protect_bin_crc_normal 1 CRC
+# ./classifier.py /u/home/b/briscoel/gapped_kmer YuCRC patternABC kmer kmer_matrix bin_crc_adenomaORnormal patternABC 1 5 100 1 CRC
 # the matrix you provide should have k-mer in row, sample in column
+
+# your directory should be set up like this:
+# greater_folder (e.g. /u/home/b/briscoel/gapped_kmer)
+# > "data" (e.g. /u/home/b/briscoel/gapped_kmer/data)
+# >> study_name  (e.g. /u/home/b/briscoel/gapped_kmer/data/YuCRC)
+# >>> matrix_folder (e.g. /u/home/b/briscoel/gapped_kmer/data/YuCRC/patternABC)
+# >>>> "kmer_matrix_patternABC.txt"  (e.g. /u/home/b/briscoel/gapped_kmer/data/YuCRC/kmer_matrix_patternABC.txt) 
+
+# greater_folder = /u/home/b/briscoel/gapped_kmer
+# study_name = YuCRC
+# matrix_folder = patternABC
+# data_type = kmer
+# prefix_name = kmer_matrix
+# column_of_interest = bin_crc_adenomaORnormal
+# methods = patternABC
+
+# map_with_accession = 1
+# n_repeats = 5
+# number_estimators_rf = 100
+
+# if len(args) > 11:
+#     label_pos_or_neg = 1
+#     target_label = CRC
+
+
 
 args = sys.argv
 print(args)
 print(len(args))
 greater_folder = args[1] # what folder do you save your different datasets in
 study_name = args[2] # what is the name of the dataset (tells the program which folder to check)
-prefix_name = args[3] # what is the prefix of the file name
-column_of_interest = args[4] # what is the phenotype you are predicting (use the same name in the column of the metadata you want to predict), this programs reads from metadata.txt
-methods = args[5].split("&") # you can specify prediction with multiple matrices by separating with &. Just ignore the '&'
-n_repeats = int(args[6]) # number of different folds for cross validation. 5 or 10 is good. 
-data_type = args[7] # type of data. kmer vs OTU
-batch_def_folder = args[8] #which folder is the matrix saved in
-number_estimators_rf = int(args[9]) # number of estimators in random forest
+matrix_folder = args[3] #which folder is the matrix saved in
+data_type = args[4] # type of data. kmer vs OTU
 
-if len(args) > 10:
-    label_pos_or_neg = int(args[10]) # do you want to treat CRC as positive class or negative class? 
-    target_label = args[11] # phenotype representing positive class or negative class? eg. CRC eg. H
+prefix_name = args[5] # what is the prefix of the file name
+column_of_interest = args[6] # what is the phenotype you are predicting (use the same name in the column of the metadata you want to predict), this programs reads from metadata.txt
+methods = args[7].split("&") # you can specify prediction with multiple matrices by separating with &. Just ignore the '&'
+
+map_with_accession = bool(int(args[8]))
+n_repeats = int(args[9]) # number of different folds for cross validation. 5 or 10 is good. 
+number_estimators_rf = int(args[10]) # number of estimators in random forest
+
+if len(args) > 11:
+    label_pos_or_neg = int(args[11]) # do you want to treat CRC as positive class or negative class? 
+    target_label = args[12] # phenotype representing positive class or negative class? eg. CRC eg. H
     print(target_label)
 else:
     label_pos_or_neg = 1
@@ -60,8 +88,12 @@ else:
 use_domain_pheno = False # for when running raw to compare to domain pheno
 data_folder = greater_folder + "/data/" + study_name + "/"   
 plot_folder = greater_folder + "/plots/" + study_name + "/" #+ 
-methods_dict = utils.load_data(data_folder,prefix_name,methods,batch_column = batch_def_folder)
+methods_dict = utils.load_data(data_folder,prefix_name,methods,batch_column = matrix_folder)
 metadata = pd.read_csv(data_folder + "metadata.txt",delimiter="\t")
+
+if map_with_accession:
+    metadata.index = metadata['accession']
+
 if column_of_interest == "antibiotic" and "AGP" in study_name:
     bin_antibiotic = utils.binarize_labels_mod(metadata["antibiotic_history"],pos_labels =['Year','Month','6 months','Week'],none_labels = ["Not provided",float("Nan"),'not provided'])
     #Counter(metadata["antibiotic"])

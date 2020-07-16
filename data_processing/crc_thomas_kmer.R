@@ -453,17 +453,18 @@ dir.create(kmer_output_folder)
 total_metadata$sampleID_official = row.names(total_metadata)
 ###
 
-for(d in 1:length(datasets)){
-  meta_d = total_metadata %>% filter(study == datasets[d] )
+for(d in 1:length(names(final_kmer_matrices))){
+  meta_d = total_metadata %>% filter(study == names(final_kmer_matrices)[d] )
   kmer_d = kmer_table[,row.names(meta_d)]
-  kmer_output_folder_d = paste0('/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/',datasets[d],'_k',kmer_len)
-  print(kmer_output_folder_d)
+  kmer_output_folder_d = paste0('/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/',names(final_kmer_matrices)[d],'_k',kmer_len)
+  print(dim(kmer_d))
   dir.create(kmer_output_folder_d)
   write.table(kmer_d,paste0(kmer_output_folder_d,"/kmer_table.txt"),sep="\t",quote=FALSE)
   write.table(meta_d,paste0(kmer_output_folder_d,"/metadata.txt"),sep = "\t",quote = FALSE)
   
   
 }
+
 
 
 

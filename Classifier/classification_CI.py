@@ -1,3 +1,35 @@
+
+# example run of this script
+# ./classifier.py /u/home/b/briscoel/gapped_kmer YuCRC patternABC kmer kmer_matrix bin_crc_adenomaORnormal patternABC 1 1 5 100 1 CRC
+# the matrix you provide should have k-mer in row, sample in column
+
+# your directory should be set up like this:
+# greater_folder (e.g. /u/home/b/briscoel/gapped_kmer)
+# > "data" (e.g. /u/home/b/briscoel/gapped_kmer/data)
+# >> study_name  (e.g. /u/home/b/briscoel/gapped_kmer/data/YuCRC)
+# >>> matrix_folder (e.g. /u/home/b/briscoel/gapped_kmer/data/YuCRC/patternABC)
+# >>>> "kmer_matrix_patternABC.txt"  (e.g. /u/home/b/briscoel/gapped_kmer/data/YuCRC/patternABC/kmer_matrix_patternABC.txt)
+# >>>> "metadata.txt" (e.g. /u/home/b/briscoel/gapped_kmer/data/YuCRC/patternABC/metadata.txt)
+
+# greater_folder = /u/home/b/briscoel/gapped_kmer
+# study_name = YuCRC
+# matrix_folder = patternABC
+# data_type = kmer
+# prefix_name = kmer_matrix
+# column_of_interest = bin_crc_adenomaORnormal
+# methods = patternABC
+
+# norm_input = 1
+# map_with_accession = 1
+# n_repeats = 5
+# number_estimators_rf = 100
+
+# if len(args) > 11:
+#     label_pos_or_neg = 1
+#     target_label = CRC
+
+
+
 from sklearn import model_selection 
 import pandas as pd
 import utils
@@ -31,38 +63,6 @@ import math
 import sys
 from collections import Counter
 occurrences = lambda s, lst: (i for i,e in enumerate(lst) if e == s)
-
-
-# example run of this script
-# ./classifier.py /u/home/b/briscoel/gapped_kmer YuCRC patternABC kmer kmer_matrix bin_crc_adenomaORnormal patternABC 1 1 5 100 1 CRC
-# the matrix you provide should have k-mer in row, sample in column
-
-# your directory should be set up like this:
-# greater_folder (e.g. /u/home/b/briscoel/gapped_kmer)
-# > "data" (e.g. /u/home/b/briscoel/gapped_kmer/data)
-# >> study_name  (e.g. /u/home/b/briscoel/gapped_kmer/data/YuCRC)
-# >>> matrix_folder (e.g. /u/home/b/briscoel/gapped_kmer/data/YuCRC/patternABC)
-# >>>> "kmer_matrix_patternABC.txt"  (e.g. /u/home/b/briscoel/gapped_kmer/data/YuCRC/patternABC/kmer_matrix_patternABC.txt)
-# >>>> "metadata.txt" (e.g. /u/home/b/briscoel/gapped_kmer/data/YuCRC/patternABC/metadata.txt)
-
-# greater_folder = /u/home/b/briscoel/gapped_kmer
-# study_name = YuCRC
-# matrix_folder = patternABC
-# data_type = kmer
-# prefix_name = kmer_matrix
-# column_of_interest = bin_crc_adenomaORnormal
-# methods = patternABC
-
-# norm_input = 1
-# map_with_accession = 1
-# n_repeats = 5
-# number_estimators_rf = 100
-
-# if len(args) > 11:
-#     label_pos_or_neg = 1
-#     target_label = CRC
-
-
 
 args = sys.argv
 print(args)

@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from sklearn.model_selection import train_test_split,KFold
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, normalize
 from sklearn.datasets import make_moons, make_circles, make_classification
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
@@ -34,7 +34,7 @@ occurrences = lambda s, lst: (i for i,e in enumerate(lst) if e == s)
 
 
 # example run of this script
-# ./classifier.py /u/home/b/briscoel/gapped_kmer YuCRC patternABC kmer kmer_matrix bin_crc_adenomaORnormal patternABC 1 5 100 1 CRC
+# ./classifier.py /u/home/b/briscoel/gapped_kmer YuCRC patternABC kmer kmer_matrix bin_crc_adenomaORnormal patternABC 1 1 5 100 1 CRC
 # the matrix you provide should have k-mer in row, sample in column
 
 # your directory should be set up like this:
@@ -42,7 +42,8 @@ occurrences = lambda s, lst: (i for i,e in enumerate(lst) if e == s)
 # > "data" (e.g. /u/home/b/briscoel/gapped_kmer/data)
 # >> study_name  (e.g. /u/home/b/briscoel/gapped_kmer/data/YuCRC)
 # >>> matrix_folder (e.g. /u/home/b/briscoel/gapped_kmer/data/YuCRC/patternABC)
-# >>>> "kmer_matrix_patternABC.txt"  (e.g. /u/home/b/briscoel/gapped_kmer/data/YuCRC/kmer_matrix_patternABC.txt) 
+# >>>> "kmer_matrix_patternABC.txt"  (e.g. /u/home/b/briscoel/gapped_kmer/data/YuCRC/patternABC/kmer_matrix_patternABC.txt)
+# >>>> "metadata.txt" (e.g. /u/home/b/briscoel/gapped_kmer/data/YuCRC/patternABC/metadata.txt)
 
 # greater_folder = /u/home/b/briscoel/gapped_kmer
 # study_name = YuCRC
@@ -52,6 +53,7 @@ occurrences = lambda s, lst: (i for i,e in enumerate(lst) if e == s)
 # column_of_interest = bin_crc_adenomaORnormal
 # methods = patternABC
 
+# norm_input = 1
 # map_with_accession = 1
 # n_repeats = 5
 # number_estimators_rf = 100
@@ -74,13 +76,14 @@ prefix_name = args[5] # what is the prefix of the file name
 column_of_interest = args[6] # what is the phenotype you are predicting (use the same name in the column of the metadata you want to predict), this programs reads from metadata.txt
 methods = args[7].split("&") # you can specify prediction with multiple matrices by separating with &. Just ignore the '&'
 
-map_with_accession = bool(int(args[8]))
-n_repeats = int(args[9]) # number of different folds for cross validation. 5 or 10 is good. 
-number_estimators_rf = int(args[10]) # number of estimators in random forest
+norm_input = bool(int(args[8]))
+map_with_accession = bool(int(args[9]))
+n_repeats = int(args[10]) # number of different folds for cross validation. 5 or 10 is good. 
+number_estimators_rf = int(args[11]) # number of estimators in random forest
 
-if len(args) > 11:
-    label_pos_or_neg = int(args[11]) # do you want to treat CRC as positive class or negative class? 
-    target_label = args[12] # phenotype representing positive class or negative class? eg. CRC eg. H
+if len(args) > 12:
+    label_pos_or_neg = int(args[12]) # do you want to treat CRC as positive class or negative class? 
+    target_label = args[13] # phenotype representing positive class or negative class? eg. CRC eg. H
     print(target_label)
 else:
     label_pos_or_neg = 1
@@ -88,8 +91,19 @@ else:
 use_domain_pheno = False # for when running raw to compare to domain pheno
 data_folder = greater_folder + "/data/" + study_name + "/"   
 plot_folder = greater_folder + "/plots/" + study_name + "/" #+ 
+
+#########################################################################
+###### COMMENTARY: load data from your k-mer matrix, load metadata ######
+#########################################################################
+
 methods_dict = utils.load_data(data_folder,prefix_name,methods,batch_column = matrix_folder)
 metadata = pd.read_csv(data_folder + "metadata.txt",delimiter="\t")
+
+
+
+#########################################################################
+###### COMMENTARY: get the column of interest: DiseaseStatus and convert it to binary labels 0 or 1 ######
+#########################################################################
 
 if map_with_accession:
     metadata.index = metadata['accession']
@@ -100,7 +114,7 @@ if column_of_interest == "antibiotic" and "AGP" in study_name:
     metadata[column_of_interest] = bin_antibiotic
     pos_label = 1 #"Healthy"#'1-2' #'0-0.5'#'Omnivore' # '0-1.5'
 else:
-    if len(args) > 10:
+    if len(args) > 12:
         if label_pos_or_neg == 1:
             print("positive")
             bin_column_of_interest = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],pos_labels =[target_label])
@@ -114,6 +128,12 @@ else:
         bin_column_of_interest = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'])
     metadata[column_of_interest] = bin_column_of_interest
     pos_label = 1 #"Healthy"#'1-2' #'0-0.5'#'Omnivore' # '0-1.5
+
+
+#########################################################################
+###### COMMENTARY: Make the two classes even sized ######
+#########################################################################
+
 print(Counter(metadata[column_of_interest] ))
 names = ["Random Forest","Naive Bayes"]
 all_methods_metrics = dict()
@@ -139,7 +159,7 @@ for method in methods:
         np_interest =  np.array(metadata[column_of_interest])
         unique_categories = np.unique(np_interest)
         #print(unique_categories)
-        if len(args) <= 10:
+        if len(args) <= 12:
             unique_categories = [cat for cat in unique_categories if not math.isnan(cat)]
 
     
@@ -174,7 +194,7 @@ for method in methods:
             category_counter = dict(Counter(metadata[column_of_interest]  ))
             categorical_counts = [category_counter[key] for key in category_counter.keys()]
             #print(category_counter)
-            if len(args) <= 10:
+            if len(args) <= 12:
                 categorical_counts = [category_counter[key] for key in category_counter.keys() if not math.isnan(key) ]
         #print(category_counter)
 
@@ -193,7 +213,20 @@ for method in methods:
         #     bootstrap_sample_size = int(bootstrap_prop * len(eligible_columns))
         sampled_columns += random.sample(list(eligible_columns), bootstrap_sample_size)
         #print(len(sampled_columns))
-    X = np.array(methods_dict[method][sampled_columns].transpose())
+
+
+    ###############################################################################
+    ######  COMMENTARY: 
+    ######  Make each sample sum to 1, so that regardless of number of reads per sample, they can be compared
+    ######  Remove samples that have NA disease status
+    ###############################################################################
+
+
+    if norm_input:
+        X  = normalize(np.array(methods_dict[method][sampled_columns].transpose()), axis = 1, norm = 'l1')
+    else:
+        X = np.array(methods_dict[method][sampled_columns].transpose())
+    
     y = np.array(metadata.loc[sampled_columns][column_of_interest]) 
 
     y_counter = dict(Counter(y))
@@ -205,6 +238,14 @@ for method in methods:
     print("Shapes")
     print(y.shape)
     print(X.shape)
+
+    ###############################################################################
+    ######  COMMENTARY: 
+    ######  Calculate cross validation folds (train and test samples) with RepeatStratified KFold
+    ######  Run the classifier
+    ###############################################################################
+
+
     
     rskf = model_selection.RepeatedStratifiedKFold(n_splits=5, n_repeats=n_repeats, random_state=123)
     h = .02  # step size in the mesh

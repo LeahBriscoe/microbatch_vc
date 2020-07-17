@@ -2,9 +2,10 @@ rm(list = ls())
 args = commandArgs(trailingOnly=TRUE)
 print(args)
 #args = c("otu", "WR_AD","~/Documents/MicroBatch/", "0-0.5","1-2","01/07/2016","DiseaseState","study")
-# args = c("kmer", 5,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
-#          "minerva_first1filter_TRUE_trans_clr_scale","protect_bmi_corrected","BatchCorrected",
-#          0,0,0)
+# args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Thomas",
+#          "SVs_minerva_first4filter_TRUE_trans_clr_scale","protect_bin_crc_adenomaORnormal")
+args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
+         "SVs_minerva_first3filter_TRUE_trans_clr_scale","protect_bin_antibiotic_last_year")
 
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Hispanic",
 #          "minerva_first1filter_TRUE_trans_clr_scale","protect_diabetes3_v2",
@@ -19,14 +20,9 @@ data_type = args[1]#"kmer"
 kmer_len = args[2]#6
 microbatch_folder = args[3]#'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/'
 study_name = args[4]
-methods_list = unlist(strsplit(args[5],"&"))#c("ComBat_with_batch2")#"pca_regress_out_scale","clr_pca_regress_out_no_scale","clr_pca_regress_out_scale") #)#,
+sv_file = args[5]#c("ComBat_with_batch2")#"pca_regress_out_scale","clr_pca_regress_out_no_scale","clr_pca_regress_out_scale") #)#,
 batch_def_folder = args[6]
-prefix_name = args[7]
-use_quant_norm = as.logical(as.integer(args[8]))
-use_std =  as.logical(as.integer(args[9]))
-filter_low_counts =  as.logical(as.integer(args[10]))
-apply_bootstrap = FALSE
-bootstrap_prop = 0.80
+
 # ============================================================================== #
 # load packages and functions
 require(varhandle)
@@ -46,6 +42,8 @@ source(paste0(batch_script_folder,"/batch_correction_source.R"))
 
 otu_input_folder = paste0(microbatch_folder,'/data/',study_name, '_otu')
 kmer_input_folder = paste0(microbatch_folder,'/data/',study_name,'_k',kmer_len)
+plot_folder = paste0(microbatch_folder,"/plots/",study_name,'_k',kmer_len)
+dir.create(plot_folder)
 
 if(data_type == "kmer"){
   input_folder = paste0(kmer_input_folder,"/",batch_def_folder)
@@ -63,32 +61,8 @@ if(grepl("AGP",study_name)){
 
 # ============================================================================== #
 # read in data
-batch_corrected_data = list()
-batch_corrected_data_quant_norm = list()
-batch_corrected_data_scale = list()
-for(m in 1:length(methods_list)){
-  print(methods_list[m])
-  batch_corrected_data[[methods_list[m]]] = readRDS(paste0(input_folder ,"/",prefix_name,"_",methods_list[m],".rds"))
-}
+svdata = readRDS(paste0(input_folder ,"/",sv_file,".rds"))
 
-
-# ============================================================================== #
-# quant norm data?
-if(use_quant_norm){
-  for(m in 1:length(methods_list)){
-    print(Sys.time())
-    print(m)
-    batch_corrected_data_quant_norm[[methods_list[m]]] = quantile_norm(batch_corrected_data[[methods_list[m]]])
-    print(Sys.time())
-  }
-}else if(use_std){
-  for(m in 1:length(methods_list)){
-    print(Sys.time())
-    print(m)
-    batch_corrected_data_scale[[methods_list[m]]] = t(scale(t(batch_corrected_data[[methods_list[m]]])))
-    print(Sys.time())
-  }
-}
 
 # ============================================================================== #
 # make model matrix
@@ -223,119 +197,89 @@ formula_random = paste0('~ (1| ',paste( random_effects_vars, collapse = ') + (1|
 formula_fixed =  paste(fixed_effects_vars, collapse = ' + ')
 
 formula_input = paste0(formula_random, " + ", formula_fixed)
+####
+# prepare metadata
 
-# ============================================================================== #
-# var par
-#length(batch_correocted_data_input)
+input_metadata_table = total_metadata_mod[,c(random_effects_bio,fixed_effects_bio,random_effects_tech,fixed_effects_tech)]
 
-#row.names(batch_corrected_data_input[[methods_list[4]]])
-collect_var_pars_full_BC = list()
-if(use_quant_norm){
-  batch_corrected_data_input = batch_corrected_data_quant_norm
+
+ncol(total_metadata_mod)
+
+
+input_sv_table = svdata$pca_score
+
+dim(input_metadata_table)
+dim(input_sv_table)
+
+
+common_samples = intersect(row.names(input_sv_table ),row.names(input_metadata_table))
+print("common samples")
+print(length(common_samples))
+input_sv_table  = input_sv_table[common_samples,]
+input_metadata_table = input_metadata_table[common_samples,]
+
+
+###
+
+
+colnames(input_sv_table) = paste0("PC",1:ncol(input_sv_table))
+
+if(grepl("AGP",study_name)){
   
-}else if(use_std){
-  batch_corrected_data_input = batch_corrected_data_scale
-}else{
-  batch_corrected_data_input = batch_corrected_data
+  
+  
+  
+  colnames(input_metadata_table) = c("Race","AlcoholConsumption","OmnivoreDiet","AntibioticLastYear","BowelMovementQuality",
+                                     "BMI","Age","CollectionYear","Instrument","LibrarySize")
+  input_metadata_pc = data.frame(input_metadata_table,
+                                 input_sv_table)
+}
+if(grepl("Thomas",study_name)){
+  colnames(input_metadata_table) = c("HasColorectalCancer", "Sex", "SeqInstrument", "SeqCenter","Dataset","DNA_ExtractionKit","Paired_vs_Unpaired_Seq","LibrarySize")
+  input_metadata_pc = data.frame(input_metadata_table[,c("HasColorectalCancer", "Sex", "DNA_ExtractionKit","SeqInstrument", "SeqCenter","Paired_vs_Unpaired_Seq","LibrarySize","Dataset")],
+                                 input_sv_table)
 }
 
 
-length(collect_var_pars_full_BC )
-for(i in 1:length(batch_corrected_data_input)){
-  colnames(batch_corrected_data_input[[methods_list[i]]]) = colnames(batch_corrected_data[[methods_list[i]]])
-  print(methods_list[i])
-  varPartMetaData = c()
-  input_abundance_table = c()
-  
-  input_abundance_table = batch_corrected_data_input[[methods_list[i]]]
-  input_metadata_table = total_metadata_mod
-  
-  
-  common_samples = intersect(colnames(input_abundance_table ),row.names(input_metadata_table))
-  print("common samples")
-  print(length(common_samples))
-  input_abundance_table  = input_abundance_table[,common_samples]
-  input_metadata_table = input_metadata_table[common_samples,]
-  
-  print(dim(input_abundance_table))
-  print(dim( input_metadata_table))
-  
-  if(apply_bootstrap){
-    
-    samples_picked = sample(1:ncol(input_abundance_table),as.integer(bootstrap_prop*ncol(input_abundance_table)))
-    sample_names_picked = colnames(input_abundance_table)[samples_picked]
-    
-    # subsample
-    input_abundance_table= input_abundance_table[,sample_names_picked]
-    #sub_abundance_table_kmer = input_abundance_table_kmer[,samples_picked]
-    input_metadata_table = input_metadata_table[sample_names_picked,]
-  }
-  
-  print(dim(input_abundance_table))
-  print(dim(input_metadata_table))
-  # remove any features with 0 variance in uncorrected data
-  yes_no_na = apply(input_metadata_table,1,function(x){
-    any(is.na(x))
-  })
-  input_abundance_table = input_abundance_table[,!yes_no_na]
-  input_metadata_table = input_metadata_table[!yes_no_na,]
-  print(dim(input_abundance_table))
-  print(dim(input_metadata_table))
-  
-  
-  input_abundance_table = input_abundance_table[rowVars(as.matrix(input_abundance_table)) > 10e-9,]
-  
-  if(filter_low_counts){
-    #filter_at_least_two_samples_sub = (rowSums(input_abundance_table  > 0 ) > 2)
-    filter_at_least_two_samples_sub = (rowVars(input_abundance_table) >2e-7 )
-    
-     #test = rowVars(input_abundance_table)
-     #sum(test  > 2e-7)
-     #hist(test,breaks=100)
-    input_abundance_table = input_abundance_table[filter_at_least_two_samples_sub,]
-    
-  }
-
-  #row.names(input_abundance_table) = paste0("OTU",1:nrow(input_abundance_table))
-
-  
+dim(input_metadata_pc)
+dim(input_metadata_table)
+#new_names = colnames(input_metadata_pc)
+#colnames(input_metadata_pc) = new_names
+input_metadata_pc_formula = as.formula(paste0(" ~ ",paste(colnames(input_metadata_pc ), collapse = " + ")))
 
 
+C = canCorPairs(formula = input_metadata_pc_formula , data = input_metadata_pc )
+pdf(paste0(plot_folder,"/","canCor_",sv_file, ".pdf"))
+corrplot(C[1:(nrow(C)-ncol(input_sv_table)),((nrow(C)-ncol(input_sv_table))+1):ncol(C)])
+colnames(C)
+#plotCorrMatrix(C[1:(nrow(C)-14),((nrow(C)-14)+1):ncol(C)],sort=FALSE)
+dev.off()
 
-  # test = cor(input_abundance_table)
-  # test2 <- (test == 1)
-  # cols <- colSums(test2) 
-  # sort(cols,decreasing=TRUE)[1:10]
-  # 
-  # 
-  # fe <- apply(as.factor(input_metadata_table),2,as.numeric)
-  # dim(fe)
-  # 
-  # test = cor(as.numeric(as.factor(input_metadata_table)))
-  # test2 <- (test == 1)
-  # cols <- colSums(test2) 
-  # sort(cols,decreasing=TRUE)[1:10]
-  # 
-  # 
-  # 
-  # noncorrelated_samples = names(cols)[which(cols <= 1)]
-  # print(paste0("uncorre samples", length(noncorrelated_samples)))
-  # input_abundance_table <- input_abundance_table[,noncorrelated_samples]
-  # input_metadata_table <- input_metadata_table[noncorrelated_samples,]
-  # 
 
-  
-  varPartMetaData = fitExtractVarPartModel(formula = formula_input,
-                                           exprObj = input_abundance_table, data = data.frame(input_metadata_table))
-  
-  collect_var_pars_full_BC[[methods_list[i]]] = varPartMetaData
-  
-  # write.table(as.matrix(varPartMetaData), paste0(input_folder ,"varpart",methods_list[i],".txt"),
-  #             sep = "\t",quote = FALSE)
+install.packages("corrplot")
+library(corrplot)
 
-  saveRDS(varPartMetaData, paste0(input_folder ,"/varpart_quant",use_quant_norm ,"_",methods_list[i],"_filter_", filter_low_counts,".rds"))
+if(grepl("AGP",study_name)){
   
+  colnames(input_metadata_table) = c("Race:","AlcoholConsumption:","OmnivoreDiet:","AntibioticLastYear:","BowelMovementQuality:",
+                                     "BMI:","Age:","CollectionYear:","Instrument:","LibrarySize:")
+  input_metadata_pc = data.frame(input_metadata_table,
+                                 input_sv_table)
 }
+if(grepl("Thomas",study_name)){
+  colnames(input_metadata_table) = c("HasColorectalCancer:", "Sex:", "SeqInstrument:", "SeqCenter:","Dataset:","DNA_ExtractionKit:","Paired_vs_Unpaired_Seq:","LibrarySize:")
+  input_metadata_pc = data.frame(input_metadata_table[,c("HasColorectalCancer:", "Sex:", "DNA_ExtractionKit:","SeqInstrument:", "SeqCenter:","Paired_vs_Unpaired_Seq:","LibrarySize:","Dataset:")],
+                                 input_sv_table)
+}
+
+input_metadata_pc_formula = as.formula(paste0(" ~ ",paste(colnames(input_metadata_pc ), collapse = " + ")))
+
+
+C_input = model.matrix(input_metadata_pc_formula,input_metadata_pc )
+C = cor(C_input)
+pdf(paste0(plot_folder,"/","allCor_",sv_file, ".pdf"))
+corrplot(C[2:(nrow(C)-ncol(input_sv_table)),((nrow(C)-ncol(input_sv_table))+1):ncol(C)])
+dev.off()
 
 
 

@@ -32,7 +32,7 @@ phen_type = "class"
 
 
 folder_names = ["YuCRC","YuCRC"]
-file_names = ['patternABC.txt","patterneven.txt"] 
+file_names = ["patternABC.txt","patterneven.txt"] 
 select_columns_bool = True
 select_labels = ["Even-Spaced","Odd-Spaced"] # how do you want the labels to look in the final plot 
 metric_word = "auc_all" #what metric do you want to look at

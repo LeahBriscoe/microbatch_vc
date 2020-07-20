@@ -2,5 +2,5 @@
 . /u/local/Modules/default/init/modules.sh
 #source /u/home/b/briscoel/project-ngarud/miniconda2/bin/activate /u/home/b/briscoel/project-ngarud/miniconda2/envs/python3
 module load python/anaconda3
-python classification_CI.py $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10}
+python classification_CI.py $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10} ${11} ${12} ${13} ${14}
 

@@ -10,9 +10,11 @@ print(args)
 #table(total_metadata$diabetes_lab_v2.x)
 # args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "CRC", "PhenoCorrect",10,"study",1,1,"bin_crc_adenomaORnormal",0,"clr_scale",0,0,0,1,1)
+args = c("kmer", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+         "CRC", "minerva",4,"study",1,1,"bin_crc_adenomaORnormal",0,"none",0,0,0,1,1)
 
 # args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-# "AGP_max", "minerva",20,"Instrument",1,1,"Abx6_12",0,"clr_scale",0,0,0,1,1)
+# "AGP_max", "minerva",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"clr_scale",0,0,0,1,1)
 
 # args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "AGP_max", "PhenoCorrect",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"none",0,0,0,1, "Yes")

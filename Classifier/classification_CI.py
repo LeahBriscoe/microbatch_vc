@@ -246,8 +246,8 @@ for method in methods:
     ###############################################################################
 
 
-    
-    rskf = model_selection.RepeatedStratifiedKFold(n_splits=5, n_repeats=n_repeats, random_state=123)
+    n_splits = 5
+    rskf = model_selection.RepeatedStratifiedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=123)
     h = .02  # step size in the mesh
     metric_classifier = pd.DataFrame(index = list(range(0,10)), columns= names)
 #     classifiers = [
@@ -284,24 +284,41 @@ for method in methods:
         y_pr_all = []
         y_tr = []
         y_pr = []
+        #importances_matrix = pd.DataFrame(index=methods_dict[method].index
+        importances_matrix = pd.DataFrame(index=methods_dict[method].index,columns = range(n_splits * n_repeats))
+
+
+        training_iteration = 0
         for train_index, test_index in rskf.split(X, y):
             #print(cv_it)
             X_train, X_test = X[train_index,], X[test_index,]
             y_train, y_test = y[train_index], y[test_index]
             clf.fit(X_train, y_train)
-            if classifier_it == 0:
-                print("importance")
+
+            if classifier_it == 0: # if random forest
+                print("rf here")
+               
                 importances = clf.feature_importances_
-                #print(type(importances))
-                std = np.std([clf.feature_importances_ for tree in clf.estimators_], axis=0)
-                indices = np.argsort(importances)[::-1]
+                print(type(importances))
+                #print(list(importances)[0:10])
+                #importances = pd.Series(importances)
+                #importances.index = methods_dict[method].index
+                #print("it" + str(training_iteration))
+                importances_matrix[training_iteration] = list(importances)
+                #pd.concat([importances_matrix,importances],axis=1)
 
-                # Print the feature ranking
-                print("Feature ranking:")
+            training_iteration += 1
+            # importances = importances.sort_values(axis=0, ascending=False)
+            # nonzero_count = sum(importances > 0)
+            # print(importances[0:(nonzero_count + 1)])
+            # print("rank of batch")
+            # print(list(importances.index).index('batch_labels_factor2'))
+            # print("rank of batch 3")
+            # print(list(importances.index).index('batch_labels_factor3'))
 
-                # for f in range(X.shape[1]):
-                #     print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
-                np.savetxt(data_folder +  data_type + "_" + prefix_name + "_" + column_of_interest + "_" + method + "_rf_importance.csv", importances, delimiter=',')
+            # for f in range(X.shape[1]):
+            #     print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
+            #np.savetxt(data_folder +  data_type + "_" + prefix_name + "_" + column_of_interest + "_" + method + "_rf_importance.csv", importances, delimiter=',')
                     
 
             score = clf.score(X_test, y_test)
@@ -359,16 +376,20 @@ for method in methods:
             all_methods_auc_stats[method][names[classifier_it]]['tpr_all'] = tpr_all#auc_matrix
             all_methods_auc_stats[method][names[classifier_it]]['tpr_i'] = tpr_i #auc_matrix
             all_methods_auc_stats[method][names[classifier_it]]['auc_all'] = auc_all #auc_matrix
+            #all_methods_auc_stats[method][names[classifier_it]]['feature_importance'] = importances_matrix
             #all_methods_auc_stats[method][names[classifier_it]]['auc'] = auc_list #auc_matrix
             #all_methods_auc_stats[method][names[classifier_it]]['fpr'] = fpr_list #fpr_matrix
             #all_methods_auc_stats[method][names[classifier_it]]['tpr'] = tpr_list #tpr_matrix
+        if classifier_it == 0: 
+            importances_matrix.to_csv(data_folder + data_type + "_" + prefix_name + "_" + column_of_interest + "_" + method + "_RF_importance.csv") 
+
         classifier_it += 1
+        
     all_methods_metrics[method] = metric_classifier
     all_methods_means.loc[method,:] = np.array(pd.DataFrame.mean(metric_classifier,axis =0))   
     pickle.dump(all_methods_metrics , open( data_folder +  data_type + "_" + prefix_name + "_" + column_of_interest + "_" + method + "_classification_metrics.pkl", "wb" ) )
     pickle.dump(all_methods_auc_stats , open( data_folder + data_type + "_" + prefix_name + "_" + column_of_interest + "_" + method + "_classification_auc.pkl", "wb" ) )
     pickle.dump(all_methods_means , open( data_folder + data_type + "_" + prefix_name + "_" + column_of_interest + "_" + method + "_classification_means.pkl", "wb" ) )
-
-
+    
 
 

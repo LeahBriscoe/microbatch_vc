@@ -11,7 +11,7 @@ require(dplyr)
 
 # ============================================================================== #
 # define folders
-kmer_len=7
+kmer_len=6
 folder = '/Users/leahbriscoe/Documents/KmerCounting/'
 datasets = c("Karlsson_2013","Qin_et_al")
 kmer_input_folders = paste0(folder ,datasets)
@@ -72,9 +72,18 @@ bin_t2d = sapply(metadata_list[["Karlsson_2013"]]$Classification,function(x){
 })
 metadata_list[["Karlsson_2013"]]$bin_t2d = bin_t2d
 metadata_list[["Karlsson_2013"]]$study = "Karlsson_2013"
-
-
-wanted_cols = c("bin_t2d","run_accession","study")
+metadata_list[["Karlsson_2013"]]$sex = "female"
+metadata_list[["Karlsson_2013"]]$seq_instrument = "Illumina HiSeq 2000"
+metadata_list[["Karlsson_2013"]]$age = metadata_list[["Karlsson_2013"]]$Age..years.
+## additional July 2020
+qin_additional = read.csv(paste0(kmer_input_folders[2],"/SraRunTable.csv"),sep=",",row.names = 1,header = TRUE)
+qin_additional = qin_additional[metadata_list[["Qin_et_al"]]$run_accession,]
+metadata_list[["Qin_et_al"]]$age = qin_additional$Age
+metadata_list[["Qin_et_al"]]$seq_instrument = qin_additional$Instrument
+metadata_list[["Qin_et_al"]]$sex = qin_additional$gender
+  
+  
+wanted_cols = c("bin_t2d","run_accession","study","age","seq_instrument","sex")
 
 total_metadata = rbind(metadata_list[["Karlsson_2013"]][,wanted_cols],metadata_list[["Qin_et_al"]][,wanted_cols])
 total_metadata$SampleID = total_metadata$run_accession
@@ -88,11 +97,15 @@ kmer_table = total_kmer_table
 kmer_table_norm = total_kmer_table_norm
 
 
-saveRDS(kmer_table_norm,paste0(kmer_output_folder,"/kmer_table_norm.rds"))
-saveRDS(kmer_table,paste0(kmer_output_folder,"/kmer_table.rds"))
+total_metadata$library_size = colSums(total_kmer_table)
 
-write.table(kmer_table_norm,paste0(kmer_output_folder,"/kmer_table_norm.txt"),sep = "\t",quote = FALSE)
-write.table(kmer_table,paste0(kmer_output_folder,"/kmer_table.txt"),sep="\t",quote=FALSE)
+plot(total_metadata$library_size)
+
+# saveRDS(kmer_table_norm,paste0(kmer_output_folder,"/kmer_table_norm.rds"))
+# saveRDS(kmer_table,paste0(kmer_output_folder,"/kmer_table.rds"))
+# 
+# write.table(kmer_table_norm,paste0(kmer_output_folder,"/kmer_table_norm.txt"),sep = "\t",quote = FALSE)
+# write.table(kmer_table,paste0(kmer_output_folder,"/kmer_table.txt"),sep="\t",quote=FALSE)
 
 saveRDS(total_metadata,paste0(kmer_output_folder,"/metadata.rds"))
 

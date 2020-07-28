@@ -104,9 +104,6 @@ if(grepl("AGP",study_name)){
   numeric_vars = c("bmi_corrected","age_corrected","librarysize")
   
   
- 
-  
-  
 }else if(grepl("Hispanic",study_name)){
   collection_year = format(as.Date(total_metadata$collection_timestamp, format="%m/%d/%Y"), "%Y")
   total_metadata$collection_year = collection_year
@@ -132,6 +129,11 @@ if(grepl("AGP",study_name)){
   binary_vars = c("gender","LibraryLayout")
   categorical_vars = c("study","Instrument",'multi_crc_adenoma_normal','CenterName','DNA_extraction_kit')
   numeric_vars = c("LibrarySize")#,"age","BMI")
+}else if(grepl("T2D",study_name)){
+  binary_vars = c("sex")
+  categorical_vars = c("study","seq_instrument","bin_t2d")
+  numeric_vars = c("library_size","age")
+  
 }
 
 
@@ -201,6 +203,14 @@ if(grepl("AGP",study_name)){
   fixed_effects_tech = c("LibrarySize")
   fixed_effects_bio = c()#"age","BMI")
 
+}else if(grepl("T2D",study_name)){
+  random_effects_tech = c("seq_instrument","study") # "center_project_name","collection_days")#"Instrument",
+  
+  random_effects_bio = c("sex","bin_t2d") 
+  fixed_effects_tech = c("library_size")
+  fixed_effects_bio = c("age")
+  
+  
 }
 
 

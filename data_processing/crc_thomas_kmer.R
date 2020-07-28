@@ -468,7 +468,20 @@ for(d in 1:length(names(final_kmer_matrices))){
 
 
 
-###
+rohan_daniel <- t(kmer_table_norm)
+dim(rohan_daniel)
+new_status = sapply(total_metadata$bin_crc_adenomaORnormal,function(x){
+  if(is.na(x)){
+    return(NA)
+  }else if(x == "H"){
+    return(0)
+  }else if (x == "CRC"){
+    return(1)
+  }
+})
+rohan_daniel = cbind(rohan_daniel,DiseaseStatus = new_status)
+rohan_daniel[,"DiseaseStatus"]
+write.table(rohan_daniel,paste0("~/Documents/HarkerMentor","/Thomas_CRC_kmer.txt"),sep="\t",quote=FALSE)
 
 
 saveRDS(kmer_table_norm,paste0(kmer_output_folder,"/kmer_table_norm.rds"))

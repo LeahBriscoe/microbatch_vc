@@ -4,8 +4,10 @@ print(args)
 #args = c("otu", "WR_AD","~/Documents/MicroBatch/", "0-0.5","1-2","01/07/2016","DiseaseState","study")
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Thomas",
 #          "SVs_minerva_first4filter_TRUE_trans_clr_scale","protect_bin_crc_adenomaORnormal")
-args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
-         "SVs_minerva_first3filter_TRUE_trans_clr_scale","protect_bin_antibiotic_last_year")
+# args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
+#          "SVs_minerva_first3filter_TRUE_trans_clr_scale","protect_bin_antibiotic_last_year")
+args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Hispanic",
+         "SVs_minerva_first1filter_TRUE_trans_clr_scale","protect_antibiotic")
 
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Hispanic",
 #          "minerva_first1filter_TRUE_trans_clr_scale","protect_diabetes3_v2",
@@ -239,7 +241,12 @@ if(grepl("Thomas",study_name)){
   input_metadata_pc = data.frame(input_metadata_table[,c("HasColorectalCancer", "Sex", "DNA_ExtractionKit","SeqInstrument", "SeqCenter","Paired_vs_Unpaired_Seq","LibrarySize","Dataset")],
                                  input_sv_table)
 }
-
+if(grepl("Hispanic",study_name)){
+  #colnames(input_metadata_table)
+  #colnames(input_metadata_table) = c("HasColorectalCancer", "Sex", "SeqInstrument", "SeqCenter","Dataset","DNA_ExtractionKit","Paired_vs_Unpaired_Seq","LibrarySize")
+  input_metadata_pc = data.frame(input_metadata_table,
+                                 input_sv_table)
+}
 
 dim(input_metadata_pc)
 dim(input_metadata_table)
@@ -247,7 +254,7 @@ dim(input_metadata_table)
 #colnames(input_metadata_pc) = new_names
 input_metadata_pc_formula = as.formula(paste0(" ~ ",paste(colnames(input_metadata_pc ), collapse = " + ")))
 
-
+require("corrplot")
 C = canCorPairs(formula = input_metadata_pc_formula , data = input_metadata_pc )
 pdf(paste0(plot_folder,"/","canCor_",sv_file, ".pdf"))
 corrplot(C[1:(nrow(C)-ncol(input_sv_table)),((nrow(C)-ncol(input_sv_table))+1):ncol(C)])
@@ -256,7 +263,7 @@ colnames(C)
 dev.off()
 
 
-install.packages("corrplot")
+
 library(corrplot)
 
 if(grepl("AGP",study_name)){
@@ -265,10 +272,12 @@ if(grepl("AGP",study_name)){
                                      "BMI:","Age:","CollectionYear:","Instrument:","LibrarySize:")
   input_metadata_pc = data.frame(input_metadata_table,
                                  input_sv_table)
-}
-if(grepl("Thomas",study_name)){
+}else if(grepl("Thomas",study_name)){
   colnames(input_metadata_table) = c("HasColorectalCancer:", "Sex:", "SeqInstrument:", "SeqCenter:","Dataset:","DNA_ExtractionKit:","Paired_vs_Unpaired_Seq:","LibrarySize:")
   input_metadata_pc = data.frame(input_metadata_table[,c("HasColorectalCancer:", "Sex:", "DNA_ExtractionKit:","SeqInstrument:", "SeqCenter:","Paired_vs_Unpaired_Seq:","LibrarySize:","Dataset:")],
+                                 input_sv_table)
+}else{
+  input_metadata_pc = data.frame(input_metadata_table,
                                  input_sv_table)
 }
 

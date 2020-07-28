@@ -11,7 +11,7 @@ print(args)
 # args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "CRC", "PhenoCorrect",10,"study",1,1,"bin_crc_adenomaORnormal",0,"clr_scale",0,0,0,1,1)
 args = c("kmer", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-         "CRC", "minerva",4,"study",1,1,"bin_crc_adenomaORnormal",0,"none",0,0,0,1,1)
+         "CRC", "minerva","c","study",1,1,"bin_crc_adenomaORnormal",0,"none",0,0,0,1,1)
 
 # args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "AGP_max", "minerva",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"clr_scale",0,0,0,1,1)
@@ -441,8 +441,71 @@ for(m in 1:length(methods_list)){
       num_factors = num_pcs
     }
     
-    
-    pca_res = pca_method(input_abundance_table,clr_transform = FALSE,center_scale_transform = FALSE,num_pcs = num_factors )
+    if(num_pcs == 'c'){
+      
+      pca_res = pca_method(input_abundance_table,clr_transform = FALSE,center_scale_transform = FALSE,num_pcs = 20 )
+      
+      
+      sv_object_output = pca_res
+      pca_data = pca_res$pca_score
+      transformed_data = t(pca_res$transformed_data)
+      
+      
+
+      #Randomly shuffle the data
+      shuffle_samples <-sample(row.names(transformed_data))
+      
+      #Create 10 equally size folds
+      n_cv = 3
+      folds <- cut(seq(1,length(shuffle_samples)),breaks=n_cv,labels=FALSE)
+      
+      calibration_list_cv = list()
+      #Perform 10 fold cross validation
+      for(i in 1:n_cv){
+        i=1
+        #Segement your data by fold using the which() function 
+        testIndexes <- which(folds==i,arr.ind=TRUE)
+        testSamples = shuffle_samples[testIndexes]
+        trainSamples = shuffle_samples[-testIndexes]
+        test_pca_data <-  pca_data[testSamples, ]
+        train_pca_data <- pca_data[trainSamples, ]
+        
+        test_transformed_data <- transformed_data[testSamples,]
+        train_transformed_data<- transformed_data[trainSamples,]
+        
+        
+        
+        calibration_list = list()
+        for(num_factors_it in 1:20){
+          calibration_list[[num_factors_it]] = regress_out(train_pca_data,data=t(pca_res$transformed_data),pc_index = c(1:num_factors_it))
+          
+          
+        }
+        total_metadata_mod_interest
+        library(randomForest)
+        # Perform training:
+        rf_classifier = randomForest(Species ~ ., data=training, ntree=100, mtry=2, importance=TRUE)
+        
+        calibration_list_cv[[i]][["train"]]
+        calibration_list_cv[[i]][["test"]]
+        #Use the test and train data partitions however you desire...
+      }
+      
+      
+      
+      ####
+      
+      
+      
+      
+    }else{
+      pca_res = pca_method(input_abundance_table,clr_transform = FALSE,center_scale_transform = FALSE,num_pcs = num_factors )
+      sv_object_output = pca_res
+      
+      
+      batch_corrected_output = regress_out(pca_res$pca_score,data=t(pca_res$transformed_data),pc_index = c(1:num_factors))
+      
+    }
     
     sv_object_output = pca_res
     

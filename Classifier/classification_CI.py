@@ -118,7 +118,7 @@ if column_of_interest == "antibiotic" and "AGP" in study_name:
     metadata[column_of_interest] = bin_antibiotic
     pos_label = 1 #"Healthy"#'1-2' #'0-0.5'#'Omnivore' # '0-1.5'
 else:
-    if len(args) > 15
+    if len(args) > 15:
         if label_pos_or_neg == 1:
             print("positive")
             bin_column_of_interest = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],pos_labels =[target_label])

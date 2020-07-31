@@ -1,6 +1,6 @@
 # ============================================================================== #
 # user input
-kmer_len = 8
+kmer_len = 7
 export_otu =TRUE
 # ============================================================================== #
 # load packages and functions
@@ -65,6 +65,7 @@ if(export_otu){
 
 # ============================================================================== #
 # define folders
+kmer_len = 7
 
 folder = '/Users/leahbriscoe/Documents/KmerCounting/'
 datasets = c("CRC_Zackular","CRC_Baxter","CRC_Zeller")
@@ -81,7 +82,6 @@ for(m in 1:length(metadata_folders)){
   metadata_list[[datasets[m]]] = read.csv(metadata_folders[m],sep = ",")
 }
 
-table(metadata_list[["CRC_Zeller"]]$Assay.Type)
 
 accessions_list = list()
 for(m in 1:length(metadata_folders)){
@@ -92,6 +92,70 @@ kmer_list = list()
 for(m in 1:length(kmer_folders)){
   kmer_list[[datasets[m]]] = read.csv(kmer_folders[m],sep = ",",row.names=1)
 }
+
+
+## adding metadata July 2020
+metadata_list[["CRC_Zackular"]]$age
+metadata_list[["CRC_Zeller"]]$age = metadata_list[["CRC_Zeller"]]$Age
+metadata_list[["CRC_Baxter"]]$age = metadata_list[["CRC_Baxter"]]$Age
+
+
+
+
+old_sex = as.character(metadata_list[["CRC_Zackular"]]$sex)
+require("stringr")
+
+new_zack_sex = sapply(old_sex,function(x){
+  x = str_trim(x)
+  if(is.na(x)){
+    return(NA)
+  }else if(x == "m"){
+    return("male")
+  }else if(x == "f"){
+    return("female")
+  }else{
+    return(NA)
+  }
+})
+metadata_list[["CRC_Zackular"]]$sex = new_zack_sex
+metadata_list[["CRC_Zeller"]]$sex = as.character(metadata_list[["CRC_Zeller"]]$Environmental_package)
+metadata_list[["CRC_Baxter"]]$sex = as.character(metadata_list[["CRC_Baxter"]]$gender)
+
+
+metadata_list[["CRC_Zackular"]]$seq_meth
+metadata_list[["CRC_Zeller"]]$seq_meth = "illumina"
+new_baxter_seq = sapply(metadata_list[["CRC_Baxter"]]$Instrument,function(x){
+  x =as.character(x)
+  if(is.na(x)){
+    return(NA)
+  }else if(x == "Illumina MiSeq"){
+    return("illumina")
+  }else{
+    return(x)
+  }
+})
+
+metadata_list[["CRC_Baxter"]]$seq_meth = new_baxter_seq
+  
+  # ethnicity, weight, height,bmi
+metadata_list[["CRC_Zackular"]]$host_race
+metadata_list[["CRC_Zeller"]]$host_race = "white"
+new_ethnicity <- sapply(1:nrow(metadata_list[["CRC_Baxter"]]),function(x){
+  if(is.na(sum(metadata_list[["CRC_Baxter"]][x,c("Black","Asian","White")]))){
+    return(NA)
+  }else if(metadata_list[["CRC_Baxter"]][x,"Black"] ==1){
+    return("black")
+  }else if(metadata_list[["CRC_Baxter"]][x,"Asian"] ==1){
+    return("asian")
+  }else if(metadata_list[["CRC_Baxter"]][x,"White"] ==1){
+    return("white")
+  }else{
+    return("other")
+  }
+  
+})
+table(new_ethnicity)
+metadata_list[["CRC_Baxter"]]$host_race = new_ethnicity
 
 
 # fix sample names
@@ -231,7 +295,7 @@ metadata_list[["CRC_Zackular"]]$bmi_corrected = NA
 
 
 
-wanted_cols = c("bin_crc_normal","bin_crc_adenomaORnormal","study","bmi_corrected")
+wanted_cols = c("bin_crc_normal","bin_crc_adenomaORnormal","study","bmi_corrected","age","sex","seq_meth","host_race")
 total_metadata = rbind(metadata_list[["CRC_Zackular"]][,wanted_cols],metadata_list[["CRC_Baxter"]][,wanted_cols])
 total_metadata = rbind(total_metadata,metadata_list[["CRC_Zeller"]][,wanted_cols])
 total_metadata$SampleID = row.names(total_metadata)
@@ -252,9 +316,18 @@ total_kmer_table_norm= convert_to_rel_ab(total_kmer_table,metadata = NULL,provid
 kmer_table = total_kmer_table
 kmer_table_norm = total_kmer_table_norm
 #
-total_metadata$bmi_corrected
-head(total_metadata)
-
+new_bmi = sapply(total_metadata$bmi_corrected,function(x){
+  if(is.na(as.numeric(x))){
+    return(NA)
+  }else if(as.numeric(x)==0){
+    return(NA)
+  }else{
+    return(as.numeric(x))
+  }
+    
+  
+})
+total_metadata$bmi_corrected = new_bmi
 
 
 saveRDS(kmer_table_norm,paste0(kmer_output_folder,"/kmer_table_norm.rds"))
@@ -266,5 +339,4 @@ write.table(kmer_table,paste0(kmer_output_folder,"/kmer_table.txt"),sep="\t",quo
 saveRDS(total_metadata,paste0(kmer_output_folder,"/metadata.rds"))
 
 write.table(total_metadata,paste0(kmer_output_folder,"/metadata.txt"),sep = "\t",quote = FALSE)
-
 

@@ -6,9 +6,9 @@ args = commandArgs(trailingOnly=TRUE)
 # args = c("AGP_Hfilter", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_max_k6",
 #          "raw&clr@raw&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10@raw&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10",
 #          'Instrument&Instrument&Instrument',"0","") #filter_FALSE_filter_FALSE
-# args = c("Hispanic_k6", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Hispanic_k6",
-#          "rawfilter_TRUE_trans_clr_scale&minerva_first1filter_TRUE_trans_clr_scale",
-#          'protect_diabetes3_v2',"0","filter_FALSE") #filter_FALSE_filter_FALSE
+# args = c("Hispanic_k7", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Hispanic_k7",
+#          "rawfilter_TRUE_trans_clr_scale&minerva_first11filter_TRUE_trans_clr_scale",
+#          'protect_antibiotic',"1","filter_FALSE") #filter_FALSE_filter_FALSE
 
 # args = c("AGP_max", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_max_k6",
 #          "rawfilter_TRUE_trans_clr_scale&minerva_first2filter_TRUE_trans_clr_scale",
@@ -16,6 +16,12 @@ args = commandArgs(trailingOnly=TRUE)
 args = c("Thomas", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Thomas_k6",
          "rawfilter_TRUE_trans_clr_scale&minerva_first4filter_TRUE_trans_clr_scale",
          'protect_bin_crc_adenomaORnormal',"1","filter_FALSE") #filter_FALSE_filter_FALSE
+# args = c("T2D", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "T2D_k7",
+#          "rawfilter_TRUE_trans_clr_scale&minerva_first1filter_TRUE_trans_clr_scale",
+#          'protect_bin_t2d',"1","filter_FALSE") #filter_FALSE_filter_FALSE
+# args = c("CRC_k7", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "CRC_k7",
+#          "rawfilter_TRUE_trans_clr_scale&minerva_first10filter_TRUE_trans_clr_scale",
+#          'protect_bin_crc_adenomaORnormal',"1","filter_FALSE") #filter_FALSE_filter_FALSE
 
 # 
 # 
@@ -52,7 +58,7 @@ require(variancePartition)
 
 script_folder = paste0(microbatch_folder,'/data_processing')
 batch_script_folder = paste0(microbatch_folder, '/batch_correction')
-plot_path = paste0(microbatch_folder,'/plots/',plot_folder)
+plot_path = paste0(microbatch_folder,'/plots/',study_name)
 dir.create(plot_path) 
 
 source(paste0(script_folder,"/utils.R"))
@@ -68,11 +74,18 @@ source(paste0(batch_script_folder,"/batch_correction_source.R"))
 # fixed_effects_bio = c("sex","bmi_corrected","age_corrected")
 if(grepl("AGP",study_name)){
   
-  random_effects_tech = c("collection_year","Instrument") # "center_project_name","collection_days")#"Instrument",
-  random_effects_bio = c("race.x","bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year","bin_bowel_movement") #"diet_type.x","artificial_sweeteners"
+  # random_effects_tech = c("collection_year","Instrument") # "center_project_name","collection_days")#"Instrument",
+  # random_effects_bio = c("race.x","bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year","bin_bowel_movement") #"diet_type.x","artificial_sweeteners"
+  # 
+  # fixed_effects_tech = c("librarysize")#,"collection_AM")
+  # fixed_effects_bio = c("bmi_corrected","age_corrected") #"sex",
+  # 
+  # 
+  random_effects_tech = c("collection_year","Instrument","race.x") # "center_project_name","collection_days")#"Instrument",
+  random_effects_bio = c("bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year","bin_bowel_movement") #"diet_type.x","artificial_sweeteners"
   
-  fixed_effects_tech = c("librarysize")#,"collection_AM")
-  fixed_effects_bio = c("bmi_corrected","age_corrected") #"sex",
+  fixed_effects_tech = c("librarysize","age_corrected")#,"collection_AM")
+  fixed_effects_bio = c("bmi_corrected") #"sex",
   
   
 }else if(grepl("Hispanic",study_name)){
@@ -91,6 +104,26 @@ if(grepl("AGP",study_name)){
   random_effects_bio = c('multi_crc_adenoma_normal',"gender") 
   fixed_effects_tech = c("LibrarySize")
   fixed_effects_bio = c()#"age","BMI")
+  
+}else if(grepl("T2D",study_name)){
+  random_effects_tech = c("seq_instrument","study") # "center_project_name","collection_days")#"Instrument",
+  
+  random_effects_bio = c("sex","bin_t2d") 
+  fixed_effects_tech = c("library_size")
+  fixed_effects_bio = c("age")
+  
+  
+}else if(grepl("CRC",study_name)){
+  # random_effects_tech = c("study","seq_meth") # "center_project_name","collection_days")#"Instrument",
+  # random_effects_bio = c("host_race","bin_crc_normal","bin_crc_adenomaORnormal","sex") 
+  # fixed_effects_tech = c("library_size")
+  # fixed_effects_bio = c("age")#,"bmi_corrected")
+  
+  
+  random_effects_tech = c("study","seq_meth","host_race","sex") # "center_project_name","collection_days")#"Instrument",
+  random_effects_bio = c("bin_crc_normal","bin_crc_adenomaORnormal") 
+  fixed_effects_tech = c("library_size","age")
+  fixed_effects_bio = c()#,"bmi_corrected")
   
 }
 
@@ -117,6 +150,8 @@ for(s in 1:length(study_list)){
   for(m in 1:length(study_methods_list)){
 
     print( study_methods_list[m])
+    
+    #m=2
     retrieve_varpars[[paste0(study_list[s],study_methods_list[m])]] = readRDS(paste0(input_folder ,"/varpart_quant",use_quant_norm ,"_",study_methods_list[m],"_",last_name, ".rds"))
     
   }
@@ -139,19 +174,35 @@ for( t in 1:length(varpar_types )){
   row.names(vp) = paste0("Feature",1:nrow(vp))
   if(grepl("AGP",study_name)){
     vp = vp[order(vp$bmi_corrected,decreasing = TRUE),]
-    top_5 = c("Instrument","collection_year","librarysize","Residuals")
-    top_5_pretty = c("Instrument","Collection year","Library Size","Residuals")
+   
+    top_5 = c("Instrument","collection_year","librarysize","race.x","bin_bowel_movement","bin_antibiotic_last_year")
+    top_5_pretty = c("Instrument","Collection year","Library Size","Race","Bowel Movement","AntibioticLastYear")
   }else if(grepl("Hispanic",study_name)){
     vp = vp[order(vp$bmi_v2,decreasing = TRUE),]
-    top_5 = c( "antibiotic","librarysize","frequency_bowel_movement.y","hispanic_origin.x",
-               "mastermix_lot..exp.","Residuals" )
-    top_5_pretty = c("antibiotic","librarysize","frequency_bowel_movement.y","hispanic_origin.x",
-                     "mastermix_lot..exp.","Residuals")
+    
+    colnames(vp)
+    top_5 = c( "prep","mastermix_lot..exp.","extraction_robot..exp.","processing_robot..exp.","librarysize","frequency_bowel_movement.y","hispanic_origin.x",
+               "antibiotic","bmi_v2" )
+    top_5_pretty = c("PrepNo","MastermixLot","ExtractionRobot","ProcessingRobot","LibrarySize","Freq. Bowel Mvmt","Hispanic Origin",
+                     "Antibiotic History","BMI" )
   }else if(grepl("Thomas",study_name)){
     vp = vp[order(vp$multi_crc_adenoma_normal,decreasing = TRUE),]
-    top_5 = c( 'CenterName','DNA_extraction_kit',"Instrument","study",'multi_crc_adenoma_normal') #"BMI"
-    top_5_pretty = c( 'CenterName','DNA Extraction Kit',"Instrument","Study",'CRC Status') #"BMI",
+    top_5 = c( 'CenterName','DNA_extraction_kit',"Instrument","study",'LibrarySize','multi_crc_adenoma_normal') #"BMI"
+    top_5_pretty = c( 'CenterName','DNA Extraction Kit',"Instrument","Study",'LibrarySize','CRC Status') #"BMI",
+  }else if(grepl("T2D",study_name)){
+    vp = vp[order(vp$bin_t2d,decreasing = TRUE),]
+    top_5 = c( "study","seq_instrument","library_size","age","sex","bin_t2d") #"BMI"
+    top_5_pretty = c( "Study","Instrument","LibrarySize","Age","Sex","T2D Status")  #"BMI",
+    
+    
+  }else if(grepl("CRC",study_name)){
+    vp = vp[order(vp$bin_crc_adenomaORnormal,decreasing = TRUE),]
+    top_5 = c( "study","seq_meth","library_size","age","sex","host_race","bin_crc_normal","bin_crc_adenomaORnormal") #"BMI"
+    top_5_pretty = c( "Study","Sequencing Method","LibrarySize","Age","Sex","Race","CRC v Normal","CRC v Normal/Adenoma")  #"BMI",
+    
+    
   }
+
   
   
   
@@ -173,6 +224,9 @@ for( t in 1:length(varpar_types )){
   var_pars_tech_bio[[varpar_types[t]]] = data.frame(bio_variability_explained = rowSums(as.matrix(retrieve_varpars[[varpar_types[t]]])[,biological_vars]),
                                                                     tech_variability_explained = rowSums(as.matrix(retrieve_varpars[[varpar_types[t]]])[,technical_vars]))
 }
+mean(retrieve_varpars[[varpar_types[1]]]$study)
+mean(retrieve_varpars[[varpar_types[2]]]$study)
+mean(vp$Instrument)
 # ============================================================================== #
 # makedf
 varpar_types
@@ -182,8 +236,11 @@ to_plot = melt(var_pars_tech_bio,id.vars = c("bio_variability_explained","tech_v
 # to_plot = to_plot %>% filter(L1 %in% c("AGP_Hfilter_oturaw" , "AGP_Hfilter_otuComBat","AGP_Hfilter_otulimma" ,
 #                                               "AGP_Hfilter_otuclr_pca_regress_out_scale_first10" , "AGP_Hfilter_k6raw",
 #                                               "AGP_Hfilter_k6clr_pca_regress_out_scale_first10" ))
+test = c("ty","tu")
+sapply(test,function(x){
+  if(grepl("t",x)){return("o")}
+})
 
-names(var_pars_tech_bio)
 
 # 
 # to_plot = to_plot %>% filter(L1 %in% c("AGP_Hfilter_k7raw",
@@ -223,29 +280,32 @@ not_raw = to_plot %>% filter(L1 == "MINERVA")
 head(raw)
 head(not_raw)
 
-not_raw$tech_ratio = log(not_raw$tech_variability_explained/raw$tech_variability_explained)
-not_raw$bio_ratio = log(not_raw$bio_variability_explained/raw$bio_variability_explained)
+range(not_raw$bio_ratio)
+not_raw$tech_ratio = log((not_raw$tech_variability_explained+1)/(raw$tech_variability_explained+1))
+not_raw$bio_ratio = log((not_raw$bio_variability_explained+1)/(raw$bio_variability_explained+1))
 
 not_raw$L1 =  factor(not_raw$L1, levels =unique( not_raw$L1))
 
 
 
 axis_group = sapply(1:nrow(not_raw),function(i){
-  if( not_raw$tech_ratio[i] < 0 & not_raw$bio_ratio[i] > 0 ){ return("bingo")}
-  else{return("nah")}
+  if(is.na(not_raw$tech_ratio[i]) | is.na(not_raw$bio_ratio[i]) > 0 ){
+    return(NA)
+  }else if( not_raw$tech_ratio[i] < 0 & not_raw$bio_ratio[i] > 0 ){ return("Incrs Bio, Decrs Tech")}
+  else{return("Other")}
 })
 
-paste0("Less tech, more bio ", sum(axis_group == "bingo")/length(axis_group))
+paste0("Less tech, more bio ", sum(axis_group == "Incrs Bio, Decrs Tech",na.rm=TRUE)/length(axis_group))
 paste0("less tech ",sum(not_raw$tech_ratio < 0)/nrow(not_raw))
-paste0("more bio ",sum(not_raw$bio_ratio > 0)/nrow(not_raw))
+paste0("more bio ",sum(not_raw$bio_ratio > 0,na.rm=TRUE)/nrow(not_raw))
 
 p<-ggplot(not_raw ,aes(x=bio_ratio,y= tech_ratio,color=axis_group)) + ggtitle("Variance attributed to different variables") 
-p<-p + geom_point() + theme_bw()+ theme(text = element_text(size=20)) #+ theme(legend.position = "none") #+ stat_ellipse()#+ scale_color_manual(values=c("#999999", "#56B4E9"))
-p <- p + labs(x = "Fold increase in prop. variance biological", y = "Fold increase in prop. variance technical", color = "Method")
+p<-p + geom_point() + theme_bw()+ theme(text = element_text(size=17)) #+ theme(legend.position = "none") #+ stat_ellipse()#+ scale_color_manual(values=c("#999999", "#56B4E9"))
+p <- p + labs(x = "Log Fold increase in prop. variance biological", y = "Log Fold increase in prop. variance technical", color = "Method")
 p <- p + scale_color_manual(values=c("red","black"))
 p
 ggsave(filename = paste0(plot_path,'/scatter_ratio_',varpar_types[1],'.pdf'), 
-       plot = p ) 
+       plot = p,width=9,height=7 ) 
 
 # ============================================================================== #
 

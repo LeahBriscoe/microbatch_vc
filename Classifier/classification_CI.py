@@ -81,9 +81,13 @@ map_with_accession = bool(int(args[9]))
 n_repeats = int(args[10]) # number of different folds for cross validation. 5 or 10 is good. 
 number_estimators_rf = int(args[11]) # number of estimators in random forest
 
-if len(args) > 12:
-    label_pos_or_neg = int(args[12]) # do you want to treat CRC as positive class or negative class? 
-    target_label = args[13] # phenotype representing positive class or negative class? eg. CRC eg. H
+criterion_input = args[12]
+min_samples_leaf_input = int(args[13])
+max_features_input = float(args[14])
+
+if len(args) > 15:
+    label_pos_or_neg = int(args[15]) # do you want to treat CRC as positive class or negative class? 
+    target_label = args[16] # phenotype representing positive class or negative class? eg. CRC eg. H
     print(target_label)
 else:
     label_pos_or_neg = 1
@@ -114,7 +118,7 @@ if column_of_interest == "antibiotic" and "AGP" in study_name:
     metadata[column_of_interest] = bin_antibiotic
     pos_label = 1 #"Healthy"#'1-2' #'0-0.5'#'Omnivore' # '0-1.5'
 else:
-    if len(args) > 12:
+    if len(args) > 15
         if label_pos_or_neg == 1:
             print("positive")
             bin_column_of_interest = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],pos_labels =[target_label])
@@ -159,8 +163,8 @@ for method in methods:
         np_interest =  np.array(metadata[column_of_interest])
         unique_categories = np.unique(np_interest)
         #print(unique_categories)
-        if len(args) <= 12:
-            unique_categories = [cat for cat in unique_categories if not math.isnan(cat)]
+        #if len(args) <= 12:
+        unique_categories = [cat for cat in unique_categories if not math.isnan(cat)]
 
     
     
@@ -194,8 +198,8 @@ for method in methods:
             category_counter = dict(Counter(metadata[column_of_interest]  ))
             categorical_counts = [category_counter[key] for key in category_counter.keys()]
             #print(category_counter)
-            if len(args) <= 12:
-                categorical_counts = [category_counter[key] for key in category_counter.keys() if not math.isnan(key) ]
+            #if len(args) <= 12:
+            categorical_counts = [category_counter[key] for key in category_counter.keys() if not math.isnan(key) ]
         #print(category_counter)
 
 
@@ -263,7 +267,8 @@ for method in methods:
 #         QuadraticDiscriminantAnalysis()]   
 #     "Naive Bayes","AdaBoost","RBF SVM","Linear SVM"
     classifiers = [
-        RandomForestClassifier(max_depth=5, random_state=0,n_estimators = number_estimators_rf),
+        RandomForestClassifier(max_depth=5, random_state=0,n_estimators = number_estimators_rf,\
+            criterion = criterion_input,min_samples_leaf = min_samples_leaf_input,max_features = max_features_input),
         GaussianNB()]#,AdaBoostClassifier(),SVC(kernel="linear", C=0.025),SVC(gamma=2, C=1),KNeighborsClassifier(3)]
 #         MLPClassifier(alpha=1, max_iter=1000),
 #         AdaBoostClassifier()]
@@ -271,6 +276,9 @@ for method in methods:
     # RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1)
     classifier_it = 0
     for name, clf in zip(names, classifiers):
+        if classifier_it:
+            print("hyperparam")
+            print(min_samples_leaf_input)
         print(names[classifier_it])
         all_methods_auc_stats[method][names[classifier_it]]  = dict()
         #print("TRAIN:", train_index, "TEST:", test_index)

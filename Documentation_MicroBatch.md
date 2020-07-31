@@ -1454,6 +1454,9 @@ done
 /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg kmer -arg 6 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_Hfilter -arg "rawfilter_FALSE" -arg Instrument -arg BatchCorrected -arg 0 -arg 1 -arg 0
 
 
+for method in raw; do for sv in 1; do for phen in bin_t2d; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg T2D -arg "$method"filter_TRUE_trans_clr_scale -arg protect_"$phen" -arg BatchCorrected -arg 1 -arg 0 -arg 0; done; done; done
+
+for method in minerva; do for sv in 1; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 18 -t 100 -hp -v 3.6.0 -arg kmer -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg T2D -arg "$method"_first"sv"filter_TRUE_trans_clr_scale -arg protect_"$phen" -arg BatchCorrected -arg 1 -arg 1 -arg 0; done; done
 
 ```
 

@@ -10,10 +10,10 @@ print(args)
 #table(total_metadata$diabetes_lab_v2.x)
 # args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "CRC", "PhenoCorrect",10,"study",1,1,"bin_crc_adenomaORnormal",0,"clr_scale",0,0,0,1,1)
-args = c("kmer", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-         "CRC", "minerva","c","study",1,1,"bin_crc_adenomaORnormal",0,"none",0,0,0,1,1)
-
-# args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+# args = c("kmer", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+#          "CRC", "minerva","c","study",1,1,"bin_crc_adenomaORnormal",0,"none",0,0,0,1,1)
+# 
+# # args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "AGP_max", "minerva",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"clr_scale",0,0,0,1,1)
 
 # args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
@@ -506,11 +506,13 @@ for(m in 1:length(methods_list)){
       batch_corrected_output = regress_out(pca_res$pca_score,data=t(pca_res$transformed_data),pc_index = c(1:num_factors))
       
     }
-    
-    sv_object_output = pca_res
-    
-    
-    batch_corrected_output = regress_out(pca_res$pca_score,data=t(pca_res$transformed_data),pc_index = c(1:num_factors))
+    # pca_res = pca_method(input_abundance_table,clr_transform = FALSE,center_scale_transform = FALSE,num_pcs = num_factors )
+    # 
+    # sv_object_output = pca_res
+    # 
+    # 
+    # batch_corrected_output = regress_out(pca_res$pca_score,data=t(pca_res$transformed_data),pc_index = c(1:num_factors))
+    # 
   }else if(methods_list[m] == "ProtectPCA"){
   
     

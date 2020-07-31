@@ -122,16 +122,18 @@ if(grepl("AGP",study_name)){
   numeric_vars = c("bmi_v2","age_v2.x","librarysize")
 
 }else if(grepl("CRC",study_name)){
-  binary_vars = c("bin_crc_normal","bin_crc_adenomaORnormal")
-  categorical_vars = c("study")
-  numeric_vars = c("bmi_corrected","library_size")
+  binary_vars = c("bin_crc_normal","bin_crc_adenomaORnormal","sex")
+  categorical_vars = c("study","seq_meth","host_race")
+  numeric_vars = c("library_size","age") #"bmi_corrected",
+  
+  
 }else if(grepl("Thomas",study_name)){
   binary_vars = c("gender","LibraryLayout")
   categorical_vars = c("study","Instrument",'multi_crc_adenoma_normal','CenterName','DNA_extraction_kit')
   numeric_vars = c("LibrarySize")#,"age","BMI")
 }else if(grepl("T2D",study_name)){
-  binary_vars = c("sex")
-  categorical_vars = c("study","seq_instrument","bin_t2d")
+  binary_vars = c("sex","bin_t2d","seq_instrument")
+  categorical_vars = c("study")
   numeric_vars = c("library_size","age")
   
 }
@@ -206,12 +208,21 @@ if(grepl("AGP",study_name)){
 }else if(grepl("T2D",study_name)){
   random_effects_tech = c("seq_instrument","study") # "center_project_name","collection_days")#"Instrument",
   
-  random_effects_bio = c("sex","bin_t2d") 
+  random_effects_bio = c() 
   fixed_effects_tech = c("library_size")
-  fixed_effects_bio = c("age")
+  fixed_effects_bio = c("age","sex","bin_t2d")
+  
+  
+}else if(grepl("CRC",study_name)){
+  
+  random_effects_tech = c("study","seq_meth") # "center_project_name","collection_days")#"Instrument",
+  random_effects_bio = c("host_race","bin_crc_normal","bin_crc_adenomaORnormal","sex") 
+  fixed_effects_tech = c("library_size")
+  fixed_effects_bio = c("age")#,"bmi_corrected")
   
   
 }
+
 
 
 

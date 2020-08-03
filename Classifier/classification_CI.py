@@ -1,6 +1,11 @@
 
 # example run of this script
-# ./classifier.py /u/home/b/briscoel/gapped_kmer YuCRC patternABC kmer kmer_matrix bin_crc_adenomaORnormal patternABC 1 1 5 100 1 CRC
+
+
+ # Goal: Classify samples as NORMAL(or adenoma) vs CRC
+
+
+# python ./classifier.py /u/home/b/briscoel/gapped_kmer YuCRC patternABC kmer kmer_matrix bin_crc_adenomaORnormal patternABC 1 1 5 100 "entropy" 5 0.3 1 CRC
 # the matrix you provide should have k-mer in row, sample in column
 
 # your directory should be set up like this:
@@ -22,6 +27,8 @@
 # norm_input = 1
 # map_with_accession = 1
 # n_repeats = 5
+
+# random forest parameters
 # number_estimators_rf = 100
 
 # if len(args) > 11:
@@ -79,11 +86,14 @@ methods = args[7].split("&") # you can specify prediction with multiple matrices
 norm_input = bool(int(args[8]))
 map_with_accession = bool(int(args[9]))
 n_repeats = int(args[10]) # number of different folds for cross validation. 5 or 10 is good. 
-number_estimators_rf = int(args[11]) # number of estimators in random forest
 
-criterion_input = args[12]
+
+# RANDOM FOREST PARAMETERS
+number_estimators_rf = int(args[11]) # number of estimators in random forest
+criterion_input = args[12] 
 min_samples_leaf_input = int(args[13])
 max_features_input = float(args[14])
+# END RANDOM FOREST PARAMETERS
 
 if len(args) > 15:
     label_pos_or_neg = int(args[15]) # do you want to treat CRC as positive class or negative class? 

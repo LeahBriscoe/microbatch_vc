@@ -85,9 +85,9 @@ for method in minerva; do for phen in bin_crc_normal; do for tran in clr_scale; 
 
 # prediction
 
-for svs in 1; do for tran in clr_scale; do for phen in bin_crc_normal; do for method in raw; do for k in 8; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=3G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch CRC_thomas_otu protect_'$phen' kmer BatchCorrected  '$phen' '$method'filter_TRUE_trans_'$tran' 0 0 10 1000 entropy 5 0.30 1 1"; done; done; done; done; done
+for svs in 1; do for tran in clr_scale; do for phen in bin_crc_normal; do for method in raw; do for k in 8; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=3G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch CRC_thomas_otu protect_'$phen' kmer BatchCorrected  '$phen' '$method'filter_TRUE_trans_'$tran' 0 0 10 1000 entropy 5 0.30"; done; done; done; done; done
 
-for svs in 1 2 3 4 5 6 7 8 9 10 11 12 13 14; do for tran in clr_scale; do for phen in bin_crc_normal; do for method in minerva; do for k in 8; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=3G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch CRC_k'$k' protect_'$phen' kmer BatchCorrected  '$phen' '$method'_first'$svs'filter_TRUE_trans_'$tran' 0 0 10 1000 entropy 5 0.30 1 1"; done; done; done; done; done
+for svs in 1 2 3 4 5 6 7 8 9 10 11 12 13 14; do for tran in clr_scale; do for phen in bin_crc_normal; do for method in minerva; do for k in 8; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=3G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch CRC_thomas_otu'$k' protect_'$phen' kmer BatchCorrected  '$phen' '$method'_first'$svs'filter_TRUE_trans_'$tran' 0 0 10 1000 entropy 5 0.30"; done; done; done; done; done
 
 
 ```

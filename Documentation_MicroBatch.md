@@ -17,7 +17,7 @@
 
 ```
 qrsh -l h_rt=24:00:00,h_data=8G 
-qrsh -l h_rt=200:00:00,h_data=8G,highp -pe shared 4
+qrsh -l h_rt=336:00:00,h_data=8G,highp -pe shared 4
 
 conda activate /u/home/b/briscoel/project-halperin/deblurenv
 
@@ -182,6 +182,31 @@ Step 2
 
 Step 3
 
+
+
+## DEBLUR AGAIN 2020
+```
+for file in *.fastq.trim; 
+do 
+    filename=$(basename $file);
+    echo ${filename//.fastq.trim/} >> ../processed_2.txt; 
+done
+
+
+for file in *.fastq; 
+do 
+    filename=$(basename $file);
+    if [ -f /u/home/b/briscoel/project-halperin/AGP/deblur_temps/deblur_working_dir/"$filename".trim ]; then
+		echo "f exists.";
+	else
+		if [ -f /u/home/b/briscoel/project-halperin/AGP/deblur_temps2/deblur_working_dir/"$filename".trim ]; then
+			echo "f exists.";
+		else
+			echo ${filename//.fastq.trim/} >> ../process_missing_2.txt; 
+		fi	
+	fi;
+done
+```
 
 # crc
 

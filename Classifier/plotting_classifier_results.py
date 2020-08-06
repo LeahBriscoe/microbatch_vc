@@ -47,7 +47,6 @@ data_type = "kmer"
 classifier = ["Naive Bayes","Random Forest"]#Random Forest"#"#'Regression'#"Random Forest"
 
 #title = 'AUC for prediction of ' + phen_pretty #'AUC for prediction of antibiotic history'#'Pearson correlation of predicted body mass index (BMI)'#'AUC for prediction of antibiotic history'#' #AUC for prediction of antibiotic history' #
-special_name = phen[0] #"Antibiotic history class prediction"#"BMI prediction" #"Antibiotic history class prediction"#"BMI prediction"# "Antibody prediction"# 
 
 
 df_metric = pd.DataFrame()

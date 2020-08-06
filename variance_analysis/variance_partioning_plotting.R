@@ -10,12 +10,12 @@ args = commandArgs(trailingOnly=TRUE)
 #          "rawfilter_TRUE_trans_clr_scale&minerva_first11filter_TRUE_trans_clr_scale",
 #          'protect_antibiotic',"1","filter_FALSE") #filter_FALSE_filter_FALSE
 
-# args = c("AGP_max", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_max_k6",
-#          "rawfilter_TRUE_trans_clr_scale&minerva_first2filter_TRUE_trans_clr_scale",
-#          'protect_bin_antibiotic_last_year',"1","filter_FALSE") #filter_FALSE_filter_FALSE
-args = c("Thomas", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Thomas_k6",
-         "rawfilter_TRUE_trans_clr_scale&minerva_first4filter_TRUE_trans_clr_scale",
-         'protect_bin_crc_adenomaORnormal',"1","filter_FALSE") #filter_FALSE_filter_FALSE
+args = c("AGP_max", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_max_k6",
+         "rawfilter_TRUE_trans_clr_scale&minerva_first2filter_TRUE_trans_clr_scale",
+         'protect_bin_antibiotic_last_year',"1","filter_FALSE") #filter_FALSE_filter_FALSE
+# args = c("Thomas", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Thomas_k6",
+#          "rawfilter_TRUE_trans_clr_scale&minerva_first4filter_TRUE_trans_clr_scale",
+#          'protect_bin_crc_adenomaORnormal',"1","filter_FALSE") #filter_FALSE_filter_FALSE
 # args = c("T2D", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "T2D_k7",
 #          "rawfilter_TRUE_trans_clr_scale&minerva_first1filter_TRUE_trans_clr_scale",
 #          'protect_bin_t2d',"1","filter_FALSE") #filter_FALSE_filter_FALSE
@@ -164,6 +164,7 @@ for(s in 1:length(study_list)){
 # partition bio and tech
 require(reshape2)
 varpar_types  = names(retrieve_varpars)
+var_pars_2tech_1bio = list()
 var_pars_tech_bio = list()
 pretty_titles = c("Variance explained by technical variables before correction", "Variance explained by technical variables after MINERVA")
 for( t in 1:length(varpar_types )){
@@ -177,6 +178,11 @@ for( t in 1:length(varpar_types )){
    
     top_5 = c("Instrument","collection_year","librarysize","race.x","bin_bowel_movement","bin_antibiotic_last_year")
     top_5_pretty = c("Instrument","Collection year","Library Size","Race","Bowel Movement","AntibioticLastYear")
+    
+    top3 = c( "Instrument","collection_year") #"BMI"
+    top3_pretty = c( "Instrument","CollectionYear")
+    
+  
   }else if(grepl("Hispanic",study_name)){
     vp = vp[order(vp$bmi_v2,decreasing = TRUE),]
     
@@ -189,6 +195,8 @@ for( t in 1:length(varpar_types )){
     vp = vp[order(vp$multi_crc_adenoma_normal,decreasing = TRUE),]
     top_5 = c( 'CenterName','DNA_extraction_kit',"Instrument","study",'LibrarySize','multi_crc_adenoma_normal') #"BMI"
     top_5_pretty = c( 'CenterName','DNA Extraction Kit',"Instrument","Study",'LibrarySize','CRC Status') #"BMI",
+    top3 = c('DNA_extraction_kit',"Instrument")
+    top3_pretty  = c('DNA_extraction_kit',"Instrument")
   }else if(grepl("T2D",study_name)){
     vp = vp[order(vp$bin_t2d,decreasing = TRUE),]
     top_5 = c( "study","seq_instrument","library_size","age","sex","bin_t2d") #"BMI"
@@ -199,6 +207,9 @@ for( t in 1:length(varpar_types )){
     vp = vp[order(vp$bin_crc_adenomaORnormal,decreasing = TRUE),]
     top_5 = c( "study","seq_meth","library_size","age","sex","host_race","bin_crc_normal","bin_crc_adenomaORnormal") #"BMI"
     top_5_pretty = c( "Study","Sequencing Method","LibrarySize","Age","Sex","Race","CRC v Normal","CRC v Normal/Adenoma")  #"BMI",
+    
+    top3 = c( "study","seq_meth","library_size","age","sex","host_race","bin_crc_normal","bin_crc_adenomaORnormal") #"BMI"
+    top3_pretty = c( "Study","Sequencing Method","LibrarySize","Age","Sex","Race","CRC v Normal","CRC v Normal/Adenoma")  #"BMI",
     
     
   }
@@ -219,11 +230,18 @@ for( t in 1:length(varpar_types )){
   
   ggsave(filename = paste0(plot_path,'/top5_plot_kmer_variance_partition_',varpar_types[t],'.pdf'),
          plot = p,width = 7, height = 6)
+
+  vp3 = vp[,top3]
+  colnames(vp3) = top3_pretty
+  var_pars_2tech_1bio[[varpar_types[t]]] = vp3
   
   
   var_pars_tech_bio[[varpar_types[t]]] = data.frame(bio_variability_explained = rowSums(as.matrix(retrieve_varpars[[varpar_types[t]]])[,biological_vars]),
                                                                     tech_variability_explained = rowSums(as.matrix(retrieve_varpars[[varpar_types[t]]])[,technical_vars]))
 }
+
+top3_together = melt(var_pars_2tech_1bio)
+
 mean(retrieve_varpars[[varpar_types[1]]]$study)
 mean(retrieve_varpars[[varpar_types[2]]]$study)
 mean(vp$Instrument)
@@ -339,3 +357,23 @@ ggsave(filename = paste0(plot_path,'/Tech_',varpar_types[1],'.pdf'),
 wilcox.test(var_pars_tech_bio[[1]]$tech_variability_explained, 
             var_pars_tech_bio[[2]]$tech_variability_explained)
 
+
+top3_together_og =top3_together
+top3_together$L1  = sapply(top3_together$L1,function(x){
+  if(grepl("raw",x)){
+    return("RAW")
+  }else{
+    return("MINERVA")
+  }
+})
+top3_together$L1 =  factor(top3_together$L1, levels=unique( top3_together$L1))
+#=
+
+p<-ggplot(top3_together ,aes(x=variable,y=value,fill=L1)) + ggtitle("Tech") 
+p<-p + geom_boxplot() + theme_bw() + 
+  theme(text = element_text(size=20),axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(size=22)) +
+  ggtitle("American Gut Project ") +
+  xlab("Method") + ylab("Proportion variance") #+ scale_color_manual(values=c("#999999", "#56B4E9"))
+ggsave(filename = paste0(plot_path,'/Tech_box_summary','.pdf'), 
+       plot = p )

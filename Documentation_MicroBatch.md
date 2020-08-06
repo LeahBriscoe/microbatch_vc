@@ -143,7 +143,7 @@ done
 ```
 ### <a name ="bloomfilter">Step 2: Bloom Filter</a>
 ```
-pick_closed_reference_otus.py -i test.fastq.trim  -o qiime_pick_closed_ref/ -r /u/home/b/briscoel/project-halperin/MicroBatch/AGP_reprocessing_LB/BLOOM.fasta
+pick_closed_reference_otus.py -i test.fastq.trim  -o qiime_pick_closed_ref_2/ -r /u/home/b/briscoel/project-halperin/MicroBatch/AGP_reprocessing_LB/BLOOM.fasta
 ```
 
 ```
@@ -185,11 +185,131 @@ Step 3
 
 
 ## DEBLUR AGAIN 2020
+in reprocessing in SCRATCH
+
+qrsh -l h_rt=336:00:00,h_data=8G,highp -pe shared 4
+
+
+Step 0:
+```
+for file in *.fastq 
+do 
+    filename=$(basename $file);
+    echo ${filename//.fastq/} >> ../Deblur_Accessions_Step0.txt; 
+done
+
+split 1000 Deblur_Accessions_Step0.txt segment -d
+```
+
+Step 1: running on protocol screen
+```
+
+mkdir SRA_segment01
+while IFS= read -r line; do
+	echo $line
+	mv SRA/$line.fastq SRA_segment01/$line.fastq
+done < segment01
+
+. /u/local/Modules/default/init/modules.sh
+module load python/anaconda2
+. /u/local/apps/anaconda2/etc/profile.d/conda.sh
+
+
+
+for seg in 02 03 04; do qsub -cwd -V -N "test" -l h_data=8G,time=24:00:00,highp -pe shared 4 -M briscoel -m beas -b y "while IFS= read -r line; do echo $line; mv SRA/$line.fastq SRA_segment'$seg'/$line.fastq; done < segment'$seg'; deblur workflow --seqs-fp SRA_segment01 --output-dir deblur_filter_'$seg' -t 125 --neg-ref-fp /u/home/b/briscoel/project-halperin/MicroBatch/AGP_reprocessing_LB/BLOOM.fasta --keep-tmp-files -O 4 -w"; done
+
+
+
+
+seg=01
+deblur workflow --seqs-fp SRA_segment$seg --output-dir deblur_filter_$seg -t 125 --neg-ref-fp /u/home/b/briscoel/project-halperin/MicroBatch/AGP_reprocessing_LB/BLOOM.fasta --keep-tmp-files -O 4 -w
+
+
+for i in 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18
+
+
+COUNTER=0
+for i in 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18;
+do 
+	COUNTER=$((COUNTER + 1)); 
+	echo "Text read from file: $COUNTER"; 
+	echo ${i} >> inputs/data_$COUNTER.in; 
+done
+
+
+
+```
+
+
+```
+#!/bin/bash
+. /u/local/Modules/default/init/modules.sh
+
+module load python/anaconda3
+
+
+while read -r seg; do
+	mkdir SRA_segment'$seg';
+	while IFS= read -r line; do echo $line; mv SRA/$line.fastq SRA_segment'$seg'/$line.fastq; done < segment'$seg';
+	deblur workflow --seqs-fp SRA_segment'$seg' --output-dir deblur_filter_$seg -t 125 --neg-ref-fp /u/home/b/briscoel/project-halperin/MicroBatch/AGP_reprocessing_LB/BLOOM.fasta --keep-tmp-files -O 4 -w
+done < inputs/data_$SGE_TASK_ID.in
+
+
+qsub -cwd -V -N deblur_tab -l h_data=8G,time=24:00:00,highp -pe shared 4 -M briscoel -m beas -b y -t 18:18 "./deblur_array.sh"
+
+```
+
+# pick otus
+
+```
+pick_otus.py -i test.fastq.trim  -o qiime_pick_closed_ref/ -r /u/home/b/briscoel/project-ngarud/97_otus.fasta
+
+
+pick_closed_reference_otus.py -i deblur_filter/deblur_working_dir/ERR1073504.fastq.trim -o qiime_closed_ref -r /u/home/b/briscoel/project-ngarud/gg_13_8_otus/rep_set/97_otus.fasta -t /u/home/b/briscoel/project-ngarud/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt
+
+
+pick_closed_reference_otus.py -i combined.fastq -o qiime_closed_ref -r /u/home/b/briscoel/project-ngarud/gg_13_8_otus/rep_set/97_otus.fasta -t /u/home/b/briscoel/project-ngarud/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt
+
+pick_reference_otus_through_otu_table.py i combined.fastq -o qiime_closed_ref_thru -r /u/home/b/briscoel/project-ngarud/gg_13_8_otus/rep_set/97_otus.fasta -t /u/home/b/briscoel/project-ngarud/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt
+
+
+pick_closed_reference_otus.py -i  ERR1073900.fastq -o qiime_closed_ref -r /u/home/b/briscoel/project-ngarud/gg_13_8_otus/rep_set/97_otus.fasta -t /u/home/b/briscoel/project-ngarud/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt
+
+
+pick_otus.py -i ERR1073902.fastq.trim -o qiime_pick_closed_ref/ -r /u/home/b/briscoel/project-ngarud/gg_13_8_otus/rep_set/97_otus.fasta
+
+make_otu_table.py -i ERR1073902.fastq_otus.txt -t /u/home/b/briscoel/project-ngarud/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt -o otu_table.biom
+
+  
+ 
+
+ -r /u/home/b/briscoel/project-ngarud/97_otus.fasta
+```
+
+Step1
+
+
+
+
+```
+deblur workflow --seqs-fp SRA --output-dir deblur_temps -t 125 --keep-tmp-files -O 4
+
+Step 1 fix
+
+
+while IFS= read -r line; do
+	echo $line
+	deblur workflow --seqs-fp SRA/$line --output-dir deblur_temps_3 -t 125  --neg-ref-fp /u/home/b/briscoel/project-halperin/MicroBatch/AGP_reprocessing_LB/BLOOM.fasta --keep-tmp-files -O 4 -w
+done < process_missing_1.txt 
+```
+
+
+Step 2
 ```
 for file in *.fastq.trim; 
 do 
     filename=$(basename $file);
-    echo ${filename//.fastq.trim/} >> ../processed_2.txt; 
+    echo ${filename//.fastq.trim/} >> ../../processed_1.txt; 
 done
 
 
@@ -206,11 +326,45 @@ do
 		fi	
 	fi;
 done
+
+
+
+while IFS= read -r line; do
+        echo "Fetched: $line"
+        pick_closed_reference_otus.py -i /u/home/b/briscoel/project-halperin/AGP/deblur_temps2/deblur_working_dir/$line.fastq.trim  -o qiime_pick_closed_ref_2/ -r /u/home/b/briscoel/project-halperin/MicroBatch/AGP_reprocessing_LB/BLOOM.fasta -f
+done < deblurtrimmed2.txt
+
+conda env list
+conda activate qiime2-dev
+
+while IFS= read -r line; do
+        echo "Fetched: $line"
+        pick_closed_reference_otus.py -i /u/home/b/briscoel/project-halperin/AGP/deblur_temps1/deblur_working_dir/$line.fastq.trim  -o qiime_pick_closed_ref_1/ -r /u/home/b/briscoel/project-halperin/MicroBatch/AGP_reprocessing_LB/BLOOM.fasta -f
+done < deblurtrimmed1.txt
+
+
+
+
+```
+
+```
+filter_fasta.py -f test.fastq.trim -m qiime_pick_closed_ref/uclust_ref_picked_otus/test.fastq_otus.txt -n -o qiime_bloom_filtered_seqs
+```
+
+
+```
+pick_closed_reference_otus.py -i $seqs \
+...                                    -o $ag_otus \
+...                                    -r $ref_seqs \
+...                                    -t $ref_tax \
+...                                    -p $_params_file
+
+
+/u/home/b/briscoel/project-ngarud/97_otus.fasta
 ```
 
 # crc
 
-/u/home/b/briscoel/project-ngarud/97_otus.fasta
 /u/home/b/briscoel/project-halperin/MicroBatch/Preterm_Scripts/deblur_otu
 
 module load qiime

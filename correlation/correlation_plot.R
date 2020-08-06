@@ -9,10 +9,12 @@ print(args)
 #          "SVs_minerva_first4filter_TRUE_trans_clr_scale","protect_bin_crc_adenomaORnormal")
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
 #          "SVs_minerva_first3filter_TRUE_trans_clr_scale","protect_bin_antibiotic_last_year")
-args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Hispanic",
-         "SVs_minerva_first10filter_TRUE_trans_clr_scale","protect_antibiotic")
+# args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Hispanic",
+#          "SVs_minerva_first10filter_TRUE_trans_clr_scale","protect_antibiotic")
 # args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
 #          "SVs_minerva_first10filter_TRUE_trans_clr_scale","protect_bin_crc_adenomaORnormal")
+args = c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
+         "SVs_minerva_first10filter_TRUE_trans_none","protect_bin_crc_adenomaORnormal")
 
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Hispanic",
 #          "minerva_first1filter_TRUE_trans_clr_scale","protect_diabetes3_v2",
@@ -54,10 +56,15 @@ dir.create(plot_folder)
 
 if(data_type == "kmer"){
   input_folder = paste0(kmer_input_folder,"/",batch_def_folder)
+  total_metadata = readRDS(paste0(kmer_input_folder,"/metadata.rds"))
+  
 }else{
   input_folder =  paste0(otu_input_folder,"/",batch_def_folder)
+  total_metadata = readRDS(paste0(otu_input_folder,"/metadata.rds"))
+  
 }
-total_metadata = readRDS(paste0(kmer_input_folder,"/metadata.rds"))
+
+
 # =========================================================================== #
 #getting read depth
 if(grepl("AGP",study_name)){
@@ -108,10 +115,24 @@ if(grepl("AGP",study_name)){
   numeric_vars = c("bmi_v2","age_v2.x","librarysize")
 
 }else if(grepl("CRC",study_name)){
+  if(grepl("thomas",study_name)){
+    
+    binary_vars = c("gender")
+    categorical_vars = c("study_condition","country","dataset_name",'DNA_extraction_kit') 
+    numeric_vars = c("number_reads","median_read_length","BMI","age")
+    
+    
+    
+    #c("BMI","DNA_extraction_kit","dataset_name","age","gender","country","study_condition","number_reads","median_read_length")
+    
+    
+  }else{
+    binary_vars = c("bin_crc_normal","bin_crc_adenomaORnormal","sex")
+    categorical_vars = c("study","seq_meth","host_race")
+    numeric_vars = c("library_size","age","bmi_corrected")
+  }
 
-  binary_vars = c("bin_crc_normal","bin_crc_adenomaORnormal","sex")
-  categorical_vars = c("study","seq_meth","host_race")
-  numeric_vars = c("library_size","age","bmi_corrected")
+  
   
 }else if(grepl("Thomas",study_name)){
   binary_vars = c("gender","LibraryLayout")
@@ -192,11 +213,20 @@ if(grepl("AGP",study_name)){
   fixed_effects_bio = c()#"age","BMI")
 
 }else if(grepl("CRC",study_name)){
+  if(grepl("thomas",study_name)){
+    random_effects_tech = c("dataset_name",'DNA_extraction_kit') 
+    
+    random_effects_bio = c("study_condition","gender","country") 
+    fixed_effects_tech = c("number_reads","median_read_length")
+    fixed_effects_bio = c("BMI","age")
+  }else{
+    random_effects_tech = c("study","seq_meth") # "center_project_name","collection_days")#"Instrument",
+    random_effects_bio = c("host_race","bin_crc_normal","bin_crc_adenomaORnormal","sex") 
+    fixed_effects_tech = c("library_size")
+    fixed_effects_bio = c("age")#,"bmi_corrected")
+  }
   
-  random_effects_tech = c("study","seq_meth") # "center_project_name","collection_days")#"Instrument",
-  random_effects_bio = c("host_race","bin_crc_normal","bin_crc_adenomaORnormal","sex") 
-  fixed_effects_tech = c("library_size")
-  fixed_effects_bio = c("age")#,"bmi_corrected")
+  
   
   
 }else if(grepl("T2D",study_name)){
@@ -253,8 +283,11 @@ input_metadata_table = input_metadata_table[common_samples,]
 
 ###
 
-
+input_sv_table = input_sv_table[,1:14]
 colnames(input_sv_table) = paste0("PC",1:ncol(input_sv_table))
+
+
+
 
 if(grepl("AGP",study_name)){
   
@@ -266,8 +299,7 @@ if(grepl("AGP",study_name)){
   input_metadata_pc = data.frame(input_metadata_table[,c("AntibioticLastYear","BowelMovementQuality","Race","AlcoholConsumption","OmnivoreDiet",
                                                          "BMI","Age","CollectionYear","Instrument","LibrarySize")],
                                  input_sv_table)
-}
-if(grepl("Thomas",study_name)){
+}else if(grepl("Thomas",study_name)){
   colnames(input_metadata_table) = c("HasColorectalCancer", "Sex", "SeqInstrument", "SeqCenter","Dataset","DNA_ExtractionKit","Paired_vs_Unpaired_Seq","LibrarySize")
   input_metadata_pc = data.frame(input_metadata_table[,c("HasColorectalCancer", "Sex", "DNA_ExtractionKit","SeqInstrument", "SeqCenter","Paired_vs_Unpaired_Seq","LibrarySize","Dataset")],
                                  input_sv_table)
@@ -283,10 +315,26 @@ if(grepl("Thomas",study_name)){
                                                          "ExtractionRobot","Center", "PrepNo.", "LibrarySize")],
                                  input_sv_table)
 }else if(grepl("CRC",study_name)){
-  colnames(input_metadata_table) = c("Race","CRCvsNormal","CRCvsAdenomaOrNormal",
-                                   "Sex", "Age","Study","SeqMeth","LibrarySize" )
-  input_metadata_pc = data.frame(input_metadata_table[,c("CRCvsAdenomaOrNormal", "Sex", "Age","Race", "Study","SeqMeth","LibrarySize")],
-                                 input_sv_table)
+  
+  if(grepl("thomas",study_name)){
+    
+    
+    
+    
+    
+    colnames(input_metadata_table) = c("CRC.Status","Sex","Country","BMI","Age","Dataset","DNA.Extraction.Kit",
+                                       "NumberReads","MedianReadLength")
+    input_metadata_pc = data.frame(input_metadata_table[,c("CRC.Status","Sex","BMI","Age","Country","DNA.Extraction.Kit",
+                                                           "NumberReads","MedianReadLength","Dataset")],
+                                   input_sv_table)
+    
+  }else{
+    colnames(input_metadata_table) = c("Race","CRCvsNormal","CRCvsAdenomaOrNormal",
+                                       "Sex", "Age","Study","SeqMeth","LibrarySize" )
+    input_metadata_pc = data.frame(input_metadata_table[,c("CRCvsAdenomaOrNormal", "Sex", "Age","Race", "Study","SeqMeth","LibrarySize")],
+                                   input_sv_table)
+  }
+  
 }else if(grepl("T2D",study_name)){
   colnames(input_metadata_table) = c("Age" ,"Sex" ,"TypeII Diabetes Status" ,"SeqInstrument","Study","LibrarySize" )
   input_metadata_pc = data.frame(input_metadata_table[,c("TypeII Diabetes Status" ,"Age" ,"Sex" ,"Study","SeqInstrument","LibrarySize" )],

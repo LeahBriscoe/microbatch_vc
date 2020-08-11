@@ -65,7 +65,7 @@ batch_column = args[7]
 save_PC_scores = as.logical(as.integer(args[8]))#TRUE
 filter_low_counts = as.logical(as.integer(args[9]))
 covariate_interest = args[10]
-
+subsample_bool = 0
 use_RMT = as.logical(as.integer(args[11]))
 transformation = args[12]
 if(length(args)> 12){

@@ -863,6 +863,8 @@ qsub -cwd -V -N His -l h_data=10G,time=1:00:00 -M briscoel -m beas -b y -t 1000:
 
 ## Batch correction: bmi_corrected, Abx0_6, Abx6_12
 ```
+for method in minerva; do for tran in none; do for sv in 1 2 3 4 5 6 7 8 9 10; do for k in 5 6 7 8; do for phen in bin_antibiotic_last_year bmi_corrected; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_max -arg "$method" -arg $sv -arg Instrument -arg 1 -arg 1 -arg $phen -arg 0 -arg "$tran"; done; done; done; done; done
+
 for method in minerva smartsva; do for tran in clr_scale; do for sv in 10; do for k in 5 6 7 8; do for phen in bin_antibiotic_last_year bmi_corrected; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_max -arg "$method" -arg $sv -arg Instrument -arg 1 -arg 1 -arg $phen -arg 0 -arg "$tran"; done; done; done; done; done
 
 
@@ -886,7 +888,18 @@ for method in raw limma bmc ComBat; do for tran in clr_scale; do for sv in 1; do
 qsub -cwd -V -N AGP -l h_data=20G,time=24:00:00 -M briscoel -m beas -b y -t 242:273 "./run_bc.sh"
 
 
+
 ```
+
+## otu agp
+```
+for method in minerva; do for tran in none; do for sv in 10; do for phen in bin_antibiotic_last_year; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 20 -t 24 -v 3.6.0 -arg otu -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_complete -arg "$method" -arg $sv -arg Instrument -arg 1 -arg 1 -arg $phen -arg 0 -arg "$tran"; done; done; done; done
+
+
+Rscript batch_correction_pipeline_basic.R otu 5 /u/home/b/briscoel/project-halperin/MicroBatch AGP_complete minerva 10 Instrument 1 1 bin_antibiotic_last_year 0 none
+
+```
+
 ## array
 ```
 
@@ -1977,6 +1990,12 @@ redo k6 BMI and k7 bmi: 3211909 - 3211916
 
 
 
+# AGP OTU
 
+intersect my qiita biom table  and metadata drom AGP_max_k5 metadata: 13345 (using processed_metadata$title.y)
+metadata: 16862 
+
+Record: antibiotic last year: 7293
+not last year: 14569
 
 

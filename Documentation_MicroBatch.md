@@ -208,7 +208,7 @@ mkdir SRA_segment01
 while IFS= read -r line; do
 	echo $line
 	mv SRA/$line.fastq SRA_segment01/$line.fastq
-done < segment01
+done < segment01d
 
 . /u/local/Modules/default/init/modules.sh
 module load python/anaconda2
@@ -939,7 +939,7 @@ for seed in 1 2 3 4 5; do for method in ProtectPCA ProtectPCA_compare; do for sv
 ```
 for prop in 20 40 60 80; do for method in raw; do for svs in 1; do for tran in clr_scale; do for phen in bmi_corrected; do qsub -cwd -V -N "svapred$svs$tran$phen" -l h_data=16G,time=24:00:00 -M briscoel -m beas -b y "./run_prediction_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k6_subsample_'$prop'_seed_1 BatchCorrected '$phen' '$method'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen' reg"; done; done; done; done;done 
 
-
+qsub -cwd -V -N jobname -l h_data=8G,time=24:00:00 -M username -m beas -b y "./yourscript.sh" 
 
 
 

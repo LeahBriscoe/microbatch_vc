@@ -6,13 +6,13 @@ args = commandArgs(trailingOnly=TRUE)
 # args = c("AGP_Hfilter", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_max_k6",
 #          "raw&clr@raw&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10@raw&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10",
 #          'Instrument&Instrument&Instrument',"0","") #filter_FALSE_filter_FALSE
-# args = c("Hispanic_k7", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Hispanic_k7",
-#          "rawfilter_TRUE_trans_clr_scale&minerva_first11filter_TRUE_trans_clr_scale",
-#          'protect_antibiotic',"1","filter_FALSE") #filter_FALSE_filter_FALSE
+args = c("Hispanic_k7", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Hispanic_k7",
+         "rawfilter_TRUE_trans_clr_scale&minerva_first11filter_TRUE_trans_clr_scale",
+         'protect_antibiotic',"1","filter_FALSE") #filter_FALSE_filter_FALSE
 
-args = c("AGP_max", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_max_k6",
-         "rawfilter_TRUE_trans_clr_scale&minerva_first2filter_TRUE_trans_clr_scale",
-         'protect_bin_antibiotic_last_year',"1","filter_FALSE") #filter_FALSE_filter_FALSE
+# args = c("AGP_max", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_max_k6",
+#          "rawfilter_TRUE_trans_clr_scale&minerva_first2filter_TRUE_trans_clr_scale",
+#          'protect_bin_antibiotic_last_year',"1","filter_FALSE") #filter_FALSE_filter_FALSE
 # args = c("Thomas", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Thomas_k6",
 #          "rawfilter_TRUE_trans_clr_scale&minerva_first4filter_TRUE_trans_clr_scale",
 #          'protect_bin_crc_adenomaORnormal',"1","filter_FALSE") #filter_FALSE_filter_FALSE
@@ -191,6 +191,13 @@ for( t in 1:length(varpar_types )){
                "antibiotic","bmi_v2" )
     top_5_pretty = c("PrepNo","MastermixLot","ExtractionRobot","ProcessingRobot","LibrarySize","Freq. Bowel Mvmt","Hispanic Origin",
                      "Antibiotic History","BMI" )
+    
+    
+    top3 = c( "prep","librarysize") #"BMI"
+    top3_pretty = c("PrepNo","LibrarySize")  #"BMI",
+    custom_title = "Hispanic Community Cohort"
+    
+    
   }else if(grepl("Thomas",study_name)){
     vp = vp[order(vp$multi_crc_adenoma_normal,decreasing = TRUE),]
     top_5 = c( 'CenterName','DNA_extraction_kit',"Instrument","study",'LibrarySize','multi_crc_adenoma_normal') #"BMI"
@@ -373,7 +380,7 @@ p<-ggplot(top3_together ,aes(x=variable,y=value,fill=L1)) + ggtitle("Tech")
 p<-p + geom_boxplot() + theme_bw() + 
   theme(text = element_text(size=20),axis.text.x = element_text(angle = 45, hjust = 1),
         plot.title = element_text(size=22)) +
-  ggtitle("American Gut Project ") +
+  ggtitle(custom_title) +
   xlab("Method") + ylab("Proportion variance") #+ scale_color_manual(values=c("#999999", "#56B4E9"))
 ggsave(filename = paste0(plot_path,'/Tech_box_summary','.pdf'), 
        plot = p )

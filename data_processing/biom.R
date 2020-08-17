@@ -152,6 +152,12 @@ biom_table[is.na(biom_table)] = 0
 dim(biom_table)
 biom_table =biom_table[,colSums(biom_table)!=0] 
 dim(biom_table)
+
+min(min(c(0,0,1)),min(c(09,9293,3)))
+
+dim(biom_table)
+install.packages('EnvStats')
+length(unique(AGP_total_metadata$Run))
 biom_table_norm = convert_to_rel_ab(biom_table,metadata = NULL,provided_total_reads = FALSE,sample_column_true = TRUE)
 
 otu_output_folder = "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/AGP_complete_otu"
@@ -165,5 +171,5 @@ write.table(biom_table,paste0(otu_output_folder,"/otu_table.txt"),sep="\t",quote
 saveRDS(AGP_total_metadata,paste0(otu_output_folder,"/metadata.rds"))
 write.table(AGP_total_metadata,paste0(otu_output_folder,"/metadata.txt"),sep = "\t",quote = FALSE)
 
-
-
+table(AGP_total_metadata$body_habitat.x)
+all(row.names(AGP_total_metadata)==colnames(biom_table))

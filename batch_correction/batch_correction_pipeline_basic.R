@@ -10,11 +10,16 @@ print(args)
 #table(total_metadata$diabetes_lab_v2.x)
 # args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "CRC", "PhenoCorrect",10,"study",1,1,"bin_crc_adenomaORnormal",0,"clr_scale",0,0,0,1,1)
-# args = c("kmer", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-#          "CRC", "minerva","c","study",1,1,"bin_crc_adenomaORnormal",0,"none",0,0,0,1,1)
-# 
-# # args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+# args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+#          "CRC", "minerva",-1,"study",1,1,"bin_crc_normal",0,"none",0,0,0,1,1)
+
+# args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "AGP_max", "minerva",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"clr_scale",0,0,0,1,1)
+# args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+#          "AGP_max", "minerva","-1","Instrument",1,1,"bin_antibiotic_last_year",0,"clr_scale",0,0,0,1,"Yes")
+
+# args = c("otu", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+#          "AGP_complete", "minerva",10,"Instrument",1,1,"bin_antibiotic_last_year",0,"none",0,0,0,1,1)
 
 # args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "AGP_max", "PhenoCorrect",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"none",0,0,0,1, "Yes")
@@ -92,6 +97,7 @@ batch_script_folder = paste0(microbatch_folder, '/batch_correction')
 plot_dir =paste0(microbatch_folder,'/plots/',study_name,'_k',kmer_len)
 source(paste0(script_folder,"/utils.R"))
 source(paste0(batch_script_folder,"/batch_correction_source.R"))
+regress_out
 # ============================================================================== #
 # define folders
 otu_input_folder = paste0(microbatch_folder,'/data/',study_name, '_otu')
@@ -124,7 +130,7 @@ if(data_type == "kmer"){
   
   input_folder = kmer_input_folder
   kmer_table = readRDS(paste0(kmer_input_folder,"/kmer_table", file_type,".rds"))
-
+  
 }else{
   input_folder = otu_input_folder
   otu_table = readRDS(paste0(otu_input_folder,"/otu_table", file_type,".rds"))
@@ -164,7 +170,7 @@ if(subsample_bool){
   set.seed(subsample_seed)
   subsample_samples = sample(colnames(input_abundance_table),size = as.integer(subsample_prop*ncol(input_abundance_table)))
   
-
+  
   
   if(methods_list == "ProtectPCA" | methods_list == "ProtectPCA_compare"){
     non_sample_index = which(!(colnames(input_abundance_table) %in% subsample_samples))
@@ -192,7 +198,7 @@ if(subsample_bool){
   }
   
   
-
+  
 }
 
 #####@@@
@@ -201,10 +207,11 @@ if(subsample_bool){
 # tissue_filder
 
 if(grepl("AGP",study_name)){
-  tissue_samples = unlist(total_metadata %>% filter(total_metadata$body_habitat.x == "UBERON:feces") %>% select(Run))
+  tissue_samples = unlist(total_metadata %>% filter(total_metadata$body_habitat.x == "UBERON:feces") %>% select(Sample_ID))
+  tissue_samples = as.character(tissue_samples)
+  #length(intersect(tissue_samples,colnames(input_abundance_table)))
   input_abundance_table = input_abundance_table[,tissue_samples]
   total_metadata = total_metadata[tissue_samples,]
-  
 }
 
 #dim(input_abundance_table)
@@ -240,7 +247,7 @@ if(grepl(study_name,"AGP")){
 
 
 if(grepl("bmi",covariate_interest)){
- 
+  
   #covariate_interest = "host_body_mass_index"
   total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,numeric_vars =  covariate_interest)
   
@@ -251,12 +258,12 @@ if(grepl("bmi",covariate_interest)){
     if(is.na(x)){
       return(NA)
     }else if(x == "I have not taken antibiotics in the past year." | 
-       x == "Year"){
+             x == "Year"){
       return(0)
     }else{
       return(1)
     }
-      
+    
   })
   total_metadata_mod_interest[,1] = new_metadata_interpretation
 }else if(grepl("Abx6_12",covariate_interest)){
@@ -288,6 +295,7 @@ if(grepl("bmi",covariate_interest)){
     }else{
       total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,binary_vars = covariate_interest,
                                                          label_pos_or_neg = label_pos_or_neg,target_label = target_label)
+      #table(total_metadata_mod_interest[,1])
       
     }
     
@@ -441,7 +449,7 @@ for(m in 1:length(methods_list)){
       num_factors = num_pcs
     }
     
-    if(num_pcs == 'c'){
+    if(num_pcs == -1){
       
       pca_res = pca_method(input_abundance_table,clr_transform = FALSE,center_scale_transform = FALSE,num_pcs = 20 )
       
@@ -451,18 +459,21 @@ for(m in 1:length(methods_list)){
       transformed_data = t(pca_res$transformed_data)
       
       
-
+      
       #Randomly shuffle the data
       shuffle_samples <-sample(row.names(transformed_data))
       
       #Create 10 equally size folds
       n_cv = 3
+      original_time = Sys.time()
       folds <- cut(seq(1,length(shuffle_samples)),breaks=n_cv,labels=FALSE)
       
       calibration_list_cv = list()
+      
       #Perform 10 fold cross validation
-      for(i in 1:n_cv){
-        i=1
+      
+      for(i in 2:n_cv){
+        calibration_list_cv[[i]] = list()
         #Segement your data by fold using the which() function 
         testIndexes <- which(folds==i,arr.ind=TRUE)
         testSamples = shuffle_samples[testIndexes]
@@ -477,23 +488,93 @@ for(m in 1:length(methods_list)){
         
         calibration_list = list()
         for(num_factors_it in 1:20){
-          calibration_list[[num_factors_it]] = regress_out(train_pca_data,data=t(pca_res$transformed_data),pc_index = c(1:num_factors_it))
+          calibration_list[[num_factors_it]] = regress_out(train_pca_data,data=train_transformed_data,pc_index = c(1:num_factors_it))
           
           
         }
-        total_metadata_mod_interest
+        
         library(randomForest)
         # Perform training:
-        rf_classifier = randomForest(Species ~ ., data=training, ntree=100, mtry=2, importance=TRUE)
+        max_accuracy = c()
+        for(num_factors_it in 1:20){
+          #num_factors_it = 1
+          corrected_data = calibration_list[[num_factors_it]]
+          phenotype = total_metadata_mod_interest[trainSamples,]
+          not_na_samples = !is.na(phenotype)
+          corrected_data = corrected_data[,not_na_samples]
+          phenotype = phenotype[not_na_samples]
+          
+          
+          # time1 = Sys.time()
+          # rf_classifier = randomForest(phenotype ~ ., data=t(corrected_data) , ntree=100, mtry=2, importance=TRUE)
+          # print(Sys.time() - time1)
+          # predict(rf_classifier, t(corrected_data))
+          # 
+          # library(e1071)
+          # time1 = Sys.time()
+          # nb_classifier = naiveBayes(phenotype ~ ., data=t(corrected_data) )
+          # print(Sys.time() - time1)
+          # predict(nb_classifier,t(corrected_data))
+          
+          
+          require(caret)
+          # set up 10-fold cross validation procedure
+          train_control <- trainControl(
+            method = "cv", 
+            number = 3
+          )
+          
+          time1 = Sys.time()
+          # train model
+          nb.m1 <- train(
+            x = t(corrected_data),
+            y = phenotype,
+            method = "nb",
+            trControl = train_control
+          )
+          print(Sys.time() - time1)
+          
+          max_accuracy = c(max_accuracy,max(nb.m1$results$Accuracy))
+          
+          
+        }
         
-        calibration_list_cv[[i]][["train"]]
-        calibration_list_cv[[i]][["test"]]
+        print(length(max_accuracy))
+        opt_num_pcs = which.max(max_accuracy)
+        
+        calibration_list_cv[[i]][["all_train_performance"]] = max_accuracy
+        calibration_list_cv[[i]][["max_train_performance"]]  = max(max_accuracy)
+        calibration_list_cv[[i]][["optimal_PC"]]  = which.max(max_accuracy)
+        
+        
+        test_corrected = regress_out(test_pca_data,data=test_transformed_data,pc_index = c(1:opt_num_pcs))
+        phenotype_test = total_metadata_mod_interest[testSamples,]
+        not_na_samples = !is.na(phenotype_test)
+        test_corrected  = test_corrected [,not_na_samples]
+        phenotype_test = phenotype_test[not_na_samples]
+        
+        require(klaR)
+        #full_data = 
+        
+        nb_test_pred = predict(nb.m1$finalModel,newdata = data.frame(t(test_corrected)))
+        #length(nb_test_pred$class)
+        #length(phenotype_test)
+        #dim(test_corrected)
+        #dim(corrected_data)
+        #table(phenotype_test)
+        #table(total_metadata$bin_crc_normal)
+        conf_mat = confusionMatrix(nb_test_pred$class, phenotype_test)
+        calibration_list_cv[[i]][["test_performance"]] = conf_mat$overall["Accuracy"]
         #Use the test and train data partitions however you desire...
       }
+      print("Whole time")
+      print(Sys.time() - original_time)
+      do.call(rbind,calibration_list_cv)
       
       
       
       ####
+      
       
       
       
@@ -514,7 +595,7 @@ for(m in 1:length(methods_list)){
     # batch_corrected_output = regress_out(pca_res$pca_score,data=t(pca_res$transformed_data),pc_index = c(1:num_factors))
     # 
   }else if(methods_list[m] == "ProtectPCA"){
-  
+    
     
     set.seed(0)
     pca_res = 0
@@ -660,7 +741,7 @@ for(m in 1:length(methods_list)){
     # dim(input_abudance_table_rf)
     # dim(input_abundance_table)
     # 
-   
+    
     require(TCA)
     
     if(use_RMT){
@@ -672,7 +753,7 @@ for(m in 1:length(methods_list)){
     }else{
       num_factors = num_pcs
     }
-
+    
     
     sd_list = sqrt(rowSds(input_abundance_table))
     print(paste0("mean(sd):",mean(sd_list)))
@@ -710,7 +791,7 @@ for(m in 1:length(methods_list)){
     }
     
     #dim(total_metadata_mod_interest)
-   
+    
     
     refactor_res = refactor(input_abundance_table, k=num_factors,C=total_metadata_mod_interest, C.remove =TRUE)
     
@@ -722,8 +803,8 @@ for(m in 1:length(methods_list)){
     #row.names(sv_object_output$scores) = row.names(input_abundance_table)
     batch_corrected_output = mat_scaled_corrected
   }else if(methods_list[m ] =="PhenoCorrect"){
-
-  
+    
+    
     
     
     batch_labels_factor = factor(batch_labels)
@@ -751,7 +832,7 @@ for(m in 1:length(methods_list)){
     batch_mat = model.matrix(~batch_labels_factor )
     input_abundance_table_aug = rbind(input_abundance_table,t(batch_mat[,2:ncol(batch_mat)]))
     batch_corrected_output = input_abundance_table_aug
-
+    
     output_folder = paste0(output_folder, "_",methods_list[m])
     dir.create(output_folder)
     saveRDS(total_metadata,paste0(output_folder,"/metadata.rds"))
@@ -772,7 +853,7 @@ for(m in 1:length(methods_list)){
     #write.table(new_metadata,paste0(output_folder,"/metadata.txt"),sep="\t",quote=FALSE)
     
     batch_corrected_output = input_table_correct 
-   
+    
     
   }else if(methods_list[m ] =="PredDomainPheno"){
     
@@ -825,17 +906,17 @@ for(m in 1:length(methods_list)){
   extra_file_name = paste0(extra_file_name,"filter_",filter_low_counts, "_trans_",transformation)
   
   write.table(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder,"/protect_",covariate_interest,"/BatchCorrected_",methods_list[m],extra_file_name,".txt"),
-                sep = "\t",quote = FALSE)
+              sep = "\t",quote = FALSE)
   saveRDS(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder ,"/protect_",covariate_interest,"/BatchCorrected_",methods_list[m],extra_file_name,".rds"))
   if(save_PC_scores){
     saveRDS(sv_object_output, paste0(output_folder ,"/protect_",covariate_interest,"/SVs_",methods_list[m],extra_file_name,".rds"))
- 
-  # write.table(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder,"/",batch_column,"/BatchCorrected_",methods_list[m],extra_file_name,".txt"),
-  #             sep = "\t",quote = FALSE)
-
+    
+    # write.table(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder,"/",batch_column,"/BatchCorrected_",methods_list[m],extra_file_name,".txt"),
+    #             sep = "\t",quote = FALSE)
+    
   }
   
-
+  
   
   
   

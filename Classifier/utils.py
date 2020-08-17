@@ -11,6 +11,19 @@ def load_data(data_folder,prefix_name, methods,batch_column):
         method_dict[m] = batch_corrected_matrix
     return method_dict
 
+def load_feature_table(data_folders,data_type):
+    
+    method_dict = dict()
+    if data_type == "otu":
+        
+        data_type_file = "otu_table"
+    else:
+        data_type_file = "kmer_table"
+    for d in range(len(data_folders)):
+        batch_corrected_matrix = pd.read_csv(str(data_folders[d] + "/" + data_type_file +".txt"),delimiter="\t")
+        method_dict[d] = batch_corrected_matrix
+    return method_dict
+
 def load_pcscores(data_folder,method,data_type):
 
     pcscores = pd.read_csv(str(data_folder +"/" + "pcascore_" + data_type + "_" + method +".csv"))

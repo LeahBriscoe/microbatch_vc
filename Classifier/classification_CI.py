@@ -209,7 +209,8 @@ for method in methods:
             categorical_counts = [category_counter[key] for key in category_counter.keys()]
             #print(category_counter)
             #if len(args) <= 12:
-            categorical_counts = [category_counter[key] for key in category_counter.keys() if not math.isnan(key) ]
+            if not target_label == "1or0":
+                categorical_counts = [category_counter[key] for key in category_counter.keys() if not math.isnan(key) ]
         #print(category_counter)
 
 

@@ -174,10 +174,13 @@ for method in methods:
         unique_categories = np.unique(np_interest)
         #print(unique_categories)
         #if len(args) <= 12:
-        unique_categories = [cat for cat in unique_categories if not math.isnan(cat)]
+        print("before ficing unique")
+        if not target_label == "1or0":
+            #unique_categories = [cat for cat in unique_categories if not math.isnan(float(cat))]
+            unique_categories = [x for x in unique_categories if str(x) != 'nan']
 
     
-    
+    #print(Counter(metadata[column_of_interest] ))
     print(unique_categories)
     
     print("column of interest")
@@ -210,7 +213,7 @@ for method in methods:
             #print(category_counter)
             #if len(args) <= 12:
             if not target_label == "1or0":
-                categorical_counts = [category_counter[key] for key in category_counter.keys() if not math.isnan(key) ]
+                categorical_counts = [category_counter[key] for key in category_counter.keys() if str(key) != 'nan']
         #print(category_counter)
 
 

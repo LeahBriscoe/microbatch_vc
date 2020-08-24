@@ -243,6 +243,8 @@ if(grepl(study_name,"AGP")){
   bio_signal_formula <- as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod), collapse = " + ")))
   #names(batch_corrected_outputs)
   
+}else if(grepl(study_name,"Thomas") | grepl(study_name,"thomas") ){
+  batch_labels2 = as.character(total_metadata[,'DNA_extraction_kit'])
 }
 
 
@@ -368,7 +370,6 @@ print(dim(input_abundance_table))
 
 
 
-
 for(m in 1:length(methods_list)){
   sv_object_output = c()
   
@@ -397,6 +398,16 @@ for(m in 1:length(methods_list)){
     
   }else if(methods_list[m] == "ComBat"){
     batch_corrected_output = run_ComBat(mat = input_abundance_table, batch_labels)
+    
+  }else if(methods_list[m] == "ComBatLog"){
+    batch_corrected_output = run_ComBat(mat = log(input_abundance_table), batch_labels)
+    
+  }else if(methods_list[m] == "ComBatLog_with_batch2"){
+    batch_corrected_output1 = run_ComBat(mat = log(input_abundance_table), batch_labels)
+    
+    batch_corrected_output1_mod =  batch_corrected_output1[,!is.na(batch_labels2)]
+    batch_labels2_mod = batch_labels2[!is.na(batch_labels2)]
+    batch_corrected_output = run_ComBat(mat = batch_corrected_output1_mod, batch_labels = batch_labels2_mod)
     
   }else if(methods_list[m] == "ComBat_with_batch2"){
     batch_corrected_output1 = run_ComBat(mat = input_abundance_table, batch_labels)

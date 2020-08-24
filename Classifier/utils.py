@@ -20,7 +20,7 @@ def load_feature_table(data_folders,data_type):
     else:
         data_type_file = "kmer_table"
     for d in range(len(data_folders)):
-        batch_corrected_matrix = pd.read_csv(str(data_folders[d] + "/" + data_type_file +".txt"),delimiter="\t")
+        batch_corrected_matrix = pd.read_csv(str(data_folders[d] +  data_type_file +".txt"),delimiter="\t")
         method_dict[d] = batch_corrected_matrix
     return method_dict
 

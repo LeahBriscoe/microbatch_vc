@@ -73,86 +73,11 @@ data_folders = [greater_folder + "/data/" + study_name + "/" for study_name in s
 
 
 
-# In[4]:
-
-
 #########################################################################
-###### COMMENTARY: load data from your k-mer matrix, load metadata ######
-#########################################################################
-
-feature_table_dict = utils.load_feature_table(data_folders,data_type = data_type)
-metadata = pd.read_csv(data_folders[0] + "metadata.txt",delimiter="\t")
-
-if norm_input:
-    for d in range(len(study_names)):
-        #feature_table_dict[d] = normalize(np.array(feature_table_dict[d].transpose()), axis = 1, norm = 'l1')
-        temp = pd.DataFrame(normalize(feature_table_dict[d].transpose(), axis = 1, norm = 'l1').transpose())
-        temp.index = feature_table_dict[d].index
-        temp.columns = feature_table_dict[d].columns
-        feature_table_dict[d] = temp
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-if "AGP" in study_names[0]:
-    for d in range(len(study_names)):
-        tissue_samples = metadata.index[metadata['body_habitat.x'] == "UBERON:feces"]
-
-        feature_table_dict[d] = feature_table_dict[d][tissue_samples]
-        metadata = metadata.loc[tissue_samples]
-
-
-print(Counter(metadata[column_of_interest]))
-
-print("pos label")
-print(target_label)
-if len(args) > 10:
-    if label_pos_or_neg == 1:
-        print("positive")
-        metadata[column_of_interest] = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],pos_labels =[target_label])
-    elif label_pos_or_neg == 0:
-        metadata[column_of_interest] = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],neg_labels =[target_label])
-
-print(Counter(metadata[column_of_interest]))
-
-
-# remove na samples
-print("first dimension")
-print(metadata.shape)
-#print(np.isnan(metadata[column_of_interest]))
-print(metadata[column_of_interest][0:5])
-non_nan_samples = metadata.index[np.invert(np.isnan(metadata[column_of_interest]))]
-print("non na samples")
-print(non_nan_samples[0:4])
-metadata = metadata.loc[non_nan_samples]
-print(metadata.shape)
-
-for d in range(len(study_names)):
-    feature_table_dict[d] = feature_table_dict[d][non_nan_samples]
-    
-
-
-#print(non_nan_samples)
-#[x for x in [0,1,2]]
-#########################################################################
-###### COMMENTARY:  efining labels and binarize if not already     ######
+###### COMMENTARY: function definitions ######
 #########################################################################
 
 
-
-labels = metadata[column_of_interest]
-
-
-
-
-# In[ ]:
 
 
 def pca_regression(y,X):
@@ -176,49 +101,33 @@ def RF_cv(data,labels,param_dict):
     results = cross_val_score(clf,X=data,y=labels,scoring="roc_auc")
     return(results)
 
-   
 
 
-# In[ ]:
+
+#########################################################################
+###### COMMENTARY: load data from your k-mer matrix, load metadata ######
+#########################################################################
 
 
-# outline
-# for data_table:
-    # test train split
-    # for train
-    # for PC number:
-        # regress out PCs
-        # for grid cell:
-            # get accuracy:
-        # get max accuracy
-    # get max accuracy across PCs
-    # for test
-    # get the test accuracy with best parameters
-    # save best grid and best PCs
+
+# Regress out PCs
+all_datasets_dict =  dict()
+# For each dataset (kmer size)
+
+start = timer()
 
 
-# In[ ]:
+# filter out bad metadata
+metadata = pd.read_csv(data_folders[0] + "metadata.txt",delimiter="\t")
+if "AGP" in study_names[0]:
+    tissue_samples = metadata.index[metadata['body_habitat.x'] == "UBERON:feces"]
+    metadata = metadata.loc[tissue_samples]
+
+non_nan_samples = metadata.index[np.invert(np.isnan(metadata[column_of_interest]))]
+metadata = metadata.loc[non_nan_samples]
 
 
-# get PC scores
-pc_table_dict = dict()
-feature_table_np = dict()
-labels_np = dict()
-pca = PCA(n_components=num_pcs,svd_solver='randomized')
-for d in range(len(study_names)):
-    temp = feature_table_dict[d].transpose()
-    pca.fit(temp)
-    pc_table_dict[d] = pca.transform(temp)
-    
-    feature_table_np[d] = np.array(feature_table_dict[0])
-    labels_np[d] = np.array(labels)
-    
-  
-
-
-# In[ ]:
-
-
+# Random forest stuff
 n_splits = 5
 n_repeats = 1
 rskf = model_selection.RepeatedStratifiedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=123)
@@ -230,34 +139,82 @@ if "AGP" in special_name:
     parameter_dict = {'n_estimators':[20,100,1000],'criterion': ['entropy','gini'],\
     'min_samples_leaf': [10,15],'max_features':[0.10,0.30],'min_samples_split': [5],'max_depth':[5,10]}
 
-# parameter_dict = {'n_estimators':[10,50],'criterion': ['entropy'],\
-# 'min_samples_leaf': [2,5],'max_features':[0.3],'min_samples_split': [2, 5],}    
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-# Regress out PCs
-all_datasets_dict =  dict()
-# For each dataset (kmer size)
-
-start = timer()
 
 
 for d in range(len(study_names)): # range(1):#
+    ### COPY INTO loop
+    feature_table_dict = utils.load_feature_table(data_folders[d],data_type = data_type)
+    feature_table = feature_table_dict[0]
+    
+
+    if norm_input:
+        temp = pd.DataFrame(normalize(feature_table.transpose(), axis = 1, norm = 'l1').transpose())
+        temp.index = feature_table.index
+        temp.columns = feature_table.columns
+        feature_table = temp
+
+    if "AGP" in study_names[0]:
+        feature_table = feature_table[tissue_samples]
+        
+
+
+    print(Counter(metadata[column_of_interest]))
+
+    print("pos label")
+    print(target_label)
+
+    #########################################################################
+    ###### COMMENTARY:  efining labels and binarize if not already     ######
+    #########################################################################
+
+    if len(args) > 10:
+        if label_pos_or_neg == 1:
+            print("positive")
+            labels = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],pos_labels =[target_label])
+        elif label_pos_or_neg == 0:
+            labels = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],neg_labels =[target_label])
+    else:
+        labels = metadata[column_of_interest]
+
+    feature_table = feature_table[non_nan_samples]
+        
+    # outline
+    # for data_table:
+        # test train split
+        # for train
+        # for PC number:
+            # regress out PCs
+            # for grid cell:
+                # get accuracy:
+            # get max accuracy
+        # get max accuracy across PCs
+        # for test
+        # get the test accuracy with best parameters
+        # save best grid and best PCs
+
+    ###########################
+    #####  Preparing Data #####
+    ###########################
+
+    # get PC scores
+    pca = PCA(n_components=num_pcs,svd_solver='randomized')
+    # do the PCA thing
+    temp = feature_table.transpose()
+    pca.fit(temp)
+    pc_table = pca.transform(temp)  
+    feature_table_np = np.array(feature_table)
+    labels_np = np.array(labels)
+
+
+
+        
     dataset_start= timer()
     
     results_dict = dict()
     
-    X = feature_table_np[d].transpose()
-    y = labels_np[d]
-    pc_scores = pc_table_dict[d] # get pc scores
+    X = feature_table_np.transpose()
+    y = labels_np
+    pc_scores = pc_table # get pc scores
     na_mask = pd.isna(y)
     
     X = X[~na_mask,:]

@@ -149,8 +149,21 @@ for method in DataAugmentation; do for phen in DiseaseState; do for tran in clr_
 ## Split
 
 ```
-python MINERVA_test_train_grid.py /u/home/b/briscoel/project-halperin/microbatch_vc  "AGP_k6&CRC_k7" kmer BatchCorrected bin_crc_normal 1 0 20 1 1
+python MINERVA_test_train_grid.py /u/home/b/briscoel/project-halperin/MicroBatch "CRC_k6&CRC_k7" kmer BatchCorrected bin_crc_normal 1 0 10 maxfeat10 
 
 
-qsub -cwd -V -N "MINERVA" -l h_data=10G,time=100:00:00,highp -M briscoel -m beas -b y "./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch "CRC_k7" kmer BatchCorrected bin_crc_normal 1 0 11"
+ 1 1
+
+
+qsub -cwd -V -N "MINERVA" -l h_data=10G,time=100:00:00,highp -M briscoel -m beas -b y "./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'CRC_k6&CRC_k7' kmer BatchCorrected bin_crc_normal 1 0 10 maxfeat10"
+
+qsub -cwd -V -N MINERVA2 -l h_data=10G,time=100:00:00,highp -M briscoel -m beas -b y "python /u/home/b/briscoel/project-halperin/MicroBatch 'CRC_k6&CRC_k7' kmer BatchCorrected bin_crc_normal 1 0 10 maxfeat10"
+
+
+qsub -cwd -V -N "MINERVA" -l h_data=16G,time=100:00:00,highp -M briscoel -m beas -b y "./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'AGP_max_k5' kmer BatchCorrected bin_antibiotic_last_year 1 0 10 maxfeat10 1 Yes"
+
+qsub -cwd -V -N "MINERVA" -l h_data=16G,time=100:00:00,highp -M briscoel -m beas -b y "./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'AGP_max_k5&AGP_max_k6&AGP_max_k7&AGP_max_k8' kmer BatchCorrected bin_antibiotic_last_year 1 0 10 maxfeat10_678 1 Yes"
+
+
+&AGP_max_k6&AGP_max_k7&AGP_max_k8
 ```

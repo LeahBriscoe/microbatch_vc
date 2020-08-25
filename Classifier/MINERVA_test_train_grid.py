@@ -12,8 +12,18 @@
 # In[2]:
 
 
-## data = [[1,10,12,14,20,21],[3,50,2,40,51,14],[1,2,3,5,1,5],[1,2,3,4,8,1],[1,2,8,6,7,2]]
+## data = np.random.rand(100,80)
+# labels = np.random.binomial(size=100, n=1, p= 0.5)
 
+# parameter_dict = {'n_estimators':[10,100],'criterion': ['entropy'],'min_samples_leaf': [10],'max_features':[0.3],'min_samples_split': [2, 5, 10],}
+# clf = GridSearchCV(rf, parameter_dict,scoring="roc_auc")
+# clf.fit(data, labels)
+# clf.best_params_
+# y_pred = clf.predict_proba(data)
+# y_true = labels
+# already_trained_auc = roc_auc_score(y_true = y_true, y_score = y_pred[:,1])
+# already_trained_auc
+# reducing n_estimators reduced AUC on train, increasing min_samples_leaf reduced AUC on train
 
 import sys
 import pandas as pd
@@ -49,10 +59,11 @@ norm_input = bool(int(args[6]))
 map_with_accession = bool(int(args[7]))
 num_pcs = 20
 num_pcs = int(args[8])
+special_name = args[9]
 
-if len(args) > 9:
-    label_pos_or_neg = int(args[9]) # do you want to treat CRC as positive class or negative class? 
-    target_label = args[10] # phenotype representing positive class or negative class? eg. CRC eg. H
+if len(args) > 10:
+    label_pos_or_neg = int(args[10]) # do you want to treat CRC as positive class or negative class? 
+    target_label = args[11] # phenotype representing positive class or negative class? eg. CRC eg. H
     print(target_label)
 else:
     label_pos_or_neg = 1
@@ -60,9 +71,6 @@ else:
 use_domain_pheno = False # for when running raw to compare to domain pheno
 data_folders = [greater_folder + "/data/" + study_name + "/" for study_name in study_names]   
 
-
-
-rf_params = ['criterion','max_features','min_samples_leaf', 'n_estimators']
 
 
 # In[4]:
@@ -101,6 +109,38 @@ if "AGP" in study_names[0]:
         metadata = metadata.loc[tissue_samples]
 
 
+print(Counter(metadata[column_of_interest]))
+
+print("pos label")
+print(target_label)
+if len(args) > 10:
+    if label_pos_or_neg == 1:
+        print("positive")
+        metadata[column_of_interest] = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],pos_labels =[target_label])
+    elif label_pos_or_neg == 0:
+        metadata[column_of_interest] = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],neg_labels =[target_label])
+
+print(Counter(metadata[column_of_interest]))
+
+
+# remove na samples
+print("first dimension")
+print(metadata.shape)
+#print(np.isnan(metadata[column_of_interest]))
+print(metadata[column_of_interest][0:5])
+non_nan_samples = metadata.index[np.invert(np.isnan(metadata[column_of_interest]))]
+print("non na samples")
+print(non_nan_samples[0:4])
+metadata = metadata.loc[non_nan_samples]
+print(metadata.shape)
+
+for d in range(len(study_names)):
+    feature_table_dict[d] = feature_table_dict[d][non_nan_samples]
+    
+
+
+#print(non_nan_samples)
+#[x for x in [0,1,2]]
 #########################################################################
 ###### COMMENTARY:  efining labels and binarize if not already     ######
 #########################################################################
@@ -108,14 +148,6 @@ if "AGP" in study_names[0]:
 
 
 labels = metadata[column_of_interest]
-print(Counter(labels))
-
-if len(args) > 9:
-    if label_pos_or_neg == 1:
-        print("positive")
-        labels = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],pos_labels =[target_label])
-    elif label_pos_or_neg == 0:
-        labels = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],neg_labels =[target_label])
 
 
 
@@ -190,8 +222,13 @@ for d in range(len(study_names)):
 n_splits = 5
 n_repeats = 1
 rskf = model_selection.RepeatedStratifiedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=123)
-parameter_dict = {'n_estimators':[2000],'criterion': ['entropy'],\
-'min_samples_leaf': [2,5],'max_features':[0.3],'min_samples_split': [2, 5, 10],}
+
+if "maxfeat10" in special_name:
+    parameter_dict = {'n_estimators':[20],'criterion': ['entropy'],\
+    'min_samples_leaf': [10],'max_features':[0.10],'min_samples_split': [5],'max_depth':[5]}
+if "AGP" in special_name:
+    parameter_dict = {'n_estimators':[20,100,1000],'criterion': ['entropy','gini'],\
+    'min_samples_leaf': [10,15],'max_features':[0.10,0.30],'min_samples_split': [5],'max_depth':[5,10]}
 
 # parameter_dict = {'n_estimators':[10,50],'criterion': ['entropy'],\
 # 'min_samples_leaf': [2,5],'max_features':[0.3],'min_samples_split': [2, 5],}    
@@ -286,8 +323,8 @@ for d in range(len(study_names)): # range(1):#
             print("already train model test RF" + str(already_trained_test_auc))
             results_dict["PC" + str(p)]['test_auc_trained'].append(already_trained_test_auc)
 
-            pickle.dump(all_datasets_dict , open( data_folders[0] +"_MINERVA_tt_grid.pkl", "wb" ) )
-  
+            pickle.dump(all_datasets_dict , open( data_folders[0] +"_" + special_name + "_MINERVA_tt_grid.pkl", "wb" ) )
+             
             
             
         train_it += 1
@@ -305,7 +342,7 @@ for d in range(len(study_names)): # range(1):#
 end = timer()
 print(end - start)
         
-pickle.dump(all_datasets_dict , open( data_folders[0] +"_MINERVA_tt_grid.pkl", "wb" ) )
+pickle.dump(all_datasets_dict , open( data_folders[0] +"_" + special_name + "_MINERVA_tt_grid.pkl", "wb" ) )
             
         
     

@@ -9,8 +9,8 @@
 #python MINERVA_test_train_grid.py /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc "CRC_k6&CRC_k7" kmer BatchCorrected bin_crc_normal 1 0 20 1 1
 # python MINERVA_test_train_grid.py /Users/leahbriscoe/Documents/MicroBatch/microbatch_vc "AGP_k6&CRC_k7" kmer BatchCorrected bin_crc_normal 1 0 20 1 1
 
-# # In[2]:
-# from sklearn.ensemble import RandomForestClassifier
+# In[2]:
+
 # from sklearn.model_selection import GridSearchCV, cross_val_score, train_test_split
 # data = np.random.rand(100,80)
 # labels = np.random.binomial(size=100, n=1, p= 0.5)
@@ -69,13 +69,26 @@ special_name = args[9]
 
 perform_MINERVA = bool(int(args[10]))
 
-if len(args) > 11:
-    label_pos_or_neg = int(args[11]) # do you want to treat CRC as positive class or negative class? 
-    target_label = args[12] # phenotype representing positive class or negative class? eg. CRC eg. H
-    print(target_label)
-else:
+spec_label_scheme = bool(int(args[11]))
+label_pos_or_neg = int(args[12]) # do you want to treat CRC as positive class or negative class? 
+target_label = args[13] # phenotype representing positive class or negative class? eg. CRC eg. H
+print(target_label)
+if not spec_label_scheme 
     label_pos_or_neg = 1
     target_label = 1
+
+
+n_estimators_input = int(args[14])
+criterion_input = str(args[15])
+max_features_input = float(args[16])
+min_samples_split_input = int(args[17])
+max_depth_input = int(args[18])
+train_it_input = int(args[19])
+
+file_output_string  = "_nest" + str(number_estimators_rf) + "_cri" + str(criterion_input) + "_min" + str(min_samples_leaf_input) + \
+    "_max" + str(max_features_input) + "_mod" + model_type 
+
+
 use_domain_pheno = False # for when running raw to compare to domain pheno
 if data_type == "otu" or data_type == "kmer":
     data_folders = [greater_folder + "/data/" + study_name + "/" for study_name in study_names] 
@@ -162,12 +175,9 @@ random.seed(30)
 
 rskf = model_selection.RepeatedStratifiedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=123)
 
-if "maxfeat10" in special_name:
-    parameter_dict = {'n_estimators':[20],'criterion': ['entropy'],\
-    'min_samples_leaf': [10],'max_features':[0.10],'min_samples_split': [5],'max_depth':[5]}
-if "AGP" in special_name:
-    parameter_dict = {'n_estimators':[1000],'criterion': ['entropy','gini'],\
-    'min_samples_leaf': [10],'max_features':[0.10,0.30],'min_samples_split': [5],'max_depth':[1]}
+parameter_dict = {'n_estimators':n_estimators_input,'criterion': criterion_input,\
+'min_samples_leaf': min_samples_leaf_input,'max_features':max_features_input,\
+'min_samples_split': min_samples_split_input,'max_depth':max_depth_input}
 
 
 
@@ -234,7 +244,7 @@ for d in range(len(study_names)): # range(1):#
         train_it = 0
         for train_index, test_index in rskf.split(X, y):   
 
-            if train_it == 0: 
+            if train_it == train_it_input: 
                 results_dict = dict()
                 results_dict['train_best_params'] = dict()
                 results_dict['train_auc_trained'] = []
@@ -242,64 +252,63 @@ for d in range(len(study_names)): # range(1):#
                 results_dict['mean_test_cv_auc'] = []
                 results_dict['test_auc_trained'] = []
                 results_dict['val_auc_trained']= []         
-            test_train_start = timer()
-            X_train, X_test = X[train_index,], X[test_index,]
-            y_train, y_test = y[train_index], y[test_index]
-            if use_validation:
-                n_splits = 5
-                n_repeats = 1
-                X_train, X_val, y_train, y_val = train_test_split(X_train, y_train,test_size=0.30, random_state=1) 
-            if train_it == 0: 
+                test_train_start = timer()
+                X_train, X_test = X[train_index,], X[test_index,]
+                y_train, y_test = y[train_index], y[test_index]
+                if use_validation:
+                    n_splits = 5
+                    n_repeats = 1
+                    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train,test_size=0.30, random_state=1) 
+                
                 results_dict["number samples"] = []
-            results_dict["number samples"].append(X_train.shape[0])
-            # for each PC we regress out 
-            
+                results_dict["number samples"].append(X_train.shape[0])
+                # for each PC we regress out 
                 
-            # perform grid search on train
-            best_train_model, best_params = RF_grid_search(X_train, y_train,parameter_dict)
-            # save best params
-            results_dict['train_best_params'][train_it] = best_params
-            print("finished grid search: " + "train it " + str(train_it) )
-            # get predictions on trained model
-            y_train_pred_prob = best_train_model.predict_proba(X_train)
-            already_trained_auc = roc_auc_score(y_true = y_train, y_score = y_train_pred_prob[:,1])
-            results_dict['train_auc_trained'].append(already_trained_auc)
-            print("trained_model train Rf " + str(already_trained_auc))            
+                    
+                # perform grid search on train
+                best_train_model, best_params = RF_grid_search(X_train, y_train,parameter_dict)
+                # save best params
+                results_dict['train_best_params'][train_it] = best_params
+                print("finished grid search: " + "train it " + str(train_it) )
+                # get predictions on trained model
+                y_train_pred_prob = best_train_model.predict_proba(X_train)
+                already_trained_auc = roc_auc_score(y_true = y_train, y_score = y_train_pred_prob[:,1])
+                results_dict['train_auc_trained'].append(already_trained_auc)
+                print("trained_model train Rf " + str(already_trained_auc))            
 
-            # get predictions on newly trained model
-            newly_trained_auc = RF_cv(X_train,y_train,best_params)
-            results_dict['mean_train_cv_auc'].append(newly_trained_auc)
-            print("newly trained mean trained mean Rf " + str(np.mean(newly_trained_auc)))
-            
-            # validation metrics
-            if use_validation:
-                y_val_pred_prob = best_train_model.predict_proba(X_val)
-                already_trained_val_auc = roc_auc_score(y_true = y_val, y_score = y_val_pred_prob[:,1])
-                results_dict['val_auc_trained'].append(already_trained_val_auc)
-                print("trained_model validation Rf " + str(already_trained_val_auc)) 
-
-            # test metrics
-            # get predictions on trained model
-            y_test_pred_prob = best_train_model.predict_proba(X_test)
-            already_trained_test_auc = roc_auc_score(y_true = y_test, y_score = y_test_pred_prob[:,1])
-            results_dict['test_auc_trained'].append(already_trained_test_auc)
-            print("trained_model test RF" + str(already_trained_test_auc))
-
-            # get predictions on newly trained model
-            test_RF = RF_cv(X_test,y_test,best_params)
-            results_dict['mean_test_cv_auc'].append(test_RF)
-            print("newly trained test mean Rf " + str(np.mean(test_RF)))
-            
-            
-
-            pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_tt_grid.pkl", "wb" ) )
-             
+                # get predictions on newly trained model
+                newly_trained_auc = RF_cv(X_train,y_train,best_params)
+                results_dict['mean_train_cv_auc'].append(newly_trained_auc)
+                print("newly trained mean trained mean Rf " + str(np.mean(newly_trained_auc)))
                 
+                # validation metrics
+                if use_validation:
+                    y_val_pred_prob = best_train_model.predict_proba(X_val)
+                    already_trained_val_auc = roc_auc_score(y_true = y_val, y_score = y_val_pred_prob[:,1])
+                    results_dict['val_auc_trained'].append(already_trained_val_auc)
+                    print("trained_model validation Rf " + str(already_trained_val_auc)) 
+
+                # test metrics
+                # get predictions on trained model
+                y_test_pred_prob = best_train_model.predict_proba(X_test)
+                already_trained_test_auc = roc_auc_score(y_true = y_test, y_score = y_test_pred_prob[:,1])
+                results_dict['test_auc_trained'].append(already_trained_test_auc)
+                print("trained_model test RF" + str(already_trained_test_auc))
+
+                # get predictions on newly trained model
+                test_RF = RF_cv(X_test,y_test,best_params)
+                results_dict['mean_test_cv_auc'].append(test_RF)
+                print("newly trained test mean Rf " + str(np.mean(test_RF)))
+                
+                
+
+                pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_tt_grid.pkl", "wb" ) )
+                test_train_end = timer()
+                print("Finished one test train split")
+                print(test_train_end - test_train_start)
                 
             train_it += 1
-            test_train_end = timer()
-            print("Finished one test train split")
-            print(test_train_end - test_train_start)
+            
 
 
 
@@ -327,94 +336,86 @@ for d in range(len(study_names)): # range(1):#
         
         train_it = 0
         for train_index, test_index in rskf.split(X, y):
-            
-            test_train_start = timer()
-            #print(train_index)
-            #print(test_index)
-            
-            X_train, X_test = X[train_index,], X[test_index,]
-            y_train, y_test = y[train_index], y[test_index]
-            pc_scores_train, pc_scores_test =  pc_scores[train_index], pc_scores[test_index]
 
-            if use_validation:
-
-                n_splits = 5
-                n_repeats = 1
-
-                X_train, X_val, y_train, y_val, pc_scores_train, pc_scores_val = train_test_split(X_train, y_train,pc_scores_train, test_size=0.30, random_state=1) 
-
+            if train_it == train_it_input:
             
-            
-            if train_it == 0: 
-                results_dict["number samples"] = []
-            results_dict["number samples"].append(X_train.shape[0])
-            # for each PC we regress out 
-            for p in range(num_pcs): #range(3):#
-                if train_it == 0: 
-                    results_dict["PC" + str(p)] = dict()
-                    results_dict["PC" + str(p)]['train_best_params'] = dict()
-                    results_dict["PC" + str(p)]['train_auc_trained'] = []
-                    results_dict["PC" + str(p)]['mean_train_cv_auc'] = []
-                    results_dict["PC" + str(p)]['mean_test_cv_auc'] = []
-                    results_dict["PC" + str(p)]['test_auc_trained'] = []
-                    results_dict["PC" + str(p)]['val_auc_trained']= []
-                   
-                if p == 0:
-                    X_train_corrected = X_train
-                    X_test_corrected = X_test
-                    if use_validation:
-                        X_val_corrected = X_val
-                else:
-                    X_train_corrected = pca_regression(X_train,pc_scores_train[:,0:p])
-                    X_test_corrected = pca_regression(X_test,pc_scores_test[:,0:p])
-                    if use_validation:
-                        X_val_corrected  = pca_regression(X_val,pc_scores_val[:,0:p])
+                test_train_start = timer()
+                #print(train_index)
+                #print(test_index)
                 
-                # perform grid search on train
-                best_train_model, best_params = RF_grid_search(X_train_corrected, y_train,parameter_dict)
-                # save best params
-                results_dict["PC" + str(p)]['train_best_params'][train_it] = best_params
-                print("finished grid search: " + "train it " + str(train_it) + ", PC" + str(p))
-                # get predictions on trained model
-                y_train_pred_prob = best_train_model.predict_proba(X_train_corrected)
-                already_trained_auc = roc_auc_score(y_true = y_train, y_score = y_train_pred_prob[:,1])
-                results_dict["PC" + str(p)]['train_auc_trained'].append(already_trained_auc)
-                print("trained_model train Rf " + str(already_trained_auc))            
+                X_train, X_test = X[train_index,], X[test_index,]
+                y_train, y_test = y[train_index], y[test_index]
+                pc_scores_train, pc_scores_test =  pc_scores[train_index], pc_scores[test_index]
 
-                # get predictions on newly trained model
-                newly_trained_auc = RF_cv(X_train_corrected,y_train,best_params)
-                results_dict["PC" + str(p)]['mean_train_cv_auc'].append(newly_trained_auc)
-                print("newly trained mean trained mean Rf " + str(np.mean(newly_trained_auc)))
-                
-                # validation metrics
                 if use_validation:
-                    y_val_pred_prob = best_train_model.predict_proba(X_val_corrected)
-                    already_trained_val_auc = roc_auc_score(y_true = y_val, y_score = y_val_pred_prob[:,1])
-                    results_dict["PC" + str(p)]['val_auc_trained'].append(already_trained_val_auc)
-                    print("trained_model validation Rf " + str(already_trained_val_auc)) 
 
-                # test metrics
-                # get predictions on trained model
-                y_test_pred_prob = best_train_model.predict_proba(X_test_corrected)
-                already_trained_test_auc = roc_auc_score(y_true = y_test, y_score = y_test_pred_prob[:,1])
-                results_dict["PC" + str(p)]['test_auc_trained'].append(already_trained_test_auc)
-                print("trained_model test RF" + str(already_trained_test_auc))
+                    n_splits = 5
+                    n_repeats = 1
 
-                # get predictions on newly trained model
-                test_RF = RF_cv(X_test_corrected,y_test,best_params)
-                results_dict["PC" + str(p)]['mean_test_cv_auc'].append(test_RF)
-                print("newly trained test mean Rf " + str(np.mean(test_RF)))
-                
-                
+                    X_train, X_val, y_train, y_val, pc_scores_train, pc_scores_val = train_test_split(X_train, y_train,pc_scores_train, test_size=0.30, random_state=1) 
 
-                pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_tt_grid.pkl", "wb" ) )
-                 
                 
                 
-            train_it += 1
-            test_train_end = timer()
-            print("Finished one test train split")
-            print(test_train_end - test_train_start)
+                results_dict["number samples"] = []
+                results_dict["number samples"].append(X_train.shape[0])
+                # for each PC we regress out 
+                for p in range(num_pcs): #range(3):#
+                    results_dict["PC" + str(p)] = dict()
+                       
+                    if p == 0:
+                        X_train_corrected = X_train
+                        X_test_corrected = X_test
+                        if use_validation:
+                            X_val_corrected = X_val
+                    else:
+                        X_train_corrected = pca_regression(X_train,pc_scores_train[:,0:p])
+                        X_test_corrected = pca_regression(X_test,pc_scores_test[:,0:p])
+                        if use_validation:
+                            X_val_corrected  = pca_regression(X_val,pc_scores_val[:,0:p])
+                    
+                    # perform grid search on train
+                    best_train_model, best_params = RF_grid_search(X_train_corrected, y_train,parameter_dict)
+                    # save best params
+                    results_dict["PC" + str(p)]['train_best_params'][train_it] = best_params
+                    print("finished grid search: " + "train it " + str(train_it) + ", PC" + str(p))
+                    # get predictions on trained model
+                    y_train_pred_prob = best_train_model.predict_proba(X_train_corrected)
+                    already_trained_auc = roc_auc_score(y_true = y_train, y_score = y_train_pred_prob[:,1])
+                    results_dict["PC" + str(p)]['train_auc_trained'].append(already_trained_auc)
+                    print("trained_model train Rf " + str(already_trained_auc))            
+
+                    # get predictions on newly trained model
+                    newly_trained_auc = RF_cv(X_train_corrected,y_train,best_params)
+                    results_dict["PC" + str(p)]['mean_train_cv_auc'].append(newly_trained_auc)
+                    print("newly trained mean trained mean Rf " + str(np.mean(newly_trained_auc)))
+                    
+                    # validation metrics
+                    if use_validation:
+                        y_val_pred_prob = best_train_model.predict_proba(X_val_corrected)
+                        already_trained_val_auc = roc_auc_score(y_true = y_val, y_score = y_val_pred_prob[:,1])
+                        results_dict["PC" + str(p)]['val_auc_trained'].append(already_trained_val_auc)
+                        print("trained_model validation Rf " + str(already_trained_val_auc)) 
+
+                    # test metrics
+                    # get predictions on trained model
+                    y_test_pred_prob = best_train_model.predict_proba(X_test_corrected)
+                    already_trained_test_auc = roc_auc_score(y_true = y_test, y_score = y_test_pred_prob[:,1])
+                    results_dict["PC" + str(p)]['test_auc_trained'].append(already_trained_test_auc)
+                    print("trained_model test RF" + str(already_trained_test_auc))
+
+                    # get predictions on newly trained model
+                    test_RF = RF_cv(X_test_corrected,y_test,best_params)
+                    results_dict["PC" + str(p)]['mean_test_cv_auc'].append(test_RF)
+                    print("newly trained test mean Rf " + str(np.mean(test_RF)))
+
+                    pickle.dump(all_datasets_dict , open( metadata_folder + special_name + file_output_string + "_MINERVA_tt_grid.pkl", "wb" ) )
+                     
+                    
+                    
+                train_it += 1
+                test_train_end = timer()
+                print("Finished one test train split")
+                print(test_train_end - test_train_start)
 
     all_datasets_dict["dataset" + str(d)] = results_dict
     
@@ -426,7 +427,7 @@ for d in range(len(study_names)): # range(1):#
 end = timer()
 print(end - start)
         
-pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_tt_grid.pkl", "wb" ) )
+pickle.dump(all_datasets_dict , open( metadata_folder + special_name + file_output_string  + "_MINERVA_tt_grid.pkl", "wb" ) )
             
         
     

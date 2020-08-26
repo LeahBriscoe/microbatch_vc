@@ -152,18 +152,45 @@ for method in DataAugmentation; do for phen in DiseaseState; do for tran in clr_
 python MINERVA_test_train_grid.py /u/home/b/briscoel/project-halperin/MicroBatch "CRC_k6&CRC_k7" kmer BatchCorrected bin_crc_normal 1 0 10 maxfeat10 
 
 
- 1 1
 
 
-qsub -cwd -V -N "MINERVA" -l h_data=10G,time=100:00:00,highp -M briscoel -m beas -b y "./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'CRC_k6&CRC_k7' kmer BatchCorrected bin_crc_normal 1 0 10 maxfeat10"
+qsub -cwd -V -N MINERVA2 -l h_data=10G,time=100:00:00,highp -M briscoel -m beas -b y "./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'CRC_k6' kmer BatchCorrected bin_crc_normal 1 0 10 maxfeat10"
 
-qsub -cwd -V -N MINERVA2 -l h_data=10G,time=100:00:00,highp -M briscoel -m beas -b y "python /u/home/b/briscoel/project-halperin/MicroBatch 'CRC_k6&CRC_k7' kmer BatchCorrected bin_crc_normal 1 0 10 maxfeat10"
-
-
-qsub -cwd -V -N "MINERVA" -l h_data=16G,time=100:00:00,highp -M briscoel -m beas -b y "./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'AGP_max_k5' kmer BatchCorrected bin_antibiotic_last_year 1 0 10 maxfeat10 1 Yes"
-
-qsub -cwd -V -N "MINERVA" -l h_data=16G,time=100:00:00,highp -M briscoel -m beas -b y "./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'AGP_max_k5&AGP_max_k6&AGP_max_k7&AGP_max_k8' kmer BatchCorrected bin_antibiotic_last_year 1 0 10 maxfeat10_678 1 Yes"
+qsub -cwd -V -N AGP -l h_data=16G,time=100:00:00,highp -M briscoel -m beas -b y "./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'AGP_max_k6&AGP_max_k7&AGP_max_k8' kmer BatchCorrected bin_antibiotic_last_year 1 0 10 AGP678 1 1 Yes"
 
 
-&AGP_max_k6&AGP_max_k7&AGP_max_k8
+
 ```
+
+
+## test train with combat
+
+
+
+
+./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'CRC_k7' 'ComBatfilter_TRUE_trans_clr_scale' BatchCorrected bin_crc_normal 1 0 10 maxfeat10_ComBat 0
+
+
+./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'CRC_k7' kmer BatchCorrected bin_crc_normal 1 0 10 maxfeat10_MINERVA 1
+
+
+## reducing overfitting
+
+parameter_dict = {'n_estimators':[1000],'criterion': ['entropy'],'min_samples_leaf': [10],'max_features':[0.3],'min_samples_split': [5],'max_depth':[5]}
+
+AUC: 1.0
+
+parameter_dict = {'n_estimators':[1000],'criterion': ['entropy'],'min_samples_leaf': [10],'max_features':[0.3],'min_samples_split': [5],'max_depth':[1]}
+
+AUC: 0.9947474747474748
+
+
+parameter_dict = {'n_estimators':[10],'criterion': ['entropy'],'min_samples_leaf': [10],'max_features':[0.3],'min_samples_split': [5],'max_depth':[1]}
+
+AUC: 0.8224242424242424
+
+
+
+
+
+

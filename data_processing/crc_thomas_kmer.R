@@ -14,7 +14,7 @@
 #combined_metadata$
 # ============================================================================== #
 # user input
-kmer_len = 7
+kmer_len = 6
 # ============================================================================== #
 # load packages and functions
 script_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data_processing'
@@ -469,8 +469,8 @@ for(d in 1:length(names(final_kmer_matrices))){
 
 
 rohan_daniel <- t(kmer_table_norm)
-dim(rohan_daniel)
-new_status = sapply(total_metadata$bin_crc_adenomaORnormal,function(x){
+
+new_status = sapply(total_metadata$bin_crc_normal,function(x){
   if(is.na(x)){
     return(NA)
   }else if(x == "H"){
@@ -481,8 +481,8 @@ new_status = sapply(total_metadata$bin_crc_adenomaORnormal,function(x){
 })
 rohan_daniel = cbind(rohan_daniel,DiseaseStatus = new_status)
 rohan_daniel[,"DiseaseStatus"]
-write.table(rohan_daniel,paste0("~/Documents/HarkerMentor","/Thomas_CRC_kmer.txt"),sep="\t",quote=FALSE)
-
+write.table(rohan_daniel,paste0("~/Documents/RohanDanielMentoring","/Thomas_CRC_kmer_6_normal.txt"),sep="\t",quote=FALSE)
+dim(rohan_daniel)
 
 saveRDS(kmer_table_norm,paste0(kmer_output_folder,"/kmer_table_norm.rds"))
 saveRDS(kmer_table,paste0(kmer_output_folder,"/kmer_table.rds"))

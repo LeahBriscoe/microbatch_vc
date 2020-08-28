@@ -10,8 +10,8 @@ print(args)
 #table(total_metadata$diabetes_lab_v2.x)
 # args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "CRC", "PhenoCorrect",10,"study",1,1,"bin_crc_adenomaORnormal",0,"clr_scale",0,0,0,1,1)
-# args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-#          "CRC", "minerva",-1,"study",1,1,"bin_crc_normal",0,"none",0,0,0,1,1)
+# args = c("kmer", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+#          "CRC", "ComBat",-1,"study",1,1,"bin_crc_normal",0,"none",0,0,0)
 
 # args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "AGP_max", "minerva",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"clr_scale",0,0,0,1,1)
@@ -162,7 +162,11 @@ if(grepl("AGP",study_name)){
 
 
 input_abundance_table = get(paste0(data_type,"_table"))
+dim(input_abundance_table)
+intersect_samples = intersect(colnames(input_abundance_table),row.names(total_metadata))
 
+input_abundance_table = input_abundance_table[,intersect_samples]
+total_metadata = total_metadata[intersect_samples,]
 
 ###@@@@@
 
@@ -320,7 +324,8 @@ bio_signal_formula_interest <- as.formula(paste0(" ~ ",paste(colnames(total_meta
 
 # take out 0 variance rows
 
-
+print(dim(total_metadata_mod_interest))
+print(dim(input_abundance_table))
 input_abundance_table  =input_abundance_table[,rowSums(is.na(total_metadata_mod_interest )) == 0]
 batch_labels = batch_labels[rowSums(is.na(total_metadata_mod_interest )) == 0]
 

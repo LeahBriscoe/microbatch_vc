@@ -22,9 +22,9 @@
 # clf.best_params_
 # y_pred = clf.predict_proba(data)
 # y_true = labels
-# already_trained_auc = roc_auc_score(y_true = y_true, y_score = y_pred[:,1])
+# already_trained_score = roc_auc_score(y_true = y_true, y_score = y_pred[:,1])
 
-# already_trained_auc
+# already_trained_score
 # reducing n_estimators reduced AUC on train, increasing min_samples_leaf reduced AUC on train
 use_validation = True 
 
@@ -71,14 +71,8 @@ special_name = args[10]
 
 perform_MINERVA = bool(int(args[11]))
 
+perform_enet = bool(int(args[12]))
 
-if len(args) > 12:
-    label_pos_or_neg = int(args[12]) # do you want to treat CRC as positive class or negative class? 
-    target_label = args[13] # phenotype representing positive class or negative class? eg. CRC eg. H
-    print(target_label)
-else:
-    label_pos_or_neg = 1
-    target_label = 1
 use_domain_pheno = False # for when running raw to compare to domain pheno
 if data_type == "otu" or data_type == "kmer":
     output_folders = [greater_folder + "/data/" + study_name + "/" for study_name in study_names]
@@ -114,89 +108,87 @@ def RF_grid_search(data,labels,param_dict):
     best_params = clf.best_params_
     return clf,best_params
 
-def read_RF_grid_search_pc_version(folder,param_dict,train_it_input,pc,x,y):
+def read_enet_grid_search_pc_version(folder,param_dict,train_it_input,pc,x,y):
     print("rweading")
-    auc_train = []
+    score_train = []
     models = dict()
     model_count = 0
 
-    for n_estimators_input in param_dict['n_estimators']:
-        for criterion_input in param_dict['criterion']:
-            for min_samples_leaf_input in param_dict['min_samples_leaf']:
-                for max_features_input in param_dict['max_features']:
-                    for min_samples_split_input in param_dict['min_samples_split']:
-                        for max_depth_input in param_dict['max_depth']:
+    for alpha_input in param_dict['alpha']:
+        for l1ratio_input in param_dict['l1ratio']:
+            file_output_string  = "PREDenet_alpha" + str(alpha_input) +  "_l1ratio" + str(l1ratio_input) + "_trainit" + str(train_it_input)
+            print(folder + special_name + file_output_string + "_PC" + str(p) + "_grid.pkl")
 
-                            file_output_string  = "GRID_nest" + str(n_estimators_input) + "_cri" + str(criterion_input) + "_min" + str(min_samples_leaf_input) + \
-                            "_max" + str(max_features_input) + "_msp" + str(min_samples_split_input) + "_mad" + str(max_depth_input) + "_trainit" + str(train_it_input)
-                            print(folder + special_name + file_output_string + "_PC" + str(p) + "_grid.pkl")
+            if os.path.isfile(folder + special_name + file_output_string + "_PC" + str(p) + "_grid.pkl"):
+                clf = pickle.load(open(folder + special_name + file_output_string + "_PC" + str(p) + "_grid.pkl","rb"))
+                already_trained_score = clr.score(x,y)
+                print(already_trained_score)
 
-                            if os.path.isfile(folder + special_name + file_output_string + "_PC" + str(p) + "_grid.pkl"):
-                                clf = pickle.load(open(folder + special_name + file_output_string + "_PC" + str(p) + "_grid.pkl","rb"))
+                models[model_count] = clf
+                score_train.append(already_trained_score)
+                model_count += 1
 
-                                y_train_pred_prob = clf.predict_proba(x)
-                                already_trained_auc = roc_auc_score(y_true = y, y_score = y_train_pred_prob[:,1])
-                                print(already_trained_auc)
+                
+            else:
+                print("notfile")
 
-                                models[model_count] = clf
-                                auc_train.append(already_trained_auc)
-                                model_count += 1
-
-                                
-                            else:
-                                print("notfile")
-
-    print(auc_train)
-    print(auc_train.index(max(auc_train)))
-    best_model_index = auc_train.index(max(auc_train))
+    print(score_train)
+    print(score_train.index(max(score_train)))
+    best_model_index = score_train.index(max(score_train))
     best_model = models[best_model_index]
-    best_params = best_model.best_params_
+    best_params = best_model.get_params
     print("Best parameters set found on development set:")
     print(best_params)
 
     
     return best_model,best_params
 
+def read_lin(folder,train_it_input,x,y):
 
-def read_RF_grid_search(folder,param_dict,train_it_input,x,y):
+
+
+    file_output_string  = "PRED" + "_trainit" + str(train_it_input)
+    print(folder + special_name + file_output_string + "_grid.pkl")
+    if os.path.isfile(folder + special_name + file_output_string + "_grid.pkl"):
+        clf = pickle.load(open(folder + special_name + file_output_string + "_grid.pkl","rb"))
+        y_train_score = clf.score(x,y)
+        already_trained_score = y_train_score
+        
+        print(already_trained_score)
+
+    return clf
+
+def read_enet_grid_search(folder,param_dict,train_it_input,x,y):
     print("rweading")
-    auc_train = []
+    score_train = []
     models = dict()
     model_count = 0
-    for n_estimators_input in param_dict['n_estimators']:
-        for criterion_input in param_dict['criterion']:
-            for min_samples_leaf_input in param_dict['min_samples_leaf']:
-                for max_features_input in param_dict['max_features']:
-                    for min_samples_split_input in param_dict['min_samples_split']:
-                        for max_depth_input in param_dict['max_depth']:
+    for alpha_input in param_dict['alpha']:
+        for l1ratio_input in param_dict['l1ratio']:
+            file_output_string  = "PREDenet_alpha" + str(alpha_input) +  "_l1ratio" + str(l1ratio_input) + "_trainit" + str(train_it_input)
+            print(folder + special_name + file_output_string + "_grid.pkl")
 
+            if os.path.isfile(folder + special_name + file_output_string + "_grid.pkl"):
+                clf = pickle.load(open(folder + special_name + file_output_string + "_grid.pkl","rb"))
+                y_train_score = clf.score(x,y)
+                already_trained_score = y_train_score
+                print(already_trained_score)
 
+                models[model_count] = clf
+                score_train.append(already_trained_score)
 
-                            file_output_string  = "GRID_nest" + str(n_estimators_input) + "_cri" + str(criterion_input) + "_min" + str(min_samples_leaf_input) + \
-                            "_max" + str(max_features_input) + "_msp" + str(min_samples_split_input) + "_mad" + str(max_depth_input) + "_trainit" + str(train_it_input)
-                            print(folder + special_name + file_output_string + "_grid.pkl")
-
-                            if os.path.isfile(folder + special_name + file_output_string + "_grid.pkl"):
-                                clf = pickle.load(open(folder + special_name + file_output_string + "_grid.pkl","rb"))
-                                y_train_pred_prob = clf.predict_proba(x)
-                                already_trained_auc = roc_auc_score(y_true = y, y_score = y_train_pred_prob[:,1])
-                                print(already_trained_auc)
-
-                                models[model_count] = clf
-                                auc_train.append(already_trained_auc)
-
-                                model_count += 1
-                            else:
-                                print("notfile")
+                model_count += 1
+            else:
+                print("notfile")
 
                             
 
 
-    print(auc_train)
-    print(auc_train.index(max(auc_train)))
-    best_model_index = auc_train.index(max(auc_train))
+    print(score_train)
+    print(score_train.index(max(score_train)))
+    best_model_index = score_train.index(max(score_train))
     best_model = models[best_model_index]
-    best_params = best_model.best_params_
+    best_params = best_model.get_params
     print("Best parameters set found on development set:")
     print(best_params)
 
@@ -235,17 +227,24 @@ if "AGP" in study_names[0]:
 #print(Counter(metadata[column_of_interest]))
 
 
-if len(args) > 12:
-    if label_pos_or_neg == 1:
-        print("positive")
-        metadata[column_of_interest] = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],pos_labels =[target_label])
-    elif label_pos_or_neg == 0:
-        metadata[column_of_interest] = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],neg_labels =[target_label])
-
 #print(Counter(metadata[column_of_interest]))
+print("new metadata shape after feces filter")
+print(metadata.shape)
+print(metadata[column_of_interest])
+
+print(metadata[column_of_interest][0:5])
+metadata[column_of_interest] = [float('Nan') if i == 'not applicable' or i == 'not provided' or 
+                              i == "Not provided" or i== "Unspecified" or i == "Not applicable" 
+                              else float(i) for i in list(metadata[column_of_interest])]
+
+print(metadata[column_of_interest][0:5])
+# temp_labels = np.array(metadata[column_of_interest])
+# temp_labels = temp_labels.astype(np.float)
+
+# metadata[column_of_interest] = temp_labels
+
+
 non_nan_samples = metadata.index[np.invert(np.isnan(metadata[column_of_interest]))]
-
-
 # Random forest stuff
 n_splits = 5
 n_repeats = n_repeats_input
@@ -253,11 +252,9 @@ import random
 print ("Random number with seed 30")
 random.seed(30)
 
-rskf = model_selection.RepeatedStratifiedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=123)
+rskf = model_selection.RepeatedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=123)
 
-parameter_dict = {'n_estimators':[100,1000,1500],'criterion': ['entropy','gini'],\
-    'min_samples_leaf': [1,5,10],'max_features':[0.1,0.30,0.5],'min_samples_split': [5],'max_depth':[1]}
-
+parameter_dict = {'alpha':[0.0125, 0.025, 0.05, .125, .25, .5, 1., 2., 4.],'l1ratio':[0,.1, .5, .7, .9, .95, .99, 1]}
 
 
 for d in range(len(study_names)): # range(1):#
@@ -273,14 +270,15 @@ for d in range(len(study_names)): # range(1):#
         feature_table = temp
 
     if "AGP" in study_names[0]:
+        print("feature table columns")
+        print(feature_table.columns)
+        tissue_samples = intersection(feature_table.columns,tissue_samples)
         feature_table = feature_table[tissue_samples]
         
 
 
     print(Counter(metadata[column_of_interest]))
 
-    print("pos label")
-    print(target_label)
 
     #########################################################################
     ###### COMMENTARY:  efining labels and binarize if not already     ######
@@ -335,11 +333,15 @@ for d in range(len(study_names)): # range(1):#
             if train_it == 0: 
                 results_dict = dict()
                 results_dict['train_best_params'] = dict()
-                results_dict['train_auc_trained'] = []
-                results_dict['mean_train_cv_auc'] = []
-                results_dict['mean_test_cv_auc'] = []
-                results_dict['test_auc_trained'] = []
-                results_dict['val_auc_trained']= []         
+                results_dict['train_score_trained'] = []
+                
+                results_dict['test_score_trained'] = []
+                results_dict['val_score_trained']= []  
+
+                results_dict['train_pearson_trained'] = []
+                results_dict['val_pearson_trained'] = []  
+                results_dict['test_pearson_trained'] = []  
+
             test_train_start = timer()
             X_train, X_test = X[train_index,], X[test_index,]
             y_train, y_test = y[train_index], y[test_index]
@@ -358,40 +360,57 @@ for d in range(len(study_names)): # range(1):#
                 
             # perform grid search on train
             print("train Index" + str(train_it))
-            best_train_model, best_params = read_RF_grid_search(output_folders[d],parameter_dict, train_it, X_train, y_train)
+            best_train_model, best_params = read_enet_grid_search(output_folders[d],parameter_dict, train_it, X_train, y_train)
 
             # save best params
             results_dict['train_best_params'][train_it] = best_params
             print("finished grid search: " + "train it " + str(train_it) )
             # get predictions on trained model
-            y_train_pred_prob = best_train_model.predict_proba(X_train)
-            already_trained_auc = roc_auc_score(y_true = y_train, y_score = y_train_pred_prob[:,1])
-            results_dict['train_auc_trained'].append(already_trained_auc)
-            print("trained_model train Rf " + str(already_trained_auc))            
+            
+            already_trained_score = best_train_model.score(X_train, y_train)
+            results_dict['train_score_trained'].append(already_trained_score)
+            print("trained_model train Rf " + str(already_trained_score))  
 
-            # get predictions on newly trained model
-            newly_trained_auc = RF_cv(X_train,y_train,best_params)
-            results_dict['mean_train_cv_auc'].append(newly_trained_auc)
-            print("newly trained mean trained mean Rf " + str(np.mean(newly_trained_auc)))
+            y_train_pred_prob = best_train_model.predict(X_train)
+            already_trained_pearson= np.corrcoef(x=list(y_train),y=list(y_train_pred_prob))[0,1]
+            results_dict['train_pearson_trained'].append(already_trained_pearson)
+            print("trained pearson " + str(already_trained_pearson))  
+
+
+
+            # # get predictions on newly trained model
+            # newly_trained_auc = RF_cv(X_train,y_train,best_params)
+            # results_dict['mean_train_cv_auc'].append(newly_trained_auc)
+            # print("newly trained mean trained mean Rf " + str(np.mean(newly_trained_auc)))
             
             # validation metrics
             if use_validation:
-                y_val_pred_prob = best_train_model.predict_proba(X_val)
-                already_trained_val_auc = roc_auc_score(y_true = y_val, y_score = y_val_pred_prob[:,1])
-                results_dict['val_auc_trained'].append(already_trained_val_auc)
-                print("trained_model validation Rf " + str(already_trained_val_auc)) 
+                already_trained_val_score = best_train_model.score(X_val,y_val)
+                results_dict['val_score_trained'].append(already_trained_val_score)
+                print("trained_model validation Rf " + str(already_trained_val_score)) 
+                y_val_pred_prob = best_train_model.predict(X_val)
+
+                val_pearson= np.corrcoef(x=list(y_val),y=list(y_val_pred_prob))[0,1]
+                results_dict['val_pearson_trained'].append(val_pearson)
+                print("val pearson " + str(val_pearson))  
+
 
             # test metrics
             # get predictions on trained model
-            y_test_pred_prob = best_train_model.predict_proba(X_test)
-            already_trained_test_auc = roc_auc_score(y_true = y_test, y_score = y_test_pred_prob[:,1])
-            results_dict['test_auc_trained'].append(already_trained_test_auc)
-            print("trained_model test RF" + str(already_trained_test_auc))
+            already_trained_test_score = best_train_model.score(X_test,y_test)
+            results_dict['test_score_trained'].append(already_trained_test_score)
+            print("trained_model test RF" + str(already_trained_test_score))
 
-            # get predictions on newly trained model
-            test_RF = RF_cv(X_test,y_test,best_params)
-            results_dict['mean_test_cv_auc'].append(test_RF)
-            print("newly trained test mean Rf " + str(np.mean(test_RF)))
+            y_test_pred_prob = best_train_model.predict(X_test)
+
+            test_pearson= np.corrcoef(x=list(y_test),y=list(y_test_pred_prob))[0,1]
+            results_dict['test_pearson_trained'].append(test_pearson)
+            print("test pearson " + str(test_pearson))  
+
+            # # get predictions on newly trained model
+            # test_RF = RF_cv(X_test,y_test,best_params)
+            # results_dict['mean_test_cv_auc'].append(test_RF)
+            # print("newly trained test mean Rf " + str(np.mean(test_RF)))
             
             all_datasets_dict["dataset" + str(d)] = results_dict  
             pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_tt_grid.pkl", "wb" ) )
@@ -463,10 +482,12 @@ for d in range(len(study_names)): # range(1):#
                         results_dict["PC" + str(p)] = dict()
                         results_dict["PC" + str(p)]['train_best_params'] = dict()
                         results_dict["PC" + str(p)]['train_auc_trained'] = []
-                        results_dict["PC" + str(p)]['mean_train_cv_auc'] = []
-                        results_dict["PC" + str(p)]['mean_test_cv_auc'] = []
                         results_dict["PC" + str(p)]['test_auc_trained'] = []
                         results_dict["PC" + str(p)]['val_auc_trained']= []
+
+                        results_dict["PC" + str(p)]['train_pearson_trained'] = []
+                        results_dict["PC" + str(p)]['val_pearson_trained'] = []  
+                        results_dict["PC" + str(p)]['test_pearson_trained'] = []  
                        
                     if p == 0:
                         X_train_corrected = X_train
@@ -480,17 +501,23 @@ for d in range(len(study_names)): # range(1):#
                             X_val_corrected  = pca_regression(X_val,pc_scores_val[:,0:p])
                     
                     # perform grid search on train
-                    best_train_model, best_params = read_RF_grid_search_pc_version(output_folders[d],parameter_dict,train_it_input = train_it,pc=p,x=X_train_corrected,y = y_train)
+                    best_train_model, best_params = read_enet_grid_search_pc_version(output_folders[d],parameter_dict,train_it_input = train_it,pc=p,x=X_train_corrected,y = y_train)
                     
 
                     # save best params
                     results_dict["PC" + str(p)]['train_best_params'][train_it] = best_params
                     print("finished grid search: " + "train it " + str(train_it) + ", PC" + str(p))
                     # get predictions on trained model
-                    y_train_pred_prob = best_train_model.predict_proba(X_train_corrected)
-                    already_trained_auc = roc_auc_score(y_true = y_train, y_score = y_train_pred_prob[:,1])
-                    results_dict["PC" + str(p)]['train_auc_trained'].append(already_trained_auc)
-                    print("trained_model train Rf " + str(already_trained_auc))            
+                    #y_train_pred_prob = best_train_model.predict_proba(X_train_corrected)
+                    already_trained_score = best_train_model.score(X_train_corrected,y_train)
+                    results_dict["PC" + str(p)]['train_auc_trained'].append(already_trained_score)
+                    print("trained_model train Rf " + str(already_trained_score))  
+
+
+                    trained_pred_prob = best_train_model.predict(X_train_corrected)   
+                    train_pearson= np.corrcoef(x=list(y_train),y=list(trained_pred_prob))[0,1]
+                    results_dict["PC" + str(p)]['train_pearson_trained'].append(train_pearson)
+                    print("train pearson " + str(train_pearson))            
 
                     # # get predictions on newly trained model
                     # newly_trained_auc = RF_cv(X_train_corrected,y_train,best_params)
@@ -499,17 +526,28 @@ for d in range(len(study_names)): # range(1):#
                     
                     # validation metrics
                     if use_validation:
-                        y_val_pred_prob = best_train_model.predict_proba(X_val_corrected)
-                        already_trained_val_auc = roc_auc_score(y_true = y_val, y_score = y_val_pred_prob[:,1])
-                        results_dict["PC" + str(p)]['val_auc_trained'].append(already_trained_val_auc)
-                        print("trained_model validation Rf " + str(already_trained_val_auc)) 
+                        #y_val_pred_prob = best_train_model.predict_proba(X_val_corrected)
+                        already_trained_val_score = best_train_model.score(X_val,y_val)
+                        results_dict["PC" + str(p)]['val_auc_trained'].append(already_trained_val_score)
+                        print("trained_model validation Rf " + str(already_trained_val_score)) 
+
+
+                        val_pred_prob = best_train_model.predict(X_val_corrected)   
+                        val_pearson= np.corrcoef(x=list(y_val),y=list(val_pred_prob))[0,1]
+                        results_dict["PC" + str(p)]['val_pearson_trained'].append(val_pearson)
+                        print("val pearson " + str(val_pearson))    
 
                     # test metrics
                     # get predictions on trained model
-                    y_test_pred_prob = best_train_model.predict_proba(X_test_corrected)
-                    already_trained_test_auc = roc_auc_score(y_true = y_test, y_score = y_test_pred_prob[:,1])
-                    results_dict["PC" + str(p)]['test_auc_trained'].append(already_trained_test_auc)
-                    print("trained_model test RF" + str(already_trained_test_auc))
+                    #y_test_pred_prob = best_train_model.predict_proba(X_test_corrected)
+                    already_trained_test_score = best_train_model.score(X_test,y_test)
+                    results_dict["PC" + str(p)]['test_auc_trained'].append(already_trained_test_score)
+                    print("trained_model test RF" + str(already_trained_test_score))
+
+                    test_pred_prob = best_test_model.predict(X_test_corrected)   
+                    test_pearson= np.corrcoef(x=list(y_test),y=list(test_pred_prob))[0,1]
+                    results_dict["PC" + str(p)]['test_pearson_trained'].append(test_pearson)
+                    print("test pearson " + str(test_pearson))    
 
                     # # get predictions on newly trained model
                     # test_RF = RF_cv(X_test_corrected,y_test,best_params)

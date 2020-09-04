@@ -35,7 +35,7 @@ import pandas as pd
 import utils
 import numpy as np
 from sklearn.preprocessing import StandardScaler, normalize
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import ElasticNet,LinearRegression,ElasticNetCV
 from sklearn import model_selection 
 from sklearn.decomposition import PCA
 from sklearn.model_selection import GridSearchCV, cross_val_score, train_test_split
@@ -70,32 +70,16 @@ special_name = args[10]
 
 perform_MINERVA = bool(int(args[11]))
 
-spec_label_scheme = bool(int(args[12]))
+train_it_input = int(args[12])
 
-label_pos_or_neg = int(args[13]) # do you want to treat CRC as positive class or negative class? 
-target_label = args[14] # phenotype representing positive class or negative class? eg. CRC eg. H
-print(target_label)
-if not spec_label_scheme:
-    label_pos_or_neg = 1
-    target_label = 1
+perform_enet = bool(int(args[13]))
+alpha_input = float(args[14])
+l1ratio_input = float(args[15])
 
-
-n_estimators_input = int(args[15])
-criterion_input = str(args[16])
-min_samples_leaf_input = int(args[17])
-max_features_input = float(args[18])
-min_samples_split_input = int(args[19])
-max_depth_input = int(args[20])
-train_it_input = int(args[21])
-
-print("spec_label_scheme")
-print(spec_label_scheme)
-
-print("n_estimators_input ")
-print(n_estimators_input )
-
-file_output_string  = "GRID_nest" + str(n_estimators_input) + "_cri" + str(criterion_input) + "_min" + str(min_samples_leaf_input) + \
-    "_max" + str(max_features_input) + "_msp" + str(min_samples_split_input) + "_mad" + str(max_depth_input) + "_trainit" + str(train_it_input)
+if perform_enet:
+    file_output_string  = "PREDenet_alpha" + str(alpha_input) +  "_l1ratio" + str(l1ratio_input) + "_trainit" + str(train_it_input)
+else:
+    file_output_string  = "PRED" + "_trainit" + str(train_it_input)
 
 
 use_domain_pheno = False # for when running raw to compare to domain pheno
@@ -124,20 +108,21 @@ def pca_regression(y,X):
     residuals = y - predictedValues
     return(residuals)
 
-def RF_grid_search(data,labels,param_dict):
-    rf = RandomForestClassifier()
-    clf = GridSearchCV(rf, param_dict,scoring="roc_auc")
+def pred_enet_grid_search(data,labels,param_dict):
+    clf = ElasticNetCV(random_state=0,alphas = param_dict['alpha'],l1_ratio = param_dict['l1ratio'])
     clf.fit(data, labels)
-
     print("Best parameters set found on development set:")
-    best_params = clf.best_params_
+    best_params = clf.get_params
     return clf,best_params
 
 
+def pred_cv(data,labels):
+    clf =  LinearRegression().fit(data, labels)
+    return clf
 
-def RF_cv(data,labels,param_dict):
-    clf = RandomForestClassifier(max_depth=5, random_state=0,n_estimators = param_dict['n_estimators'],            criterion = param_dict['criterion'],min_samples_leaf = param_dict['min_samples_leaf'],                           max_features = param_dict['max_features'])
-    results = cross_val_score(clf,X=data,y=labels,scoring="roc_auc")
+def pred_enet_cv(data,labels,param_dict):
+    clf = ElasticNet(random_state=0,alpha = param_dict['alpha_input'],l1_ratio = param_dict['l1ratio_input'])
+    results = reg.score(X=data, y=labels)
     return(results)
 
 
@@ -167,15 +152,19 @@ if "AGP" in study_names[0]:
 #print(Counter(metadata[column_of_interest]))
 print("new metadata shape after feces filter")
 print(metadata.shape)
+print(metadata[column_of_interest])
 
-if spec_label_scheme :
-    if label_pos_or_neg == 1:
-        print("positive")
-        metadata[column_of_interest] = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],pos_labels =[target_label])
-    elif label_pos_or_neg == 0:
-        metadata[column_of_interest] = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],neg_labels =[target_label])
+print(metadata[column_of_interest][0:5])
+metadata[column_of_interest] = [float('Nan') if i == 'not applicable' or i == 'not provided' or 
+                              i == "Not provided" or i== "Unspecified" or i == "Not applicable" 
+                              else float(i) for i in list(metadata[column_of_interest])]
 
-print(Counter(metadata[column_of_interest]))
+print(metadata[column_of_interest][0:5])
+# temp_labels = np.array(metadata[column_of_interest])
+# temp_labels = temp_labels.astype(np.float)
+
+# metadata[column_of_interest] = temp_labels
+
 
 non_nan_samples = metadata.index[np.invert(np.isnan(metadata[column_of_interest]))]
 
@@ -187,12 +176,9 @@ import random
 print ("Random number with seed 30")
 random.seed(30)
 
-rskf = model_selection.RepeatedStratifiedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=123)
+rskf = model_selection.RepeatedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=123)
 
-parameter_dict = {'n_estimators':[n_estimators_input],'criterion': [criterion_input],\
-'min_samples_leaf': [min_samples_leaf_input],'max_features':[max_features_input],\
-'min_samples_split': [min_samples_split_input],'max_depth':[max_depth_input]}
-
+parameter_dict = {'alpha':[alpha_input],'l1ratio': [l1ratio_input]}
 
 
 for d in range(len(study_names)): # range(1):#
@@ -212,16 +198,6 @@ for d in range(len(study_names)): # range(1):#
         print(feature_table.columns)
         tissue_samples = intersection(feature_table.columns,tissue_samples)
         feature_table = feature_table[tissue_samples]
-
-
-
-        
-
-
-    print(Counter(metadata[column_of_interest]))
-
-    print("pos label")
-    print(target_label)
 
     #########################################################################
     ###### COMMENTARY:  efining labels and binarize if not already     ######
@@ -298,8 +274,23 @@ for d in range(len(study_names)): # range(1):#
                 
                     
                 # perform grid search on train
-                best_train_model, best_params = RF_grid_search(X_train, y_train,parameter_dict)
-                
+
+
+                if perform_enet:
+                    best_train_model, best_params = pred_enet_grid_search(X_train, y_train,parameter_dict)
+                else:
+                    best_train_model = pred_cv(X_train, y_train)
+
+                    print("best_train_model_results")
+                    print("true labels")
+                    print(y_train[0:5])
+                    print("pred_results")
+                    pred_results = best_train_model.predict(X_train)
+                    print(pred_results[0:5])
+                    print( np.corrcoef(x=list(y_train),y=list(pred_results)))
+
+
+
 
                 pickle.dump(best_train_model, open( output_folders[d] + special_name + file_output_string  + "_grid.pkl", "wb" ) )
                 test_train_end = timer()
@@ -381,7 +372,11 @@ for d in range(len(study_names)): # range(1):#
                             X_val_corrected  = pca_regression(X_val,pc_scores_val[:,0:p])
                     
                     # perform grid search on train
-                    best_train_model, best_params = RF_grid_search(X_train_corrected, y_train,parameter_dict)
+
+                    if perform_enet:
+                        best_train_model, best_params = pred_enet_grid_search(X_train_corrected, y_train,parameter_dict)
+                    else:
+                        best_train_model = pred_cv(X_train_corrected, y_train)
                     
                     pickle.dump(best_train_model , open( output_folders[d] + special_name + file_output_string + "_PC" + str(p) + "_grid.pkl", "wb" ) )
                      

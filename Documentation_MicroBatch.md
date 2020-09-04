@@ -1464,7 +1464,7 @@ for method in refactor refactor_protect; do for sv in 3 4 5 6 7 8 9 10 20 30 40 
 ```
 
 
-for method in raw; do for tran in clr_scale; do for sv in 1; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg 5 -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_max -arg "$method" -arg $sv -arg Instrument -arg 1 -arg 1 -arg bmi_corrected -arg 0 -arg "$tran"; done; done; done
+for method in raw bmc ComBat limma; do for tran in none; do for k in 5 6 7 8; do for phen in bin_antibiotic bin_bmido /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 48 -t 100 -hp -v 3.6.0 -arg kmer -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg AGP_max -arg "$method" -arg $sv -arg Instrument -arg 1 -arg 1 -arg $phen -arg 0 -arg "$tran"; done; done; done
 ```
 
 ```

@@ -16,7 +16,7 @@ print(args)
 # args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "AGP_max", "minerva",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"clr_scale",0,0,0,1,1)
 # args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-#          "AGP_max", "minerva","-1","Instrument",1,1,"bin_antibiotic_last_year",0,"clr_scale",0,0,0,1,"Yes")
+#          "AGP_max", "minerva","1","Instrument",1,1,"bin_antibiotic_last_year",0,"clr_scale",0,0,0,1,"Yes")
 
 # args = c("otu", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 #          "AGP_complete", "minerva",10,"Instrument",1,1,"bin_antibiotic_last_year",0,"none",0,0,0,1,1)
@@ -211,7 +211,7 @@ if(subsample_bool){
 # tissue_filder
 
 if(grepl("AGP",study_name)){
-  tissue_samples = unlist(total_metadata %>% filter(total_metadata$body_habitat.x == "UBERON:feces") %>% select(Sample_ID))
+  tissue_samples = unlist(total_metadata %>% filter(total_metadata$body_habitat.x == "UBERON:feces") %>% select(Run))
   tissue_samples = as.character(tissue_samples)
   #length(intersect(tissue_samples,colnames(input_abundance_table)))
   input_abundance_table = input_abundance_table[,tissue_samples]

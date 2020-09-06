@@ -25,7 +25,7 @@ print(args)
 # "AGP_max", "PhenoCorrect",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"none",0,0,0,1, "Yes")
 # args = c("kmer", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "T2D", "smartsva",10,"Instrument",1,1,"bmigrp_c4_v2.x",0,"none",0,0,0,3,1)#3,1)#"1","4")
-
+# table(total_metadata$antibiotic)
 
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 #          "Hispanic", "smartsva",10,"Instrument",1,1,"mets_idf3_v2",0,"none",1,"1")

@@ -479,12 +479,44 @@ qsub -cwd -V -N bmcAsmbT2D -l h_data=5G,time=24:00:00 -M briscoel -m beas -b y "
 
 
 ## Grid Job Array HispanicAntibiotic 
-
+```
 for svs in 1; do for tran in clr_scale; do for phen in antibiotic; do for method in bmc limma ComBat; do for k in 7; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=3G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch Hispanic_k'$k' protect_'$phen' kmer BatchCorrected  '$phen' '$method'filter_TRUE_trans_'$tran' 0 0 10 100 1 2"; done; done; done; done; done
 
 
-
-for method in raw bmc ComBat limma; do for tran in none; do for k in 7 8; do for phen in antibiotic bmi_v2; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 15 -t 24 -hp -v 3.6.0 -arg kmer -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg Hispanic -arg "$method" -arg 0 -arg Instrument -arg 1 -arg 1 -arg $phen -arg 0 -arg "$tran" -arg 0 -arg 0 -arg 0; done; done; done; done
+raw bmc ComBat limma
+for method in raw; do for tran in clr_scale; do for k in 7 8; do for phen in antibiotic bmi_v2; do /u/local/apps/submit_scripts/R_job_submitter.sh -n batch_correction_pipeline_basic.R -m 15 -t 24 -hp -v 3.6.0 -arg kmer -arg $k -arg "/u/home/b/briscoel/project-halperin/MicroBatch" -arg Hispanic -arg "$method" -arg 0 -arg 'mastermix_lot..exp.' -arg 1 -arg 1 -arg $phen -arg 0 -arg "$tran" -arg 0 -arg 0 -arg 0; done; done; done; done
 
 
 Rscript batch_correction_pipeline_basic.R kmer 5 "/u/home/b/briscoel/project-halperin/MicroBatch" Hispanic "raw" 0 'mastermix_lot..exp.' 1 1 antibiotic 0 none 0 0 0 1 2
+
+
+
+COUNTER=0
+for trainit in {0..49}; do for nest in 100 1000 1500; do for crit in entropy gini; do for leaf in 1 5 10; do for feat in 0.1 0.3 0.5; do COUNTER=$((COUNTER + 1)); echo $COUNTER; echo "/u/home/b/briscoel/project-halperin/MicroBatch Hispanic_k5&Hispanic_k6 rawfilter_TRUE_trans_clr_scale BatchCorrected antibiotic 0 0 10 10 minervaclrscale 1 1 1 1 $nest $crit $leaf $feat 5 1 $trainit" > data_$COUNTER.in; done; done; done; done; done;
+
+for type in raw bmc ComBat limma; do for trainit in {0..49}; do for nest in 100 1000 1500; do for crit in entropy gini; do for leaf in 1 5 10; do for feat in 0.1 0.3 0.5; do COUNTER=$((COUNTER + 1)); echo $COUNTER; echo "/u/home/b/briscoel/project-halperin/MicroBatch Hispanic_k5&Hispanic_k6 "$type"filter_TRUE_trans_none BatchCorrected antibiotic 0 0 10 10 $type 0 1 1 1 $nest $crit $leaf $feat 5 1 $trainit" > data_$COUNTER.in; done; done; done; done; done; done
+
+for trainit in {0..49}; do for nest in 100 1000 1500; do for crit in entropy gini; do for leaf in 1 5 10; do for feat in 0.1 0.3 0.5; do COUNTER=$((COUNTER + 1)); echo $COUNTER; echo "/u/home/b/briscoel/project-halperin/MicroBatch Hispanic_k7&Hispanic_k8 rawfilter_TRUE_trans_clr_scale BatchCorrected antibiotic 0 0 10 10 minervaclrscale 1 1 1 1 $nest $crit $leaf $feat 5 1 $trainit" > data_$COUNTER.in; done; done; done; done; done;
+
+for type in raw bmc ComBat limma; do for trainit in {0..49}; do for nest in 100 1000 1500; do for crit in entropy gini; do for leaf in 1 5 10; do for feat in 0.1 0.3 0.5; do COUNTER=$((COUNTER + 1)); echo $COUNTER; echo "/u/home/b/briscoel/project-halperin/MicroBatch Hispanic_k7&Hispanic_k8 "$type"filter_TRUE_trans_none BatchCorrected antibiotic 0 0 10 10 $type 0 1 1 1 $nest $crit $leaf $feat 5 1 $trainit" > data_$COUNTER.in; done; done; done; done; done; done
+
+
+
+
+./run_paraMINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch Hispanic_k5 rawfilter_TRUE_trans_none BatchCorrected antibiotic 0 0 10 10 raw 0 1 1 1 10 entropy 4 0.1 5 1 0
+
+
+# 1:2700
+qsub -cwd -V -N HisSmallMinerva -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y -t 1:2700 "./run_array_paraMINERVA_test_train_grid.sh"
+
+2701:13500
+qsub -cwd -V -N HisSmallSoup -l h_data=8G,time=24:00:00 -M briscoel -m beas -b y -t 2701:13500 "./run_array_paraMINERVA_test_train_grid.sh"
+
+#13501:16200
+qsub -cwd -V -N HisBigMinerva -l h_data=15G,time=24:00:00 -M briscoel -m beas -b y -t 13501:16200 "./run_array_paraMINERVA_test_train_grid.sh"
+
+#16201:27000
+qsub -cwd -V -N HisBigSoup -l h_data=15G,time=24:00:00 -M briscoel -m beas -b y -t 16201:27000 "./run_array_paraMINERVA_test_train_grid.sh"
+
+
+```

@@ -121,7 +121,7 @@ def read_enet_grid_search_pc_version(folder,param_dict,train_it_input,pc,x,y):
 
             if os.path.isfile(folder + special_name + file_output_string + "_PC" + str(p) + "_grid.pkl"):
                 clf = pickle.load(open(folder + special_name + file_output_string + "_PC" + str(p) + "_grid.pkl","rb"))
-                already_trained_score = clr.score(x,y)
+                already_trained_score = clf.score(x,y)
                 print(already_trained_score)
 
                 models[model_count] = clf
@@ -136,6 +136,28 @@ def read_enet_grid_search_pc_version(folder,param_dict,train_it_input,pc,x,y):
     print(score_train.index(max(score_train)))
     best_model_index = score_train.index(max(score_train))
     best_model = models[best_model_index]
+    best_params = best_model.get_params
+    print("Best parameters set found on development set:")
+    print(best_params)
+
+    
+    return best_model,best_params
+def read_lin_pc_version(folder,param_dict,train_it_input,pc,x,y):
+    print("rweading")
+
+    file_output_string  = "PRED" + "_trainit" + str(train_it_input)
+    print(folder + special_name + file_output_string + "_grid.pkl")
+
+    if os.path.isfile(folder + special_name + file_output_string + "_PC" + str(p) + "_grid.pkl"):
+        clf = pickle.load(open(folder + special_name + file_output_string + "_PC" + str(p) + "_grid.pkl","rb"))
+        already_trained_score = clf.score(x,y)
+        print(already_trained_score)
+        
+    else:
+        print("notfile")
+
+
+    best_model = clf
     best_params = best_model.get_params
     print("Best parameters set found on development set:")
     print(best_params)
@@ -180,15 +202,28 @@ def read_enet_grid_search(folder,param_dict,train_it_input,x,y):
                 model_count += 1
             else:
                 print("notfile")
+def read_lin_model(folder,param_dict,train_it_input,x,y):
+    print("rweading")
+
+    file_output_string  = "PRED" + "_trainit" + str(train_it_input)
+    print(folder + special_name + file_output_string + "_grid.pkl")
+
+    if os.path.isfile(folder + special_name + file_output_string + "_grid.pkl"):
+        clf = pickle.load(open(folder + special_name + file_output_string + "_grid.pkl","rb"))
+        y_train_score = clf.score(x,y)
+        already_trained_score = y_train_score
+        print(already_trained_score)
+
+
+    else:
+        print("notfile")
 
                             
 
 
-    print(score_train)
-    print(score_train.index(max(score_train)))
-    best_model_index = score_train.index(max(score_train))
-    best_model = models[best_model_index]
-    best_params = best_model.get_params
+
+    best_model = clf
+    best_params = clf.get_params
     print("Best parameters set found on development set:")
     print(best_params)
 
@@ -244,7 +279,7 @@ print(metadata[column_of_interest][0:5])
 # metadata[column_of_interest] = temp_labels
 
 
-non_nan_samples = metadata.index[np.invert(np.isnan(metadata[column_of_interest]))]
+original_non_nan_samples = metadata.index[np.invert(np.isnan(metadata[column_of_interest]))]
 # Random forest stuff
 n_splits = 5
 n_repeats = n_repeats_input
@@ -254,13 +289,17 @@ random.seed(30)
 
 rskf = model_selection.RepeatedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=123)
 
-parameter_dict = {'alpha':[0.0125, 0.025, 0.05, .125, .25, .5, 1., 2., 4.],'l1ratio':[0,.1, .5, .7, .9, .95, .99, 1]}
+parameter_dict = {'alpha':[ 0.025, 0.05, .125, .25, .5, 1., 2., 4.],'l1ratio':[0,.1, .5, .7, .9, .95, .99, 1]}
 
 
 for d in range(len(study_names)): # range(1):#
     ### COPY INTO loop
     feature_table_dict = utils.load_feature_table([data_folders[d]],data_type = data_type)
     feature_table = feature_table_dict[0]
+
+    print("feature table shape")
+    print(feature_table.shape)
+
     
 
     if norm_input:
@@ -277,7 +316,7 @@ for d in range(len(study_names)): # range(1):#
         
 
 
-    print(Counter(metadata[column_of_interest]))
+    #print(Counter(metadata[column_of_interest]))
 
 
     #########################################################################
@@ -286,7 +325,7 @@ for d in range(len(study_names)): # range(1):#
 
     
 
-    non_nan_samples = intersection(feature_table.columns,non_nan_samples)
+    non_nan_samples = intersection(feature_table.columns,original_non_nan_samples)
     #print(non_nan_samples)
 
     feature_table = feature_table[non_nan_samples]
@@ -324,6 +363,13 @@ for d in range(len(study_names)): # range(1):#
         
         X = X[~na_mask,:]
         y = y[~na_mask]
+
+        print("not e et")
+        print("Shape x")
+        print(X.shape)
+        print("Shape y")
+        print(y.shape)
+
         # for each test train split in 5 fold cross validation
         train_it = 0
         for train_index, test_index in rskf.split(X, y):  
@@ -360,7 +406,26 @@ for d in range(len(study_names)): # range(1):#
                 
             # perform grid search on train
             print("train Index" + str(train_it))
-            best_train_model, best_params = read_enet_grid_search(output_folders[d],parameter_dict, train_it, X_train, y_train)
+            if perform_enet:
+                best_train_model, best_params = read_enet_grid_search(output_folders[d],parameter_dict, train_it, X_train, y_train)
+            else:
+                print("not e et")
+                print("Shape xtrain")
+                print(X_train.shape)
+                print("Shape ytrain")
+                print(y_train.shape)
+                best_train_model, best_params = read_lin_model(output_folders[d],parameter_dict, train_it, X_train, y_train)
+
+
+            print("best_train_model_results")
+            print("true labels")
+            print(y_train[0:5])
+            print("pred_results")
+            pred_results = best_train_model.predict(X_train)
+            print(pred_results[0:5])
+            print( np.corrcoef(x=list(y_train),y=list(pred_results)))
+            print("score")
+            print(best_train_model.score(X_train,y_train))
 
             # save best params
             results_dict['train_best_params'][train_it] = best_params

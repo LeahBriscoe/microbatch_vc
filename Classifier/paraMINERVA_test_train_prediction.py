@@ -123,7 +123,8 @@ def pred_cv(data,labels):
 def pred_enet_cv(data,labels,param_dict):
     clf = ElasticNet(random_state=0,alpha = param_dict['alpha_input'],l1_ratio = param_dict['l1ratio_input'])
     results = reg.score(X=data, y=labels)
-    return(results)
+    print(results)
+    return(clf)
 
 
 def intersection(lst1, lst2): 
@@ -250,7 +251,7 @@ for d in range(len(study_names)): # range(1):#
             #print(len(train_index))
             #print(len(test_index))
 
-            if train_it == train_it_input: 
+            if train_it == train_it_input:  #only run for desired training iteration
                 results_dict = dict()
                 results_dict['train_best_params'] = dict()
                 results_dict['train_auc_trained'] = []
@@ -278,16 +279,20 @@ for d in range(len(study_names)): # range(1):#
 
                 if perform_enet:
                     best_train_model, best_params = pred_enet_grid_search(X_train, y_train,parameter_dict)
+
+
                 else:
                     best_train_model = pred_cv(X_train, y_train)
 
-                    print("best_train_model_results")
-                    print("true labels")
-                    print(y_train[0:5])
-                    print("pred_results")
-                    pred_results = best_train_model.predict(X_train)
-                    print(pred_results[0:5])
-                    print( np.corrcoef(x=list(y_train),y=list(pred_results)))
+                print("best_train_model_results")
+                print("true labels")
+                print(y_train[0:5])
+                print("pred_results")
+                pred_results = best_train_model.predict(X_train)
+                print(pred_results[0:5])
+                print( np.corrcoef(x=list(y_train),y=list(pred_results)))
+                print("score")
+                print(best_train_model.score(X_train,y_train))
 
 
 

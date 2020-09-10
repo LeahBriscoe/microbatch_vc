@@ -276,6 +276,12 @@ for d in range(len(study_names)): # range(1):#
                     
                 # perform grid search on train
 
+                print("not e et")
+                print("Shape xtrain")
+                print(X_train.shape)
+                print("Shape ytrain")
+                print(y_train.shape)
+
 
                 if perform_enet:
                     best_train_model, best_params = pred_enet_grid_search(X_train, y_train,parameter_dict)

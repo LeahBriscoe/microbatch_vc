@@ -71,10 +71,10 @@ special_name = args[10]
 
 perform_MINERVA = bool(int(args[11]))
 
-
-if len(args) > 12:
-    label_pos_or_neg = int(args[12]) # do you want to treat CRC as positive class or negative class? 
-    target_label = args[13] # phenotype representing positive class or negative class? eg. CRC eg. H
+use_val = bool(int(args[12])) # use validation to determine best parameters
+if len(args) > 13:
+    label_pos_or_neg = int(args[13]) # do you want to treat CRC as positive class or negative class? 
+    target_label = args[14] # phenotype representing positive class or negative class? eg. CRC eg. H
     print(target_label)
 else:
     label_pos_or_neg = 1
@@ -273,6 +273,9 @@ for d in range(len(study_names)): # range(1):#
         feature_table = temp
 
     if "AGP" in study_names[0]:
+        print("feature table columns")
+        print(feature_table.columns)
+        tissue_samples = intersection(feature_table.columns,tissue_samples)
         feature_table = feature_table[tissue_samples]
         
 
@@ -358,7 +361,11 @@ for d in range(len(study_names)): # range(1):#
                 
             # perform grid search on train
             print("train Index" + str(train_it))
-            best_train_model, best_params = read_RF_grid_search(output_folders[d],parameter_dict, train_it, X_train, y_train)
+
+            if use_val:
+                best_train_model, best_params = read_RF_grid_search(output_folders[d],parameter_dict, train_it, X_val, y_val)
+            else:
+                best_train_model, best_params = read_RF_grid_search(output_folders[d],parameter_dict, train_it, X_train, y_train)
 
             # save best params
             results_dict['train_best_params'][train_it] = best_params
@@ -480,7 +487,10 @@ for d in range(len(study_names)): # range(1):#
                             X_val_corrected  = pca_regression(X_val,pc_scores_val[:,0:p])
                     
                     # perform grid search on train
-                    best_train_model, best_params = read_RF_grid_search_pc_version(output_folders[d],parameter_dict,train_it_input = train_it,pc=p,x=X_train_corrected,y = y_train)
+                    if use_val:
+                        best_train_model, best_params = read_RF_grid_search_pc_version(output_folders[d],parameter_dict,train_it_input = train_it,pc=p,x=X_val_corrected,y = y_val)
+                    else:
+                        best_train_model, best_params = read_RF_grid_search_pc_version(output_folders[d],parameter_dict,train_it_input = train_it,pc=p,x=X_train_corrected,y = y_train)
                     
 
                     # save best params
@@ -518,7 +528,13 @@ for d in range(len(study_names)): # range(1):#
                     
                     
                     all_datasets_dict["dataset" + str(d)] = results_dict
-                    pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_tt_grid.pkl", "wb" ) )
+                    if use_val:
+                        pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_tt_grid_VAL.pkl", "wb" ) )
+                                   
+                    else:
+                        pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_tt_grid.pkl", "wb" ) )
+                                
+                          
                      
                     
                     
@@ -536,8 +552,11 @@ for d in range(len(study_names)): # range(1):#
 # ...
 end = timer()
 print(end - start)
-        
-pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_tt_grid.pkl", "wb" ) )
+if use_val:
+    pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_tt_grid_VAL.pkl", "wb" ) )
+               
+else:
+    pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_tt_grid.pkl", "wb" ) )
             
         
     

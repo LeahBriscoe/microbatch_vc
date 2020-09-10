@@ -146,7 +146,7 @@ def read_lin_pc_version(folder,param_dict,train_it_input,pc,x,y):
     print("rweading")
 
     file_output_string  = "PRED" + "_trainit" + str(train_it_input)
-    print(folder + special_name + file_output_string + "_grid.pkl")
+    print(folder + special_name + file_output_string + "_PC" + str(p) + "_grid.pkl")
 
     if os.path.isfile(folder + special_name + file_output_string + "_PC" + str(p) + "_grid.pkl"):
         clf = pickle.load(open(folder + special_name + file_output_string + "_PC" + str(p) + "_grid.pkl","rb"))
@@ -364,8 +364,8 @@ for d in range(len(study_names)): # range(1):#
         X = X[~na_mask,:]
         y = y[~na_mask]
 
-        print("not e et")
-        print("Shape x")
+        
+        print("Shape original x")
         print(X.shape)
         print("Shape y")
         print(y.shape)
@@ -566,9 +566,20 @@ for d in range(len(study_names)): # range(1):#
                             X_val_corrected  = pca_regression(X_val,pc_scores_val[:,0:p])
                     
                     # perform grid search on train
-                    best_train_model, best_params = read_enet_grid_search_pc_version(output_folders[d],parameter_dict,train_it_input = train_it,pc=p,x=X_train_corrected,y = y_train)
                     
+                    if perform_enet:
+                        best_train_model, best_params = best_train_model, best_params = read_enet_grid_search_pc_version(output_folders[d],parameter_dict,train_it_input = train_it,pc=p,x=X_train_corrected,y = y_train)
+                    else:
+                        print("not e et")
+                        print("Shape xtrain")
+                        print(X_train.shape)
+                        print("Shape ytrain")
 
+                        print(y_train.shape)
+
+                        #read_lin_pc_version(folder,param_dict,train_it_input,pc,x,y):
+                        best_train_model, best_params = read_lin_pc_version(output_folders[d],parameter_dict, train_it, p,X_train, y_train)
+                                        
                     # save best params
                     results_dict["PC" + str(p)]['train_best_params'][train_it] = best_params
                     print("finished grid search: " + "train it " + str(train_it) + ", PC" + str(p))
@@ -609,7 +620,7 @@ for d in range(len(study_names)): # range(1):#
                     results_dict["PC" + str(p)]['test_auc_trained'].append(already_trained_test_score)
                     print("trained_model test RF" + str(already_trained_test_score))
 
-                    test_pred_prob = best_test_model.predict(X_test_corrected)   
+                    test_pred_prob = best_train_model.predict(X_test_corrected)   
                     test_pearson= np.corrcoef(x=list(y_test),y=list(test_pred_prob))[0,1]
                     results_dict["PC" + str(p)]['test_pearson_trained'].append(test_pearson)
                     print("test pearson " + str(test_pearson))    
@@ -639,8 +650,10 @@ for d in range(len(study_names)): # range(1):#
 # ...
 end = timer()
 print(end - start)
-        
-pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_tt_grid.pkl", "wb" ) )
+if not perform_enet:    
+    pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_prediction_grid.pkl", "wb" ) )
+else:
+    pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_prediction_enet_grid.pkl", "wb" ) )
             
         
     

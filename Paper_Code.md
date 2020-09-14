@@ -280,7 +280,7 @@ for trainit in 0 1 2 3 4; do for nest in 100 1000 1500; do for crit in entropy g
 qsub -cwd -V -N rawAsmb -l h_data=10G,time=100:00:00,highp -M briscoel -m beas -b y "./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'CRC_k6&CRC_k7' rawfilter_TRUE_trans_none BatchCorrected bin_crc_normal 0 0 50 10 raw 0"
 
 
-./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch CRC_k6 rawfilter_TRUE_trans_none BatchCorrected bin_crc_normal 0 0 10 10 raw 0 0
+./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch CRC_k6 rawfilter_TRUE_trans_none BatchCorrected bin_crc_normal 0 0 10 10 raw 0 0 1 1
 ```
 
 # limma
@@ -328,7 +328,7 @@ qsub -cwd -V -N limmaAsmb -l h_data=10G,time=100:00:00,highp -M briscoel -m beas
 for trainit in 0 1 2 3 4; do for nest in 100 1000 1500; do for crit in entropy gini; do for leaf in 1 5 10; do for feat in 0.1 0.3 0.5; do qsub -cwd -V -N GibsMINERVAit$trainit -l h_data=10G,time=100:00:00,highp -M briscoel -m beas -b y "./run_paraMINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'CRC_k6&CRC_k7' rawfilter_TRUE_trans_clr_scale BatchCorrected bin_crc_normal 0 0 15 minervaclrscale 1 0 1 1 $nest $crit $leaf $feat 5 1 $trainit"; done; done; done; done; done
 
 
-# Jb array
+# Jb arrayx
 
 # memory needs
 Combat: 3GB (1 to 2700)
@@ -361,9 +361,9 @@ issue!!! 14870 overlaps both
 # job:
 
 # RUNNING ( shown to work on 3.8 G)
-for trainit in {5..49}; do for nest in 100 1000 1500; do for crit in entropy gini; do for leaf in 1 5 10; do for feat in 0.1 0.3 0.5; do COUNTER=$((COUNTER + 1)); echo $COUNTER; echo "/u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k5&AGP_max_k6 rawfilter_TRUE_trans_clr_scale BatchCorrected bin_antibiotic_last_year 0 0 10 10 minervaclrscale 1 1 1 Yes $nest $crit $leaf $feat 5 1 $trainit" > data_$COUNTER.in; done; done; done; done; done;
+for trainit in {8..49}; do for nest in 100 1000 1500; do for crit in entropy gini; do for leaf in 1 5 10; do for feat in 0.1 0.3 0.5; do COUNTER=$((COUNTER + 1)); echo $COUNTER; echo "/u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k5&AGP_max_k6 rawfilter_TRUE_trans_clr_scale BatchCorrected bin_antibiotic_last_year 0 0 10 10 minervaclrscale 1 1 1 Yes $nest $crit $leaf $feat 5 1 $trainit" > data_$COUNTER.in; done; done; done; done; done;
 
-qsub -cwd -V -N AGPminerva -l h_data=5G,time=336:00:00,highp -b y -t 13502:15930 "./run_array_paraMINERVA_test_train_grid.sh"
+qsub -cwd -V -N AGPminerva -l h_data=5G,time=24:00:00 -b y -t 1:2268 "./run_array_paraMINERVA_test_train_grid.sh"
 
 qsub -cwd -V -N AGPminerva -l h_data=5G,time=336:00:00,highp -b y -t 13501:13501 "./run_array_paraMINERVA_test_train_grid.sh"
 
@@ -402,25 +402,10 @@ qsub -cwd -V -N SunAGPbigz -l h_data=26G,time=24:00:00,highp -b y -t 31861:42660
 qsub -cwd -V -N SunAGPbigz -l h_data=48G,time=24:00:00,highp -b y -t 31861:31861 "./run_array_paraMINERVA_test_train_grid.sh"
 
 
-qsub -cwd -V -N parSunAGPbigz -l h_data=5G,time=24:00:00,highp -pe shared 4 -b y -t 31862:42660 "./run_array_paraMINERVA_test_train_grid.sh"
+qsub -cwd -V -N parSunAGPbigz -l h_data=5G,time=24:00:00,highp -pe shared 4 -b y -t 31862:42660 "./run_array_paraMINERVA_test_train_grid.sh" k-mer size 8
+ (only needs 17 G total)
 
 
-AGPbix=gz jobs
- 4292015 (26 G)
-   4292151  (48 G)
-
-
-
-
-
-
-#4291754.13501-13501:1 ("AGPminerva") has been submitted - GUCCI
-
-4291755.15931-15931:1 ("AGPminerva") has been submitted
-
-4291773.18361-18361:1 ("AGPminerva") has been submitted - failed because too little memory ( re ran)
-
-4292151.31861 - the bigz
 
 
 
@@ -428,72 +413,6 @@ AGPbix=gz jobs
 ```
 
 
-# Submit thomas
-
-```
-13500:16200
-
-for trainit in {0..49}; do for nest in 100 1000 1500; do for crit in entropy gini; do for leaf in 1 5 10; do for feat in 0.1 0.3 0.5; do COUNTER=$((COUNTER + 1)); echo $COUNTER; echo "/u/home/b/briscoel/project-halperin/MicroBatch Thomas_k6&Thomas_k7 rawfilter_TRUE_trans_clr_scale BatchCorrected bin_crc_normal 0 0 10 10 minervaclrscale 1 1 1 CRC $nest $crit $leaf $feat 5 1 $trainit" > data_$COUNTER.in; done; done; done; done; done;
-
-qsub -cwd -V -N Thomask -l h_data=5G,time=24:00:00 -M briscoel -m beas -b y -t 13504:16200 "./run_array_paraMINERVA_test_train_grid.sh"
-
-============ Thomas adenoma
-COUNTER=64260
-for trainit in {0..49}; do for nest in 100 1000 1500; do for crit in entropy gini; do for leaf in 1 5 10; do for feat in 0.1 0.3 0.5; do COUNTER=$((COUNTER + 1)); echo $COUNTER; echo "/u/home/b/briscoel/project-halperin/MicroBatch Thomas_k6&Thomas_k7 rawfilter_TRUE_trans_clr_scale BatchCorrected bin_crc_adenomaORnormal 0 0 10 10 minervaclrscale 1 1 1 CRC $nest $crit $leaf $feat 5 1 $trainit" > data_$COUNTER.in; done; done; done; done; done;
-
-qsub -cwd -V -N adeThomask -l h_data=5G,time=24:00:00 -M briscoel -m beas -b y -t 64260:66960 "./run_array_paraMINERVA_test_train_grid.sh"
-
-=========
-
-COUNTER=16200
-for type in raw bmc ComBat limma; do for trainit in {0..49}; do for nest in 100 1000 1500; do for crit in entropy gini; do for leaf in 1 5 10; do for feat in 0.1 0.3 0.5; do COUNTER=$((COUNTER + 1)); echo $COUNTER; echo "/u/home/b/briscoel/project-halperin/MicroBatch Thomas_k6&Thomas_k7 "$type"filter_TRUE_trans_none BatchCorrected bin_crc_normal 0 0 10 10 $type 0 1 1 CRC $nest $crit $leaf $feat 5 1 $trainit" > data_$COUNTER.in; done; done; done; done; done; done
- ========
- 
- 
-
-qsub -cwd -V -N Thomasraw -l h_data=5G,time=24:00:00 -M briscoel -m beas -b y -t 16201:18900  "./run_array_paraMINERVA_test_train_grid.sh"
-
-qsub -cwd -V -N Thomasbmc -l h_data=5G,time=24:00:00 -M briscoel -m beas -b y -t 18901:21600 "./run_array_paraMINERVA_test_train_grid.sh"
-
-qsub -cwd -V -N ThomasComBat -l h_data=5G,time=24:00:00 -M briscoel -m beas -b y -t 21601:24300 "./run_array_paraMINERVA_test_train_grid.sh"
-
-qsub -cwd -V -N ThomasLimma -l h_data=5G,time=24:00:00 -M briscoel -m beas -b y -t 24301:27000 "./run_array_paraMINERVA_test_train_grid.sh"
-
-
-
-````
-
-
-
-
-./run_paraMINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'Thomas_k6&Thomas_k7' limmafilter_TRUE_trans_none BatchCorrected bin_crc_normal 0 0 10 10 limma 0 1 1 CRC 10 entropy 1 0.1 5 1 0
-
-
-
-
-```
-
-# Asssemble results
-
-qsub -cwd -V -N MinervaAsmb -l h_data=10G,time=24:00:00 -M briscoel -m beas -b y "./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'Thomas_k6&Thomas_k7' rawfilter_TRUE_trans_clr_scale BatchCorrected bin_crc_normal 0 0 10 10 minervaclrscale 1 1 CRC"
-
-
-## assemble raw
-qsub -cwd -V -N rawAsmb -l h_data=10G,time=24:00:00 -M briscoel -m beas -b y "./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'Thomas_k6&Thomas_k7' rawfilter_TRUE_trans_none BatchCorrected bin_crc_normal 0 0 10 10 raw 0 1 CRC"
-
-## assemble combat
-
-qsub -cwd -V -N combatAsmb -l h_data=10G,time=24:00:00 -M briscoel -m beas -b y "./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'Thomas_k6&Thomas_k7' ComBatfilter_TRUE_trans_none BatchCorrected bin_crc_normal 0 0 10 10 ComBat 0 1 CRC"
-
-## Aseemble limmma
-
-qsub -cwd -V -N limmaAsmb -l h_data=10G,time=24:00:00 -M briscoel -m beas -b y "./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'Thomas_k6&Thomas_k7' limmafilter_TRUE_trans_none BatchCorrected bin_crc_normal 0 0 10 10 limma 0 1 CRC"
-
-## assemble BMC
-
-```
-qsub -cwd -V -N bmcAsmb -l h_data=10G,time=24:00:00 -M briscoel -m beas -b y "./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'Thomas_k6&Thomas_k7' bmcfilter_TRUE_trans_none BatchCorrected bin_crc_normal 0 0 10 10 bmc 0 1 CRC" 
-```
 
 
 ##
@@ -631,29 +550,27 @@ raw complete
 Minerva complete
 
 # AGP k5
-limma complete
-minerva complete
-bmc complete
-combat complete
-raw compelte
+ minerva: lmost all complete,47,48,49 not present (42-46 almost done)
+limma: done
+ bmc 
+ combat
+ raw
 
 # AGP k6
-limma complete
-minerva : incomplete (starting at 3) 
-bmc complete
-combat complete
-raw compelte
-
+ minerva: 527 errbody
+ limma
+ bmc 
+ combat
+ raw
 
 # AGP k7
-/u/home/b/briscoel/project-halperin/MicroBatch/Classifier
- limma_none
  minerva: 527 errbody
- bmc none
- combat there all
- raw: none
+ limma
+ bmc 
+ combat
+ raw
 
-
+/u/home/b/briscoel/project-halperin/MicroBatch/Classifier
 
 ## supervised aseembly
 
@@ -725,6 +642,20 @@ for trainit in {13..49}; do for nest in 100 1000 1500; do for crit in entropy gi
 qsub -cwd -V -N his7Minerva -l h_data=3G,time=24:00:00 -M briscoel -m beas -b y -t 66963:68958 "./run_array_paraMINERVA_test_train_grid.sh"
 
 
+7. SUpervised AGP
+qdel 4291974.27975:31860
+qsub -cwd -V -N SunAGPsmallz -l h_data=3G,time=24:00:00,highp -pe shared 4 -b y -t 27975:31860 "./run_array_paraMINERVA_test_train_grid.sh"
+
+Old Frequency of jobs
+
+4291974 0.50500 SunAGPsmal briscoel     r     09/12/2020 12:39:16 eeskin_pod_12.q@n7225                                             1 27964
+   4291974 0.50500 SunAGPsmal briscoel     r     09/12/2020 12:40:55 eeskin_pod_36.q@n7445                                             1 27965
+   4291974 0.50500 SunAGPsmal briscoel     r     09/12/2020 12:43:32 halperin_pod.q@n7445                                              1 27966
+   4291974 0.50500 SunAGPsmal briscoel     r     09/12/2020 12:44:21 halperin_pod.q@n7445                                              1 27967
+   4291974 0.50500 SunAGPsmal briscoel     r     09/12/2020 12:46:09 eeskin_pod_16.q@n6130                                             1 27968
+   4291974 0.50500 SunAGPsmal briscoel     r     09/12/2020 12:47:00 eeskin_pod_36.q@n7445                                             1 27969
+   4291974 0.50500 SunAGPsmal briscoel     r     09/12/2020 12:48:13 eeskin_pod_16.q@n7124                                             1 27970
+   
 
 ```
 

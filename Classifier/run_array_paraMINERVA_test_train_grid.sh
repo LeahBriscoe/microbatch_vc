@@ -4,5 +4,5 @@
 module load python/anaconda3
 
 while read -r arg_1 arg_2 arg_3 arg_4 arg_5 arg_6 arg_7 arg_8 arg_9 arg_10 arg_11 arg_12 arg_13 arg_14 arg_15 arg_16 arg_17 arg_18 arg_19 arg_20 arg_21; do
-        python paraMINERVA_test_train_grid.py $arg_1 $arg_2 $arg_3 $arg_4 $arg_5 $arg_6 $arg_7 $arg_8 $arg_9 $arg_10 $arg_11 $arg_12 $arg_13 $arg_14 $arg_15 $arg_16 $arg_17 $arg_18 $arg_19 $arg_20 $arg_21;
+        python paraMINERVA_test_train_grid.py $arg_1 $arg_2 $arg_3 $arg_4 $arg_5 $arg_6 $arg_7 $arg_8 $arg_9 $arg_10 $arg_11 $arg_12 $arg_13 $arg_14 $arg_15 $arg_16 $arg_17 $arg_18 $arg_19 $arg_20 $arg_21 $arg_22 $arg_23 $arg_24;
 done < inputs/data_$SGE_TASK_ID.in

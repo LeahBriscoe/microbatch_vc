@@ -26,6 +26,32 @@
 
 # already_trained_auc
 # reducing n_estimators reduced AUC on train, increasing min_samples_leaf reduced AUC on train
+
+
+# LODO PCA example
+# import sys
+# import pandas as pd
+# import utils
+# import numpy as np
+# from sklearn.decomposition import PCA
+# data = np.random.rand(1000,80)
+# labels = np.random.binomial(size=1000, n=1, p= 0.5)
+# train_data = data[0:800]
+# test_data = data[801:1000]
+# num_pcs = 10
+# pca = PCA(n_components=num_pcs,svd_solver='randomized')
+# pca_fit = pca.fit(train_data)
+# train_pca = pca_fit.transform(train_data)
+# test_pca = pca_fit.transform(test_data)
+# 
+###
+#####
+
+
+
+
+
+
 use_validation = True 
 
 
@@ -38,7 +64,7 @@ from sklearn.preprocessing import StandardScaler, normalize
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import model_selection 
 from sklearn.decomposition import PCA
-from sklearn.model_selection import GridSearchCV, cross_val_score, train_test_split
+from sklearn.model_selection import GridSearchCV, cross_val_score, train_test_split, LeaveOneGroupOut
 import statsmodels.formula.api as sm
 from sklearn.metrics import roc_auc_score
 from collections import Counter
@@ -228,6 +254,7 @@ start = timer()
 
 # filter out bad metadata
 metadata = pd.read_csv(metadata_folder + "metadata.txt",delimiter="\t")
+print(Counter(metadata[column_of_interest]))
 if "AGP" in study_names[0]:
     tissue_samples = metadata.index[metadata['body_habitat.x'] == "UBERON:feces"]
     metadata = metadata.loc[tissue_samples]
@@ -235,14 +262,14 @@ if "AGP" in study_names[0]:
 #print(Counter(metadata[column_of_interest]))
 
 
-if len(args) > 12:
+if len(args) > 13:
     if label_pos_or_neg == 1:
         print("positive")
         metadata[column_of_interest] = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],pos_labels =[target_label])
     elif label_pos_or_neg == 0:
         metadata[column_of_interest] = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],neg_labels =[target_label])
 
-#print(Counter(metadata[column_of_interest]))
+
 non_nan_samples = metadata.index[np.invert(np.isnan(metadata[column_of_interest]))]
 
 
@@ -376,10 +403,10 @@ for d in range(len(study_names)): # range(1):#
             results_dict['train_auc_trained'].append(already_trained_auc)
             print("trained_model train Rf " + str(already_trained_auc))            
 
-            # get predictions on newly trained model
-            newly_trained_auc = RF_cv(X_train,y_train,best_params)
-            results_dict['mean_train_cv_auc'].append(newly_trained_auc)
-            print("newly trained mean trained mean Rf " + str(np.mean(newly_trained_auc)))
+            # # get predictions on newly trained model
+            # newly_trained_auc = RF_cv(X_train,y_train,best_params)
+            # results_dict['mean_train_cv_auc'].append(newly_trained_auc)
+            # print("newly trained mean trained mean Rf " + str(np.mean(newly_trained_auc)))
             
             # validation metrics
             if use_validation:
@@ -395,10 +422,10 @@ for d in range(len(study_names)): # range(1):#
             results_dict['test_auc_trained'].append(already_trained_test_auc)
             print("trained_model test RF" + str(already_trained_test_auc))
 
-            # get predictions on newly trained model
-            test_RF = RF_cv(X_test,y_test,best_params)
-            results_dict['mean_test_cv_auc'].append(test_RF)
-            print("newly trained test mean Rf " + str(np.mean(test_RF)))
+            # # get predictions on newly trained model
+            # test_RF = RF_cv(X_test,y_test,best_params)
+            # results_dict['mean_test_cv_auc'].append(test_RF)
+            # print("newly trained test mean Rf " + str(np.mean(test_RF)))
             
             all_datasets_dict["dataset" + str(d)] = results_dict  
             pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_tt_grid.pkl", "wb" ) )

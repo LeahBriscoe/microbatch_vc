@@ -30,7 +30,7 @@ print(args)
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 #          "Hispanic", "smartsva",10,"Instrument",1,1,"mets_idf3_v2",0,"none",1,"1")
 # args = c("kmer", 4, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-#          "Hispanic", "raw",10,"extraction_robot..exp.",1,1,"bmi_v2",0,"clr_scale")
+# "Hispanic", "raw",10,"extraction_robot..exp.",1,1,"bmi_v2",0,"clr_scale")
 
 # args = c("kmer", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 #          "PTBmeta", "refactor",10,"study",1,1,"preg_outcome",0,"clr_scale",1,"preterm")
@@ -136,7 +136,7 @@ if(data_type == "kmer"){
   otu_table = readRDS(paste0(otu_input_folder,"/otu_table", file_type,".rds"))
 }
 total_metadata = readRDS(paste0(input_folder,"/metadata.rds"))
-
+dim(total_metadata)
 
 
 if(grepl("reprocess",study_name)){

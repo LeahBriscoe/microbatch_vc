@@ -38,7 +38,7 @@ from sklearn.preprocessing import StandardScaler, normalize
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import model_selection 
 from sklearn.decomposition import PCA
-from sklearn.model_selection import GridSearchCV, cross_val_score, train_test_split
+from sklearn.model_selection import GridSearchCV, cross_val_score, train_test_split, LeaveOneGroupOut
 import statsmodels.formula.api as sm
 from sklearn.metrics import roc_auc_score
 from collections import Counter
@@ -87,6 +87,10 @@ max_features_input = float(args[18])
 min_samples_split_input = int(args[19])
 max_depth_input = int(args[20])
 train_it_input = int(args[21])
+
+bool_lodo = bool(int(args[22]))
+lodo_group = args[23]
+bool_sep_pc = bool(int(args[24])) # perform PCA on training set only and apply eigen vectors to test set
 
 print("spec_label_scheme")
 print(spec_label_scheme)
@@ -236,6 +240,8 @@ for d in range(len(study_names)): # range(1):#
 
     labels = metadata_labels[column_of_interest]
 
+
+
         
     # outline
     # for data_table:
@@ -268,7 +274,18 @@ for d in range(len(study_names)): # range(1):#
         y = y[~na_mask]
         # for each test train split in 5 fold cross validation
         train_it = 0
-        for train_index, test_index in rskf.split(X, y):   
+
+        
+        if bool_lodo:
+            print("lodo time")
+
+            groups = np.array(metadata_labels[lodo_group])
+            logo = LeaveOneGroupOut()
+            splitter = logo.split(X, y, groups)
+
+        else:
+            splitter = rskf.split(X, y)
+        for train_index, test_index in splitter:   
             #print("len train index")
             #print(train_index[0:5]) 
             #print(len(train_index))
@@ -336,10 +353,28 @@ for d in range(len(study_names)): # range(1):#
         X = X[~na_mask,:]
         y = y[~na_mask]
         pc_scores = pc_scores[~na_mask,:]
+        metadata_labels_temp = metadata_labels.loc[~na_mask,:]
+        print("Shape metadata temp")
+        print(metadata_labels_temp.shape)
         # for each test train split in 5 fold cross validation
         
         train_it = 0
-        for train_index, test_index in rskf.split(X, y):
+
+        if bool_lodo:
+            print("lodo time")
+
+            groups = np.array(metadata_labels[lodo_group])
+            logo = LeaveOneGroupOut()
+            splitter = logo.split(X, y, groups)
+
+
+
+            to_plot_correlation = metadata_labels_temp.append(pc_scores)#np.append(pc_scores,metadata_labels)
+            np.savetxt(output_folders[d] + "pc_and_others.txt", to_plot_correlation)
+
+        else:
+            splitter = rskf.split(X, y)
+        for train_index, test_index in splitter:
             #print("train index")
             #print(train_index[0:5]) 
 

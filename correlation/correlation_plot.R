@@ -5,18 +5,18 @@ print(args)
 # args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"T2D",
 #          "SVs_minerva_first1filter_TRUE_trans_clr_scale","protect_bin_t2d")
 
-# args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Thomas",
-#          "SVs_minerva_first4filter_TRUE_trans_clr_scale","protect_bin_crc_adenomaORnormal")
+args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Thomas",
+         "SVs_minerva_first20filter_TRUE_trans_none","protect_bin_crc_adenomaORnormal")
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
 #          "SVs_minerva_first3filter_TRUE_trans_clr_scale","protect_bin_antibiotic_last_year")
 # args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Hispanic",
 #          "SVs_minerva_first10filter_TRUE_trans_clr_scale","protect_antibiotic")
 # args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
 #          "SVs_minerva_first10filter_TRUE_trans_clr_scale","protect_bin_crc_adenomaORnormal")
-args = c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
-         "SVs_minerva_first10filter_TRUE_trans_none","protect_bin_crc_adenomaORnormal")
+# args = c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
+#          "SVs_minerva_first10filter_TRUE_trans_clr_scale","protect_bin_crc_adenomaORnormal")
 # args = c("otu", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_complete",
-#          "SVs_minerva_first10filter_TRUE_trans_none","protect_bin_antibiotic_last_year")
+#          "SVs_minerva_first10filter_TRUE_trans_clr_scale","protect_bin_antibiotic_last_year")
 
 
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Hispanic",
@@ -369,7 +369,7 @@ if(grepl("AGP",study_name)){
   corrplot(C[1:(nrow(C)-ncol(input_sv_table)),c(((nrow(C)-ncol(input_sv_table))+1):ncol(C),1,2)],tl.col="black")
   
 }else{
-  corrplot(C[1:(nrow(C)-ncol(input_sv_table)),c(((nrow(C)-ncol(input_sv_table))+1):ncol(C),1)],tl.col="black")
+  corrplot(C[1:(nrow(C)-ncol(input_sv_table)),c(((nrow(C)-ncol(input_sv_table))+1):ncol(C),1)],tl.col="black",cl.lim=c(0,1))
   
 }
 #plotCorrMatrix(C[1:(nrow(C)-14),((nrow(C)-14)+1):ncol(C)],sort=FALSE)

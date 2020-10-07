@@ -52,7 +52,7 @@
 
 
 
-use_validation = True 
+use_validation = True  # use validation set and get performance (different from use val which is concerned with tuning)
 
 
 
@@ -95,14 +95,22 @@ num_pcs = 20
 num_pcs = int(args[9])
 special_name = args[10]
 
-perform_MINERVA = bool(int(args[11]))
+perform_MINERVA = int(args[11])
 
 use_val = bool(int(args[12])) # use validation to determine best parameters
-if len(args) > 13:
-    label_pos_or_neg = int(args[13]) # do you want to treat CRC as positive class or negative class? 
-    target_label = args[14] # phenotype representing positive class or negative class? eg. CRC eg. H
-    print(target_label)
+spec_label_scheme = bool(int(args[13]))
+label_pos_or_neg = int(args[14]) # do you want to treat CRC as positive class or negative class? 
+target_label = args[15] # phenotype representing positive class or negative class? eg. CRC eg. H
+print(target_label)
+if len(args) > 16:
+    print("many arguments")
+    bool_lodo = bool(int(args[16]))
+    lodo_group = args[17]
+    bool_sep_pc = bool(int(args[18])) # perform PCA on training set only and apply eigen vectors to test set
 else:
+    bool_lodo = False
+
+if not spec_label_scheme:
     label_pos_or_neg = 1
     target_label = 1
 use_domain_pheno = False # for when running raw to compare to domain pheno
@@ -262,7 +270,7 @@ if "AGP" in study_names[0]:
 #print(Counter(metadata[column_of_interest]))
 
 
-if len(args) > 13:
+if spec_label_scheme:
     if label_pos_or_neg == 1:
         print("positive")
         metadata[column_of_interest] = utils.binarize_labels_mod(metadata[column_of_interest],none_labels = ["not applicable",float("Nan"),'not provided'],pos_labels =[target_label])
@@ -281,6 +289,7 @@ print ("Random number with seed 30")
 random.seed(30)
 
 rskf = model_selection.RepeatedStratifiedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=123)
+logo = LeaveOneGroupOut()
 
 parameter_dict = {'n_estimators':[100,1000,1500],'criterion': ['entropy','gini'],\
     'min_samples_leaf': [1,5,10],'max_features':[0.1,0.30,0.5],'min_samples_split': [5],'max_depth':[1]}
@@ -345,7 +354,7 @@ for d in range(len(study_names)): # range(1):#
     #####  Preparing Data #####
     ###########################
 
-    if not perform_MINERVA:
+    if perform_MINERVA == 0:
         feature_table_np = np.array(feature_table)
         labels_np = np.array(labels)
         dataset_start= timer()
@@ -358,7 +367,20 @@ for d in range(len(study_names)): # range(1):#
         y = y[~na_mask]
         # for each test train split in 5 fold cross validation
         train_it = 0
-        for train_index, test_index in rskf.split(X, y):  
+
+
+
+        if bool_lodo:
+            print("lodo time")
+
+            groups = np.array(metadata_labels[lodo_group])
+            logo = LeaveOneGroupOut()
+            splitter = logo.split(X, y, groups)
+
+        else:
+            splitter = rskf.split(X, y)
+        for train_index, test_index in splitter:   
+        #for train_index, test_index in rskf.split(X, y):  
             #print("train index")
             #print(train_index[0:5]) 
 
@@ -428,9 +450,14 @@ for d in range(len(study_names)): # range(1):#
             # print("newly trained test mean Rf " + str(np.mean(test_RF)))
             
             all_datasets_dict["dataset" + str(d)] = results_dict  
-            pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_tt_grid.pkl", "wb" ) )
+            if use_val:
+                pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_tt_grid_VAL.pkl", "wb" ) )
              
-                
+            else:
+                pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_tt_grid.pkl", "wb" ) )
+             
+             
+               
                 
             train_it += 1
             test_train_end = timer()
@@ -439,13 +466,19 @@ for d in range(len(study_names)): # range(1):#
 
 
 
-    else:
+    elif perform_MINERVA == 1:
         # get PC scores
         pca = PCA(n_components=num_pcs,svd_solver='randomized')
-        # do the PCA thing
-        temp = feature_table.transpose()
-        pca.fit(temp)
-        pc_table = pca.transform(temp)  
+        if not bool_lodo:
+            # do the PCA thing
+            temp = feature_table.transpose()
+            pca.fit(temp)
+            print("Time for pca cal")
+            pca_start= timer()
+            print("pca start clock")
+            print(pca_start)
+            pc_table = pca.transform(temp)  
+            print(timer() - pca_start )
         feature_table_np = np.array(feature_table)
         labels_np = np.array(labels)
          
@@ -453,18 +486,38 @@ for d in range(len(study_names)): # range(1):#
         results_dict = dict()
         X = feature_table_np.transpose()
         y = labels_np
-        pc_scores = pc_table # get pc scores
+
         na_mask = pd.isna(y)
         
         X = X[~na_mask,:]
         y = y[~na_mask]
-        pc_scores = pc_scores[~na_mask,:]
+        if not bool_lodo:
+            
+            pc_scores = pc_table # get pc scores
+            pc_scores = pc_scores[~na_mask,:]
         # for each test train split in 5 fold cross validation
         
         starting_index = 0
         train_it = 0
 
-        for train_index, test_index in rskf.split(X, y):
+        if bool_lodo:
+            print("lodo time")
+
+            groups = np.array(metadata_labels[lodo_group])
+            
+            splitter = logo.split(X, y, groups)
+
+        else:
+            splitter = rskf.split(X, y)
+
+        print("Compare number of splits")
+        print("stratified")
+        print(rskf.get_n_splits(X,y))
+        print("stratified")
+        groups = np.array(metadata_labels[lodo_group])
+        print(logo.get_n_splits(X, y, groups))
+
+        for train_index, test_index in splitter:
             test_train_start = timer()
 
             if train_it >= starting_index:
@@ -477,7 +530,16 @@ for d in range(len(study_names)): # range(1):#
                 
                 X_train, X_test = X[train_index,], X[test_index,]
                 y_train, y_test = y[train_index], y[test_index]
-                pc_scores_train, pc_scores_test =  pc_scores[train_index], pc_scores[test_index]
+                #print(metadata_labels_temp["sampleID"][test_index[0:50]])
+
+                if bool_lodo:
+                    pca_fit = pca.fit(X_train)
+                    pc_scores_train = pca.transform(X_train)
+                    pc_scores_test = pca.transform(X_test)
+
+                else:
+                    pc_scores_train, pc_scores_test =  pc_scores[train_index], pc_scores[test_index]
+
 
                 if use_validation:
 
@@ -563,6 +625,164 @@ for d in range(len(study_names)): # range(1):#
                                 
                           
                      
+                    
+                    
+            train_it += 1
+            test_train_end = timer()
+            print("Finished one test train split")
+            print(test_train_end - test_train_start)
+    elif perform_MINERVA == 2:
+        # get PC scores
+        pca = PCA(n_components=num_pcs,svd_solver='randomized')
+        if not bool_lodo:
+            # do the PCA thing
+            temp = feature_table.transpose()
+            pca.fit(temp)
+            print("Time for pca cal")
+            pca_start= timer()
+            print("pca start clock")
+            print(pca_start)
+            pc_table = pca.transform(temp)  
+            print(timer() - pca_start )
+        feature_table_np = np.array(feature_table)
+        labels_np = np.array(labels)
+         
+        dataset_start= timer()
+        results_dict = dict()
+        X = feature_table_np.transpose()
+        y = labels_np
+
+        na_mask = pd.isna(y)
+        
+        X = X[~na_mask,:]
+        y = y[~na_mask]
+        if not bool_lodo:
+            
+            pc_scores = pc_table # get pc scores
+            pc_scores = pc_scores[~na_mask,:]
+        # for each test train split in 5 fold cross validation
+        
+        starting_index = 0
+        train_it = 0
+
+        if bool_lodo:
+            print("lodo time")
+
+            groups = np.array(metadata_labels[lodo_group])
+            
+            splitter = logo.split(X, y, groups)
+
+        else:
+            splitter = rskf.split(X, y)
+
+        print("Compare number of splits")
+        print("stratified")
+        print(rskf.get_n_splits(X,y))
+        print("stratified")
+        groups = np.array(metadata_labels[lodo_group])
+        print(logo.get_n_splits(X, y, groups))
+
+        for train_index, test_index in splitter:
+            test_train_start = timer()
+
+            if train_it >= starting_index:
+                #print("train index")
+                #print(train_index[0:5])
+                
+                test_train_start = timer()
+                #print(train_index)
+                #print(test_index)
+                
+                X_train, X_test = X[train_index,], X[test_index,]
+                y_train, y_test = y[train_index], y[test_index]
+                #print(metadata_labels_temp["sampleID"][test_index[0:50]])
+
+                if bool_lodo:
+                    pca_fit = pca.fit(X_train)
+                    pc_scores_train = pca.transform(X_train)
+                    pc_scores_test = pca.transform(X_test)
+
+                else:
+                    pc_scores_train, pc_scores_test =  pc_scores[train_index], pc_scores[test_index]
+
+
+                if use_validation:
+
+                    n_splits = 5
+                    n_repeats = 1
+
+                    X_train, X_val, y_train, y_val, pc_scores_train, pc_scores_val = train_test_split(X_train, y_train,pc_scores_train, test_size=0.30, random_state=1) 
+                    #print("First 5 xval")
+                    #print(X_val[0:5])
+                
+                if train_it == starting_index: 
+                    results_dict["number samples"] = []
+                results_dict["number samples"].append(X_train.shape[0])
+                # for each PC we regress out 
+                
+                p = num_pcs
+                if train_it == starting_index: 
+                    results_dict["PC" + str(p)] = dict()
+                    results_dict["PC" + str(p)]['train_best_params'] = dict()
+                    results_dict["PC" + str(p)]['train_auc_trained'] = []
+                    results_dict["PC" + str(p)]['mean_train_cv_auc'] = []
+                    results_dict["PC" + str(p)]['mean_test_cv_auc'] = []
+                    results_dict["PC" + str(p)]['test_auc_trained'] = []
+                    results_dict["PC" + str(p)]['val_auc_trained']= []
+                       
+                    
+                    
+                # perform grid search on train
+
+                if use_val:
+                    best_train_model, best_params = read_RF_grid_search_pc_version(output_folders[d],parameter_dict,train_it_input = train_it,pc=p,x=pc_scores_val,y = y_val)
+                else:
+                    best_train_model, best_params = read_RF_grid_search_pc_version(output_folders[d],parameter_dict,train_it_input = train_it,pc=p,x=pc_scores_train,y = y_train)
+                
+
+                # save best params
+                results_dict["PC" + str(p)]['train_best_params'][train_it] = best_params
+                print("finished grid search: " + "train it " + str(train_it) + ", PC" + str(p))
+                # get predictions on trained model
+                y_train_pred_prob = best_train_model.predict_proba(pc_scores_train)
+                already_trained_auc = roc_auc_score(y_true = y_train, y_score = y_train_pred_prob[:,1])
+                results_dict["PC" + str(p)]['train_auc_trained'].append(already_trained_auc)
+                print("trained_model train Rf " + str(already_trained_auc))            
+
+                # # get predictions on newly trained model
+                # newly_trained_auc = RF_cv(X_train_corrected,y_train,best_params)
+                # results_dict["PC" + str(p)]['mean_train_cv_auc'].append(newly_trained_auc)
+                # print("newly trained mean trained mean Rf " + str(np.mean(newly_trained_auc)))
+                
+                # validation metrics
+                if use_validation:
+                    y_val_pred_prob = best_train_model.predict_proba(pc_scores_val)
+                    already_trained_val_auc = roc_auc_score(y_true = y_val, y_score = y_val_pred_prob[:,1])
+                    results_dict["PC" + str(p)]['val_auc_trained'].append(already_trained_val_auc)
+                    print("trained_model validation Rf " + str(already_trained_val_auc)) 
+
+                # test metrics
+                # get predictions on trained model
+                y_test_pred_prob = best_train_model.predict_proba(pc_scores_test)
+                already_trained_test_auc = roc_auc_score(y_true = y_test, y_score = y_test_pred_prob[:,1])
+                results_dict["PC" + str(p)]['test_auc_trained'].append(already_trained_test_auc)
+                print("trained_model test RF" + str(already_trained_test_auc))
+
+                # # get predictions on newly trained model
+                # test_RF = RF_cv(X_test_corrected,y_test,best_params)
+                # results_dict["PC" + str(p)]['mean_test_cv_auc'].append(test_RF)
+                # print("newly trained test mean Rf " + str(np.mean(test_RF)))
+                
+                
+                all_datasets_dict["dataset" + str(d)] = results_dict
+                if use_val:
+                    pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_tt_grid_VAL.pkl", "wb" ) )
+                               
+                else:
+                    pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_tt_grid.pkl", "wb" ) )
+                            
+                      
+                 
                     
                     
             train_it += 1

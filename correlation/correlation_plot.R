@@ -5,8 +5,9 @@ print(args)
 # args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"T2D",
 #          "SVs_minerva_first1filter_TRUE_trans_clr_scale","protect_bin_t2d")
 
-args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Thomas",
-         "SVs_minerva_first20filter_TRUE_trans_none","protect_bin_crc_adenomaORnormal")
+args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Thomas",
+         "SVs_minerva_first3filter_TRUE_trans_clr_scale","protect_bin_crc_normal",
+         "BatchCorrected_limmafilter_TRUE_trans_scale")
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
 #          "SVs_minerva_first3filter_TRUE_trans_clr_scale","protect_bin_antibiotic_last_year")
 # args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Hispanic",
@@ -14,10 +15,10 @@ args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Thom
 # args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
 #          "SVs_minerva_first10filter_TRUE_trans_clr_scale","protect_bin_crc_adenomaORnormal")
 # args = c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
-#          "SVs_minerva_first10filter_TRUE_trans_clr_scale","protect_bin_crc_adenomaORnormal")
+#          "SVs_minerva_first2filter_TRUE_trans_clr_scale","protect_bin_crc_normal","BatchCorrected_ComBatfilter_TRUE_trans_none")
 # args = c("otu", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_complete",
 #          "SVs_minerva_first10filter_TRUE_trans_clr_scale","protect_bin_antibiotic_last_year")
-
+colnames(total_metadata)
 
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Hispanic",
 #          "minerva_first1filter_TRUE_trans_clr_scale","protect_diabetes3_v2",
@@ -34,6 +35,7 @@ microbatch_folder = args[3]#'/Users/leahbriscoe/Documents/MicroBatch/microbatch_
 study_name = args[4]
 sv_file = args[5]#c("ComBat_with_batch2")#"pca_regress_out_scale","clr_pca_regress_out_no_scale","clr_pca_regress_out_scale") #)#,
 batch_def_folder = args[6]
+batch_correct_df = args[7]
 
 # ============================================================================== #
 # load packages and functions
@@ -87,8 +89,90 @@ if(grepl("AGP",study_name)){
 # ============================================================================== #
 # read in data
 svdata = readRDS(paste0(input_folder ,"/",sv_file,".rds"))
+key = "limma_scale" #"minerva_clrscale"
+if(plot_pca_bool){
+  bc_data  = read.csv(paste0(input_folder ,"/",batch_correct_df,".txt"),sep="\t")
+  
+  require(RColorBrewer)
+ 
+  intersect_samples = intersect(colnames(bc_data),row.names(total_metadata))
+  total_metadata = total_metadata[intersect_samples,]
+  dim(total_metadata)
+  dim(bc_data)
+  
+  # PLOT HIERARCHICAL CLUSTERING
+  my_group <- as.numeric(as.factor(total_metadata$dataset_name))
+  colSide <- brewer.pal(9, "Set1")[my_group]
+  pdf(paste0(plot_folder,"/heatmap_raw.pdf"))
+  heatmap(as.matrix(bc_data),Rowv = NA,ColSideColors = colSide)
+  dev.off()
+  pca_method_result  = pca_method(bc_data,clr_transform=FALSE,center_scale_transform =FALSE,10)
+  
+  # PLOT PCS
+  raw_input = data.frame(svdata$pca_score)
+  intersect_samples = intersect(row.names(raw_input),row.names(total_metadata))
+  raw_input = raw_input[intersect_samples,]
+  total_metadata = total_metadata[intersect_samples,]
+  raw_input$group = total_metadata$dataset_name
+  
+  pca_plot(raw_input,key,plot_folder)
+  
+  postminerva_input = data.frame(pca_method_result$pca_score)
+  postminerva_input$group = total_metadata$dataset_name
+  
+  pca_plot(postminerva_input,key,plot_folder)
+  
+}
+
+# WILCOXON BETWEEN BATCHES
+
+total_metadata$sample_name = row.names(total_metadata)
+cohort_str_names = names(table(total_metadata$dataset_name))
+wilcoxon_collection = data.frame(matrix(vector(),nrow=length(cohort_str_names)^2,ncol=12))
+colnames(wilcoxon_collection) = c("cohort1","cohort2",paste0("PC",c(1:10)))
+row_num = 1
+test_pc_scores = postminerva_input #raw_input#  #
+already_done = c()
+for(cohort_str in cohort_str_names){
+  for(cohort_str2 in cohort_str_names){
+    if(cohort_str2 != cohort_str){
+      if(paste0(cohort_str,cohort_str2) %in% already_done | paste0(cohort_str2,cohort_str) %in% already_done){
+        print("skip")
+      }else{
+        already_done = c(already_done, paste0(cohort_str,cohort_str2))
+        
+        one_cohort = total_metadata %>% filter(dataset_name == cohort_str) %>% select(sample_name)
+        one_cohort2 = total_metadata %>% filter(dataset_name == cohort_str2) %>% select(sample_name)
+        wilc_result_vec = c()
+        for(pc_num in c(1:10)){
+          #dim(svdata$pca_score)
+          #intersect(row.names(svdata$pca_score),one_cohort$sample_name)
+          x = test_pc_scores[one_cohort$sample_name,pc_num]
+          y = test_pc_scores[one_cohort2$sample_name,pc_num]
+          wilc_result = wilcox.test(x,y, alternative = "two.sided")
+          wilc_result_vec = c(wilc_result_vec,wilc_result$p.value)
+          
+        }
+        wilcoxon_collection[row_num,] = c(cohort_str,cohort_str2,wilc_result_vec)
+        row_num = row_num+ 1
+      }
+      
+    }
+  }
+  
+}
+
+#postminerva
+write.csv(wilcoxon_collection,paste0(plot_folder,"/wilcoxon_result_",key,".csv"))
 
 
+# ============================================================================== #
+# pc_score
+
+batch_column = "dataset_name"
+df_out <- as.data.frame(svdata$pca_score)
+df_out$group <- total_metadata[,batch_column]
+pca_plot(df_out,"KmerRaw",plot_folder)
 # ============================================================================== #
 # make model matrix
 if(grepl("AGP",study_name)){
@@ -313,7 +397,7 @@ if(grepl("AGP",study_name)){
                                                          "BMI","Age","CollectionYear","Instrument","LibrarySize")],
                                  input_sv_table)
 }else if(grepl("Thomas",study_name)){
-  colnames(input_metadata_table) = c("HasColorectalCancer", "Sex", "Age","BMI","Dataset","DNA.Extraction.Kit","Country","LibrarySize")
+  colnames(input_metadata_table) = c("HasColorectalCancer", "Sex", "Age","BMI","Instrument","CenterName","Dataset","DNA.Extraction.Kit","Country","LibrarySize")
   input_metadata_pc = data.frame(input_metadata_table[,c("HasColorectalCancer", "Sex","BMI","Age","Country" ,"DNA.Extraction.Kit","LibrarySize","Dataset")],
                                  input_sv_table)
 }else if(grepl("Hispanic",study_name) ){

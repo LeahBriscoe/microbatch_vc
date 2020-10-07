@@ -52,7 +52,7 @@ if(data_type == "kmer"){
 }else{
   input_folder =  paste0(otu_input_folder,"/",batch_def_folder)
 }
-total_metadata = readRDS(paste0(kmer_input_folder,"/metadata.rds"))
+total_metadata = readRDS(paste0(otu_input_folder,"/metadata.rds"))
 # =========================================================================== #
 #getting read depth
 if(grepl("AGP",study_name)){
@@ -121,9 +121,15 @@ if(grepl("AGP",study_name)){
   
   numeric_vars = c("bmi_v2","age_v2.x","librarysize")
 
+}else if(grepl("thomas",study_name)){
+  binary_vars = c("bin_crc_normal","bin_crc_adenomaORnormal","gender")
+  categorical_vars = c("dataset_name","sequencing_platform","host_race")
+  numeric_vars = c("number_reads","age") #"bmi_corrected",
+  
+  
 }else if(grepl("CRC",study_name)){
   binary_vars = c("bin_crc_normal","bin_crc_adenomaORnormal","sex")
-  categorical_vars = c("study","seq_meth","host_race")
+  categorical_vars = c("study","seq_meth","country")
   numeric_vars = c("library_size","age") #"bmi_corrected",
   
   

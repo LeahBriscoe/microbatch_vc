@@ -16,8 +16,13 @@
 2. [Aspera](#aspera)
 
 ```
+qrsh -l h_rt=336:00:00,h_data=3G,highp -pe shared 4
+
+qrsh -l h_rt=24:00:00,h_data=5G 
 qrsh -l h_rt=24:00:00,h_data=8G 
 qrsh -l h_rt=336:00:00,h_data=8G,highp -pe shared 4
+
+qrsh -l h_rt=336:00:00,h_data=8G,highp
 
 conda activate /u/home/b/briscoel/project-halperin/deblurenv
 
@@ -1171,7 +1176,7 @@ for method in PhenoCorrect; do for phen in bin_crc_normal bin_crc_adenomaORnorma
 ## Classification: bin_crc_normal bin_crc_adenomaORnormal
  ```
  ###raw:  limma bmc ComBat: 3245962
-for svs in 1; do for tran in clr_scale; do for phen in bin_crc_adenomaORnormal; do for method in PhenoCorrect; do for k in 8; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=3G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch CRC_thomas_otu_'$method' BatchCorrected '$phen' '$method'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen'"; done; done; done; done; done
+for svs in 1; do for tran in logscale; do for phen in bin_crc_normal; do for method in ComBat; do for k in 7; do qsub -cwd -V -N "$method"pred"$svs$tran$phen" -l h_data=3G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch CRC_thomas_otu BatchCorrected '$phen' '$method'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen'"; done; done; done; done; done
 
 
 for svs in 50; do for seed in 1 2 3 4 5; do for tran in clr_scale; do for phen in bin_crc_normal bin_crc_adenomaORnormal; do for method in ProtectPCA ProtectPCA_compare; do for k in 7; do qsub -cwd -V -N CRCThomaspred"$svs$tran$phen" -l h_data=3G,time=24:00:00 -M briscoel -m beas -b y "./run_classifier_CI.sh /u/home/b/briscoel/project-halperin/MicroBatch CRC_thomas_otu_subsample_20_seed_'$seed' BatchCorrected '$phen' '$method'_first'$svs'filter_TRUE_trans_'$tran' 10 kmer protect_'$phen'"; done; done; done; done; done; done

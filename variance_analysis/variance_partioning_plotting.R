@@ -6,16 +6,16 @@ args = commandArgs(trailingOnly=TRUE)
 # args = c("AGP_Hfilter", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_max_k6",
 #          "raw&clr@raw&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10@raw&clr_pca_regress_out_no_scale_first10&clr_pca_regress_out_scale_first10",
 #          'Instrument&Instrument&Instrument',"0","") #filter_FALSE_filter_FALSE
-args = c("Hispanic_k7", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Hispanic_k7",
-         "rawfilter_TRUE_trans_clr_scale&minerva_first11filter_TRUE_trans_clr_scale",
-         'protect_antibiotic',"1","filter_FALSE") #filter_FALSE_filter_FALSE
+# args = c("Hispanic_k7", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Hispanic_k7",
+#          "rawfilter_TRUE_trans_clr_scale&minerva_first11filter_TRUE_trans_clr_scale",
+#          'protect_antibiotic',"1","filter_FALSE") #filter_FALSE_filter_FALSE
 
 # args = c("AGP_max", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_max_k6",
 #          "rawfilter_TRUE_trans_clr_scale&minerva_first2filter_TRUE_trans_clr_scale",
 #          'protect_bin_antibiotic_last_year',"1","filter_FALSE") #filter_FALSE_filter_FALSE
-# args = c("Thomas", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Thomas_k6",
-#          "rawfilter_TRUE_trans_clr_scale&minerva_first4filter_TRUE_trans_clr_scale",
-#          'protect_bin_crc_adenomaORnormal',"1","filter_FALSE") #filter_FALSE_filter_FALSE
+args = c("Thomas", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Thomas_k7",
+         "rawfilter_TRUE_trans_scale&ComBatfilter_TRUE_trans_logscale",
+         'protect_bin_crc_normal',"0","filter_FALSE") #filter_FALSE_filter_FALSE
 # args = c("T2D", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "T2D_k7",
 #          "rawfilter_TRUE_trans_clr_scale&minerva_first1filter_TRUE_trans_clr_scale",
 #          'protect_bin_t2d',"1","filter_FALSE") #filter_FALSE_filter_FALSE
@@ -204,6 +204,7 @@ for( t in 1:length(varpar_types )){
     top_5_pretty = c( 'CenterName','DNA Extraction Kit',"Instrument","Study",'LibrarySize','CRC Status') #"BMI",
     top3 = c('DNA_extraction_kit',"Instrument")
     top3_pretty  = c('DNA_extraction_kit',"Instrument")
+    custom_title = "Thomas et al."
   }else if(grepl("T2D",study_name)){
     vp = vp[order(vp$bin_t2d,decreasing = TRUE),]
     top_5 = c( "study","seq_instrument","library_size","age","sex","bin_t2d") #"BMI"
@@ -297,7 +298,7 @@ p<-ggplot(to_plot ,aes(x=bio_variability_explained,y= tech_variability_explained
 p<-p + geom_point() + theme_bw()+ theme(text = element_text(size=20)) #+ theme(legend.position = "none") #+ stat_ellipse()#+ scale_color_manual(values=c("#999999", "#56B4E9"))
 p <- p + labs(x = "Prop. variance biological", y = "Prop. variance technical", color = "Method")
 p
-ggsave(filename = paste0(plot_path,'/scatter_',varpar_types[1],'.pdf'), 
+ggsave(filename = paste0(plot_path,'/scatter_',varpar_types[2],'.pdf'), 
        plot = p ) 
 
 raw = to_plot %>% filter(L1 == "Raw")
@@ -305,7 +306,6 @@ not_raw = to_plot %>% filter(L1 == "MINERVA")
 head(raw)
 head(not_raw)
 
-range(not_raw$bio_ratio)
 not_raw$tech_ratio = log((not_raw$tech_variability_explained+1)/(raw$tech_variability_explained+1))
 not_raw$bio_ratio = log((not_raw$bio_variability_explained+1)/(raw$bio_variability_explained+1))
 
@@ -329,7 +329,7 @@ p<-p + geom_point() + theme_bw()+ theme(text = element_text(size=17)) #+ theme(l
 p <- p + labs(x = "Log Fold increase in prop. variance biological", y = "Log Fold increase in prop. variance technical", color = "Method")
 p <- p + scale_color_manual(values=c("red","black"))
 p
-ggsave(filename = paste0(plot_path,'/scatter_ratio_',varpar_types[1],'.pdf'), 
+ggsave(filename = paste0(plot_path,'/scatter_ratio_',varpar_types[2],'.pdf'), 
        plot = p,width=9,height=7 ) 
 
 # ============================================================================== #

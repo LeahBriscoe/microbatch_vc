@@ -68,7 +68,7 @@ num_pcs = 20
 num_pcs = int(args[9])
 special_name = args[10]
 
-perform_MINERVA = bool(int(args[11]))
+perform_MINERVA = int(args[11]) # 1: minerva, #2 predict with PC's directly
 
 spec_label_scheme = bool(int(args[12]))
 
@@ -88,10 +88,13 @@ min_samples_split_input = int(args[19])
 max_depth_input = int(args[20])
 train_it_input = int(args[21])
 
-bool_lodo = bool(int(args[22]))
-lodo_group = args[23]
-bool_sep_pc = bool(int(args[24])) # perform PCA on training set only and apply eigen vectors to test set
-
+if len(args) > 22:
+    print("LODO time?")
+    bool_lodo = bool(int(args[22]))
+    lodo_group = args[23]
+    bool_sep_pc = bool(int(args[24])) # perform PCA on training set only and apply eigen vectors to test set
+else:
+    bool_lodo = False
 print("spec_label_scheme")
 print(spec_label_scheme)
 
@@ -192,7 +195,7 @@ print ("Random number with seed 30")
 random.seed(30)
 
 rskf = model_selection.RepeatedStratifiedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=123)
-
+logo = LeaveOneGroupOut()
 parameter_dict = {'n_estimators':[n_estimators_input],'criterion': [criterion_input],\
 'min_samples_leaf': [min_samples_leaf_input],'max_features':[max_features_input],\
 'min_samples_split': [min_samples_split_input],'max_depth':[max_depth_input]}
@@ -261,7 +264,7 @@ for d in range(len(study_names)): # range(1):#
     #####  Preparing Data #####
     ###########################
 
-    if not perform_MINERVA:
+    if perform_MINERVA == 0:
         feature_table_np = np.array(feature_table)
         labels_np = np.array(labels)
         dataset_start= timer()
@@ -328,18 +331,19 @@ for d in range(len(study_names)): # range(1):#
 
 
 
-    else:
+    elif perform_MINERVA == 1:
         # get PC scores
         pca = PCA(n_components=num_pcs,svd_solver='randomized')
-        # do the PCA thing
-        temp = feature_table.transpose()
-        pca.fit(temp)
-        print("Time for pca cal")
-        pca_start= timer()
-        print("pca start clock")
-        print(pca_start)
-        pc_table = pca.transform(temp)  
-        print(timer() - pca_start )
+        if not bool_lodo:
+            # do the PCA thing
+            temp = feature_table.transpose()
+            pca.fit(temp)
+            print("Time for pca cal")
+            pca_start= timer()
+            print("pca start clock")
+            print(pca_start)
+            pc_table = pca.transform(temp)  
+            print(timer() - pca_start )
         feature_table_np = np.array(feature_table)
         labels_np = np.array(labels)
          
@@ -347,46 +351,77 @@ for d in range(len(study_names)): # range(1):#
         results_dict = dict()
         X = feature_table_np.transpose()
         y = labels_np
-        pc_scores = pc_table # get pc scores
-        na_mask = pd.isna(y)
         
+        na_mask = pd.isna(y)
+        print("Xshape before")
+        print(X.shape)
+
+        print("y shape before")
+        print(y.shape)
         X = X[~na_mask,:]
         y = y[~na_mask]
-        pc_scores = pc_scores[~na_mask,:]
+
+        print("before shape")
+        print(metadata_labels.shape)
+
         metadata_labels_temp = metadata_labels.loc[~na_mask,:]
+        print(metadata_labels_temp.columns)
+
+        if not bool_lodo:
+            
+            pc_scores = pc_table # get pc scores
+            pc_scores = pc_scores[~na_mask,:]
+
+            pc_scores_temp = pd.DataFrame(pc_scores,index = metadata_labels_temp.index)
+            to_plot_correlation = pd.concat([metadata_labels_temp,pc_scores_temp],sort=False,ignore_index=True,axis=1)#,axis=0,ignore_index=True)
+            to_plot_correlation.columns = np.append(np.array(metadata_labels_temp.columns),np.array(["PC" + str(i+1) for i in range(num_pcs)]))
+            to_plot_correlation.to_csv(output_folders[d] + "pc_and_others.txt")
+        
+        
         print("Shape metadata temp")
         print(metadata_labels_temp.shape)
         # for each test train split in 5 fold cross validation
         
         train_it = 0
 
+
+        # if doing lodo, designature groups for leave one dataset out
         if bool_lodo:
             print("lodo time")
 
             groups = np.array(metadata_labels[lodo_group])
-            logo = LeaveOneGroupOut()
+            
             splitter = logo.split(X, y, groups)
-
-
-
-            to_plot_correlation = metadata_labels_temp.append(pc_scores)#np.append(pc_scores,metadata_labels)
-            np.savetxt(output_folders[d] + "pc_and_others.txt", to_plot_correlation)
 
         else:
             splitter = rskf.split(X, y)
-        for train_index, test_index in splitter:
-            #print("train index")
-            #print(train_index[0:5]) 
 
+        print("Compare number of splits")
+        print("stratified")
+        print(rskf.get_n_splits(X,y))
+        print("stratified")
+        groups = np.array(metadata_labels[lodo_group])
+        print(logo.get_n_splits(X, y, groups))
+
+        for train_index, test_index in splitter:
+
+            # only run on the iteration in this grid cell (for paralle work)
             if train_it == train_it_input:
             
                 test_train_start = timer()
-                #print(train_index)
-                #print(test_index)
                 
                 X_train, X_test = X[train_index,], X[test_index,]
                 y_train, y_test = y[train_index], y[test_index]
-                pc_scores_train, pc_scores_test =  pc_scores[train_index], pc_scores[test_index]
+
+                #print(metadata_labels_temp["sampleID"][test_index[0:50]])
+
+                if bool_lodo:
+                    pca_fit = pca.fit(X_train)
+                    pc_scores_train = pca.transform(X_train)
+                    pc_scores_test = pca.transform(X_test)
+
+                else:
+                    pc_scores_train, pc_scores_test =  pc_scores[train_index], pc_scores[test_index]
 
                 if use_validation:
 
@@ -394,9 +429,7 @@ for d in range(len(study_names)): # range(1):#
                     n_repeats = 1
 
                     X_train, X_val, y_train, y_val, pc_scores_train, pc_scores_val = train_test_split(X_train, y_train,pc_scores_train, test_size=0.30, random_state=1) 
-                    #print("First 5 xval")
-                    #print(X_val[0:5])
-                
+          
                 
                 results_dict["number samples"] = []
                 results_dict["number samples"].append(X_train.shape[0])
@@ -425,7 +458,121 @@ for d in range(len(study_names)): # range(1):#
                 print("Finished one test train split")
                 print(test_train_end - test_train_start)
             train_it += 1
+    elif perform_MINERVA == 2: # predict with PCs directly
+        # get PC scores
+        pca = PCA(n_components=num_pcs,svd_solver='randomized')
+        if not bool_lodo:
+            # do the PCA thing
+            temp = feature_table.transpose()
+            pca.fit(temp)
+            print("Time for pca cal")
+            pca_start= timer()
+            print("pca start clock")
+            print(pca_start)
+            pc_table = pca.transform(temp)  
+            print(timer() - pca_start )
+        feature_table_np = np.array(feature_table)
+        labels_np = np.array(labels)
+         
+        dataset_start= timer()
+        results_dict = dict()
+        X = feature_table_np.transpose()
+        y = labels_np
+        
+        na_mask = pd.isna(y)
+        print("Xshape before")
+        print(X.shape)
+
+        print("y shape before")
+        print(y.shape)
+        X = X[~na_mask,:]
+        y = y[~na_mask]
+
+        print("before shape")
+        print(metadata_labels.shape)
+
+        metadata_labels_temp = metadata_labels.loc[~na_mask,:]
+        print(metadata_labels_temp.columns)
+
+        if not bool_lodo:
+            
+            pc_scores = pc_table # get pc scores
+            pc_scores = pc_scores[~na_mask,:]
+
+            pc_scores_temp = pd.DataFrame(pc_scores,index = metadata_labels_temp.index)
+            to_plot_correlation = pd.concat([metadata_labels_temp,pc_scores_temp],sort=False,ignore_index=True,axis=1)#,axis=0,ignore_index=True)
+            to_plot_correlation.columns = np.append(np.array(metadata_labels_temp.columns),np.array(["PC" + str(i+1) for i in range(num_pcs)]))
+            to_plot_correlation.to_csv(output_folders[d] + "pc_and_others.txt")
+        
+        
+        print("Shape metadata temp")
+        print(metadata_labels_temp.shape)
+        # for each test train split in 5 fold cross validation
+        
+        train_it = 0
+
+
+        # if doing lodo, designature groups for leave one dataset out
+        if bool_lodo:
+            print("lodo time")
+
+            groups = np.array(metadata_labels[lodo_group])
+            
+            splitter = logo.split(X, y, groups)
+
+        else:
+            splitter = rskf.split(X, y)
+
+        print("Compare number of splits")
+        print("stratified")
+        print(rskf.get_n_splits(X,y))
+        print("stratified")
+        groups = np.array(metadata_labels[lodo_group])
+        print(logo.get_n_splits(X, y, groups))
+
+        for train_index, test_index in splitter:
+
+            # only run on the iteration in this grid cell (for paralle work)
+            if train_it == train_it_input:
+            
+                test_train_start = timer()
                 
+                X_train, X_test = X[train_index,], X[test_index,]
+                y_train, y_test = y[train_index], y[test_index]
+
+                #print(metadata_labels_temp["sampleID"][test_index[0:50]])
+
+                if bool_lodo:
+                    pca_fit = pca.fit(X_train)
+                    pc_scores_train = pca.transform(X_train)
+                    pc_scores_test = pca.transform(X_test)
+
+                else:
+                    pc_scores_train, pc_scores_test =  pc_scores[train_index], pc_scores[test_index]
+
+                if use_validation:
+
+                    n_splits = 5
+                    n_repeats = 1
+
+                    X_train, X_val, y_train, y_val, pc_scores_train, pc_scores_val = train_test_split(X_train, y_train,pc_scores_train, test_size=0.30, random_state=1) 
+          
+                
+                results_dict["number samples"] = []
+                results_dict["number samples"].append(X_train.shape[0])
+
+
+                best_train_model, best_params = RF_grid_search(pc_scores_train, y_train,parameter_dict)
+                    
+                pickle.dump(best_train_model , open( output_folders[d] + special_name + file_output_string + "_PC" + str(num_pcs) + "_grid.pkl", "wb" ) )
+                     
+                    
+                test_train_end = timer()
+                print("Finished one test train split")
+                print(test_train_end - test_train_start)
+
+            train_it += 1
+            
                 
 
     all_datasets_dict["dataset" + str(d)] = results_dict

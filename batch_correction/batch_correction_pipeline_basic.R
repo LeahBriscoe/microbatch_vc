@@ -10,8 +10,8 @@ print(args)
 #table(total_metadata$diabetes_lab_v2.x)
 # args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "CRC", "PhenoCorrect",10,"study",1,1,"bin_crc_adenomaORnormal",0,"clr_scale",0,0,0,1,1)
-# args = c("kmer", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-#          "CRC", "ComBat",-1,"study",1,1,"bin_crc_normal",0,"none",0,0,0)
+# args = c("otu", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+#          "CRC_thomas", "ComBat_with_biocovariates_with_seqbatch",-1,"dataset_name",1,1,"bin_crc_normal",0,"logscale",0,0,0)
 
 # args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "AGP_max", "minerva",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"clr_scale",0,0,0,1,1)
@@ -162,12 +162,14 @@ if(grepl("AGP",study_name)){
 
 
 input_abundance_table = get(paste0(data_type,"_table"))
+sum(is.na(input_abundance_table))
 dim(input_abundance_table)
 intersect_samples = intersect(colnames(input_abundance_table),row.names(total_metadata))
 
 input_abundance_table = input_abundance_table[,intersect_samples]
 total_metadata = total_metadata[intersect_samples,]
-
+sum(is.na(input_abundance_table))
+dim(input_abundance_table)
 ###@@@@@
 
 if(subsample_bool){
@@ -231,7 +233,7 @@ batch_labels_dummy = to.dummy(batch_labels,"batch")
 
 batch_corrected_outputs = list()
 
-if(grepl(study_name,"AGP")){
+if(grepl("AGP",study_name)){
   collection_date=as.Date(total_metadata$collection_timestamp, format="%Y-%m-%d")
   total_metadata$collection_date = collection_date
   collection_days = collection_date - min(collection_date,na.rm=TRUE)
@@ -243,12 +245,12 @@ if(grepl(study_name,"AGP")){
   batch_labels2 = as.character(collection_year)
   
   #total_metadata_mod = process_model_matrix(total_metadata = total_metadata,binary_vars="sex",categorical_vars ="race.x",numeric_vars = "bmi_corrected")
-  total_metadata_mod = process_model_matrix(total_metadata = total_metadata,binary_vars="sex",categorical_vars ="race.x")
-  bio_signal_formula <- as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod), collapse = " + ")))
-  #names(batch_corrected_outputs)
-  
-}else if(grepl(study_name,"Thomas") | grepl(study_name,"thomas") ){
+  total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,binary_vars="sex",categorical_vars ="race.x")
+ 
+}else if(grepl("Thomas",study_name) | grepl("thomas",study_name) ){
   batch_labels2 = as.character(total_metadata[,'DNA_extraction_kit'])
+  total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,binary_vars =  covariate_interest)
+ 
 }
 
 
@@ -256,7 +258,7 @@ if(grepl("bmi",covariate_interest)){
   
   #covariate_interest = "host_body_mass_index"
   total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,numeric_vars =  covariate_interest)
-  
+
 }else if(grepl("Abx0_6",covariate_interest)){
   total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,categorical_vars = "antibiotic_history",
                                                      label_pos_or_neg = 0)
@@ -272,6 +274,7 @@ if(grepl("bmi",covariate_interest)){
     
   })
   total_metadata_mod_interest[,1] = new_metadata_interpretation
+ 
 }else if(grepl("Abx6_12",covariate_interest)){
   total_metadata_mod_interest = process_model_matrix(total_metadata = total_metadata,categorical_vars = "antibiotic_history",
                                                      label_pos_or_neg = 0)
@@ -289,6 +292,7 @@ if(grepl("bmi",covariate_interest)){
   })
   #table(new_metadata_interpretation)
   total_metadata_mod_interest[,1] = new_metadata_interpretation
+
 }else{
   if(length(args)> 15){
     
@@ -316,8 +320,9 @@ if(grepl("bmi",covariate_interest)){
     
   }
   #table(total_metadata_mod_interest)
-  
+
 }
+bio_signal_formula <- as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod_interest), collapse = " + ")))
 
 
 bio_signal_formula_interest <- as.formula(paste0(" ~ ",paste(colnames(total_metadata_mod_interest), collapse = " + ")))
@@ -327,12 +332,21 @@ bio_signal_formula_interest <- as.formula(paste0(" ~ ",paste(colnames(total_meta
 print(dim(total_metadata_mod_interest))
 print(dim(input_abundance_table))
 input_abundance_table  =input_abundance_table[,rowSums(is.na(total_metadata_mod_interest )) == 0]
+
+dim(input_abundance_table)
+sum(is.na(input_abundance_table))
+
+
 batch_labels = batch_labels[rowSums(is.na(total_metadata_mod_interest )) == 0]
+batch_labels2 = batch_labels2[rowSums(is.na(total_metadata_mod_interest )) == 0]
 
 
 total_metadata_mod_interest= total_metadata_mod_interest[rowSums(is.na(total_metadata_mod_interest)) == 0,,drop=FALSE]
 
 
+# filter out low count features
+dim(input_abundance_table)
+sum(is.na(input_abundance_table))
 
 if(filter_low_counts){
   if(grepl("clr",transformation)){
@@ -340,12 +354,24 @@ if(filter_low_counts){
   }else{
     filter_at_least_two_samples_per_feature = (rowSums(input_abundance_table  > 0 ) > 2)
   }
+  sum(filter_at_least_two_samples_per_feature)
   
   input_abundance_table = input_abundance_table[filter_at_least_two_samples_per_feature,]
   
 }
 #sum(filter_at_least_two_samples_per_feature)
+#table_before_log = input_abundance_table
 
+#input_abundance_table = table_before_log
+#table_before_log[1:5,1:5]
+#rowSums(table_before_log)[1:5]
+if(grepl("log",transformation)){
+  print("LOGTIME")
+  input_abundance_table = log(input_abundance_table+1)
+  
+}
+dim(input_abundance_table)
+sum(is.na(input_abundance_table))
 
 if(grepl("clr",transformation)){
   input_abundance_table = t(clr(t(input_abundance_table)))
@@ -353,6 +379,8 @@ if(grepl("clr",transformation)){
   input_abundance_table = as.matrix(input_abundance_table)
   
 }
+
+
 if(grepl("scale",transformation)){
   input_abundance_table= t(scale_custom(t(input_abundance_table)))
   
@@ -402,6 +430,7 @@ for(m in 1:length(methods_list)){
     batch_corrected_output = t(ilr(t(input_abundance_table)))
     
   }else if(methods_list[m] == "ComBat"){
+   
     batch_corrected_output = run_ComBat(mat = input_abundance_table, batch_labels)
     
   }else if(methods_list[m] == "ComBatLog"){
@@ -420,33 +449,36 @@ for(m in 1:length(methods_list)){
     batch_corrected_output1_mod =  batch_corrected_output1[,!is.na(batch_labels2)]
     batch_labels2_mod = batch_labels2[!is.na(batch_labels2)]
     batch_corrected_output = run_ComBat(mat = batch_corrected_output1_mod, batch_labels = batch_labels2_mod)
+
     
   }else if(methods_list[m] == "ComBat_with_biocovariates"){
-    
+    total_metadata_mod = total_metadata_mod_interest
     input_abundance_table_mod = input_abundance_table[,rowSums(is.na(total_metadata_mod)) == 0]
     metadata_mod= total_metadata_mod[rowSums(is.na(total_metadata_mod)) == 0,]
     batch_labels_mod = batch_labels[rowSums(is.na(total_metadata_mod)) == 0]
-    mod <- model.matrix( bio_signal_formula, data = metadata_mod)
-    batch_corrected_output = run_ComBat(mat = input_abundance_table_mod, batch_labels_mod,mod = mod)
+    mod <- model.matrix( bio_signal_formula, data = total_metadata_mod)
+    batch_corrected_output = run_ComBat(mat = input_abundance_table_mod, batch_labels = batch_labels_mod,mod = mod)
     
     
-  }else if(methods_list[m] == "ComBat_with_biocovariates_with_batch2"){
+  }else if(methods_list[m] == "ComBat_with_biocovariates_with_seqbatch"){
     #total_metadata_mod1 = total_metadata_mod
     #total_metadata_mod1[total_metadata_mod1 == "African American"] = NA
     #metadata_mod$race.x= as.factor(as.character(metadata_mod$race.x))
     
+    total_metadata_mod = total_metadata_mod_interest
     input_abundance_table_mod = input_abundance_table[,rowSums(is.na(total_metadata_mod)) == 0]
-    metadata_mod= total_metadata_mod[rowSums(is.na(total_metadata_mod)) == 0,]
+    metadata_mod= total_metadata_mod[rowSums(is.na(total_metadata_mod)) == 0,,drop=FALSE]
     batch_labels_mod = batch_labels[rowSums(is.na(total_metadata_mod)) == 0]
     batch_labels2_mod = batch_labels2[rowSums(is.na(total_metadata_mod)) == 0]
+    head(total_metadata_mod)
     mod <- model.matrix( bio_signal_formula, data = metadata_mod)
     
-    batch_corrected_output1 = run_ComBat(mat = input_abundance_table_mod, batch_labels_mod,mod = mod)
+    batch_corrected_output1 = run_ComBat(mat = input_abundance_table_mod, batch_labels = batch_labels_mod,mod = mod)
     
     tab_batch2 = table(batch_labels2_mod)
     lonely_batches = names(tab_batch2[tab_batch2 == 1])
     batch_corrected_output1 = batch_corrected_output1[,!(batch_labels2_mod %in% lonely_batches) & !is.na(batch_labels2_mod)]
-    metadata_mod= metadata_mod[!(batch_labels2_mod %in% lonely_batches)& !is.na(batch_labels2_mod),]
+    metadata_mod= metadata_mod[!(batch_labels2_mod %in% lonely_batches)& !is.na(batch_labels2_mod),,drop=FALSE]
     batch_labels2_mod = batch_labels2_mod[!(batch_labels2_mod %in% lonely_batches)& !is.na(batch_labels2_mod)]
     mod <- model.matrix( bio_signal_formula, data = metadata_mod)
     

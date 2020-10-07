@@ -93,7 +93,24 @@ pca_method <- function(input,clr_transform = FALSE,scale_logic =FALSE){
   row.names(pca_score) = colnames(orig_input)
   return(list(svd_result = svd_result,pca_score=pca_score,transformed_data = input))
 }
-
+pca_plot <- function(df_out,key,plot_folder){
+  
+  pairs1 = c(1,3,5,7)
+  pairs2 = c(2,4,6,8)
+  colnames(df_out)
+  
+  for(j in 1:length(pairs1)){
+    df_out$plotx = df_out[,pairs1[j]]
+    df_out$ploty = df_out[,pairs2[j]]
+    
+    p<-ggplot(df_out,aes(x=plotx,y=ploty,color=group)) + ggtitle("PCA") 
+    p<-p + geom_point() + theme_bw()  + xlab(paste0("PC",pairs1[j])) + ylab(paste0("PC",pairs2[j]))
+    
+    print(p)
+    ggsave(p,file=paste0(plot_folder,"/PCA_", key, pairs1[j],"_", pairs2[j],".pdf"),device ="pdf")
+    
+  }
+}
 quantile_norm <- function(df,normalize_within_features = TRUE){
   if(normalize_within_features){
     df = t(df)

@@ -372,8 +372,12 @@ qsub -cwd -V -N AGPminerva -l h_data=5G,time=336:00:00,highp -b y -t 13501:13501
 
 for trainit in {5..49}; do for nest in 100 1000 1500; do for crit in entropy gini; do for leaf in 1 5 10; do for feat in 0.1 0.3 0.5; do COUNTER=$((COUNTER + 1)); echo $COUNTER; echo "/u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k7 rawfilter_TRUE_trans_clr_scale BatchCorrected bin_antibiotic_last_year 0 0 10 10 minervaclrscale 1 1 1 Yes $nest $crit $leaf $feat 5 1 $trainit" > data_$COUNTER.in; done; done; done; done; done;
 
-qsub -cwd -V -N Sun7AGPminerva -l h_data=15G,time=336:00:00,highp -b y -t 15932:18360 "./run_array_paraMINERVA_test_train_grid.sh"
-qsub -cwd -V -N AGPminerva -l h_data=15G,time=336:00:00,highp -b y -t 15931:15931 "./run_array_paraMINERVA_test_train_grid.sh"
+
+15932:18360
+
+qsub -cwd -V -N Sun7AGPminerva -l h_data=3G,time=336:00:00,highp -pe shared 4 -b y -t 16095:18360 "./run_array_paraMINERVA_test_train_grid.sh"
+
+qsub -cwd -V -N Sun7AGPminerva -l h_data=3G,time=336:00:00,highp -pe shared 4 -b y -t 16094:16094 "./run_array_paraMINERVA_test_train_grid.sh"
 
 
 #STILLT ESTING
@@ -513,10 +517,10 @@ qsub -cwd -V -N new8HisBigSoup -l h_data=3G,time=24:00:00 -M briscoel -m beas -b
 # Hspanic record
 for i in {0..49}; do echo $i; ls *minervaclrscaleGRID*trainit"$i"_* | wc -l; done
 
-for i in {0..49}; do echo $i; ls *limmaGRID*trainit"$i"_* | wc -l; done
-for i in {0..49}; do echo $i; ls *bmcGRID*trainit"$i"_* | wc -l; done
-for i in {0..49}; do echo $i; ls *ComBatGRID*trainit"$i"_* | wc -l; done
-for i in {0..49}; do echo $i; ls *rawGRID*trainit"$i"_* | wc -l; done
+for i in {35..49}; do echo $i; ls *limmaGRID*trainit"$i"_* | wc -l; done
+for i in {35..49}; do echo $i; ls *bmcGRID*trainit"$i"_* | wc -l; done
+for i in {35..49}; do echo $i; ls *ComBatGRID*trainit"$i"_* | wc -l; done
+for i in {35..49}; do echo $i; ls *rawGRID*trainit"$i"_* | wc -l; done
 
 
 # k= 5
@@ -617,7 +621,21 @@ qsub -cwd -V -N adeThomask -l h_data=2G,time=24:00:00 -M briscoel -m beas -b y -
 for trainit in {5..49}; do for nest in 100 1000 1500; do for crit in entropy gini; do for leaf in 1 5 10; do for feat in 0.1 0.3 0.5; do COUNTER=$((COUNTER + 1)); echo $COUNTER; echo "/u/home/b/briscoel/project-halperin/MicroBatch AGP_max_k7 rawfilter_TRUE_trans_clr_scale BatchCorrected bin_antibiotic_last_year 0 0 10 10 minervaclrscale 1 1 1 Yes $nest $crit $leaf $feat 5 1 $trainit" > data_$COUNTER.in; done; done; done; done; done;
 
 
-qsub -cwd -V -N agpMINasmb -l h_data=15G,time=24:00:00 -M briscoel -m beas -b y "./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'AGP_max_k5&AGP_max_k6&AGP_max_k7' rawfilter_TRUE_trans_clr_scale BatchCorrected bin_antibiotic_last_year 0 0 10 10 minervaclrscale 1 1 1 Yes"
+qsub -cwd -V -N agp5MINasmb -l h_data=10G,time=24:00:00 -M briscoel -m beas -b y "./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'AGP_max_k5' rawfilter_TRUE_trans_clr_scale BatchCorrected bin_antibiotic_last_year 0 0 10 10 minervaclrscale 1 0 1 Yes"
+
+qsub -cwd -V -N agp6MINasmb -l h_data=6G,time=24:00:00,highp -M briscoel -m beas -b y "./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'AGP_max_k6' rawfilter_TRUE_trans_clr_scale BatchCorrected bin_antibiotic_last_year 0 0 10 10 minervaclrscale 1 0 1 Yes"
+
+
+qsub -cwd -V -N agp7MINasmb -l h_data=15G,time=24:00:00 -M briscoel -m beas -b y "./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'AGP_max_k7' rawfilter_TRUE_trans_clr_scale BatchCorrected bin_antibiotic_last_year 0 0 10 10 minervaclrscale 1 1 1 Yes"
+
+qsub -cwd -V -N agpraw7MINasmb -l h_data=10G,time=24:00:00 -M briscoel -m beas -b y "./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'AGP_max_k7' rawfilter_TRUE_trans_none BatchCorrected bin_antibiotic_last_year 0 0 10 10 raw 0 1 1 Yes"
+
+qsub -cwd -V -N agpraw6asmb -l h_data=6G,time=24:00:00 -M briscoel -m beas -b y "./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'AGP_max_k6' rawfilter_TRUE_trans_none BatchCorrected bin_antibiotic_last_year 0 0 10 10 raw 0 0 1 Yes"
+
+qsub -cwd -V -N agpraw5asmb -l h_data=10G,time=24:00:00 -M briscoel -m beas -b y "./run_MINERVA_test_train_grid.sh /u/home/b/briscoel/project-halperin/MicroBatch 'AGP_max_k5' rawfilter_TRUE_trans_none BatchCorrected bin_antibiotic_last_year 0 0 10 10 raw 0 0 1 Yes"
+
+
+&AGP_max_k6&AGP_max_k7
 
 
 

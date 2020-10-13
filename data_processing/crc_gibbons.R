@@ -1,3 +1,5 @@
+
+
 # ============================================================================== #
 # user input
 kmer_len = 7
@@ -13,6 +15,39 @@ folder = '/Users/leahbriscoe/Documents/MicroBatch/MicrobiomeDenoisingData/crc_HD
 
 otu_output_folder = '/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/CRC_otu'
 dir.create(otu_output_folder) 
+metadata_fix = readRDS(paste0(otu_output_folder,"/metadata.rds"))
+typeof(metadata_fix)
+metadata_fix[1:5,1:5]
+#data.frame(read.csv(paste0(otu_output_folder,'/metadata.txt'),sep="\t",header =TRUE,fill=TRUE,na.strings=c("NA", "-", "?"),stringsAsFactors = FALSE))
+bin_crc_normal = sapply(metadata_fix$DiseaseState,function(x){
+  if(x == "nonCRC"){
+    return(NA)
+  }else if(x == "H"){
+    return("H")
+  }else if(x == "CRC"){
+    return("CRC")
+  }else{
+    return(NA)
+  }
+})
+metadata_fix$study
+bin_crc_adenomaORnormal = sapply(metadata_fix$DiseaseState,function(x){
+  if(x == "nonCRC"){
+    return("H")
+  }else if(x == "H"){
+    return("H")
+  }else if(x == "CRC"){
+    return("CRC")
+  }else{
+    return(NA)
+  }
+})
+metadata_fix$bin_crc_normal  =bin_crc_normal 
+metadata_fix$bin_crc_adenomaORnormal  = bin_crc_adenomaORnormal
+dim(metadata_fix)
+write.table(metadata_fix,paste0(otu_output_folder,"/metadata.txt"),sep = "\t",quote = FALSE)
+saveRDS(metadata_fix,paste0(otu_output_folder,"/metadata.rds"))
+
 # ============================================================================== #
 # read OTU table
 otu_files = "otu_table.txt"

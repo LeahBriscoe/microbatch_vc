@@ -65,7 +65,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn import model_selection 
 from sklearn.decomposition import PCA
 from sklearn.model_selection import GridSearchCV, cross_val_score, train_test_split, LeaveOneGroupOut
-import statsmodels.formula.api as sm
+import statsmodels.api as sm
 from sklearn.metrics import roc_auc_score
 from collections import Counter
 from timeit import default_timer as timer
@@ -354,7 +354,7 @@ for d in range(len(study_names)): # range(1):#
     #####  Preparing Data #####
     ###########################
 
-    if perform_MINERVA == 0:
+    if perform_MINERVA == 0 or perform_MINERVA == 3 or perform_MINERVA == 4: # 3 is for data augment , 4 is for correcting oTU with domains
         feature_table_np = np.array(feature_table)
         labels_np = np.array(labels)
         dataset_start= timer()
@@ -365,15 +365,25 @@ for d in range(len(study_names)): # range(1):#
         
         X = X[~na_mask,:]
         y = y[~na_mask]
+        metadata_labels_temp = metadata_labels.loc[~na_mask,:]
         # for each test train split in 5 fold cross validation
         train_it = 0
-
-
-
+        print("before adding dummies")
+        print(X[295:300,(X.shape[1]-5):X.shape[1]])
+        groups = np.array(metadata_labels_temp[lodo_group])
+        groups_one_hot = pd.get_dummies(groups,drop_first=True)
+        if perform_MINERVA == 3:
+            #X =  [[3,4,5],[7,8,9],[6,5,6],[8,8,8]]
+            X = np.append(X, groups_one_hot, 1)
+            print("after adding dummies")
+            print(X[295:300,(X.shape[1]-5):X.shape[1]])
+        if perform_MINERVA == 4:
+            #X = pca_regression(X_train,pc_scores_train[:,0:p])
+            X = pca_regression(X, groups_one_hot)
+            print("after regressing domain")
+            print(X[295:300,(X.shape[1]-5):X.shape[1]])
         if bool_lodo:
             print("lodo time")
-
-            groups = np.array(metadata_labels[lodo_group])
             logo = LeaveOneGroupOut()
             splitter = logo.split(X, y, groups)
 

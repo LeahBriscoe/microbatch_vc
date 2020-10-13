@@ -19,7 +19,7 @@ print(args)
 #          "AGP_max", "minerva","1","Instrument",1,1,"bin_antibiotic_last_year",0,"clr_scale",0,0,0,1,"Yes")
 
 # args = c("otu", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-#          "AGP_complete", "minerva",10,"Instrument",1,1,"bin_antibiotic_last_year",0,"none",0,0,0,1,1)
+#          "AGP_complete", "raw",10,"Instrument",1,1,"bin_antibiotic_last_year",0,"none",0,0,0,1,1)
 
 # args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "AGP_max", "PhenoCorrect",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"none",0,0,0,1, "Yes")
@@ -213,7 +213,13 @@ if(subsample_bool){
 # tissue_filder
 
 if(grepl("AGP",study_name)){
-  tissue_samples = unlist(total_metadata %>% filter(total_metadata$body_habitat.x == "UBERON:feces") %>% select(Run))
+  if(data_type == "kmer"){
+    tissue_samples = unlist(total_metadata %>% filter(total_metadata$body_habitat.x == "UBERON:feces") %>% select(Run))
+    
+  }else{
+    tissue_samples = unlist(total_metadata %>% filter(total_metadata$body_habitat.x == "UBERON:feces") %>% select(sample_name))
+    
+  }
   tissue_samples = as.character(tissue_samples)
   #length(intersect(tissue_samples,colnames(input_abundance_table)))
   input_abundance_table = input_abundance_table[,tissue_samples]
@@ -953,6 +959,13 @@ for(m in 1:length(methods_list)){
   }
   extra_file_name = paste0(extra_file_name,"filter_",filter_low_counts, "_trans_",transformation)
   
+  old_col_names = colnames(batch_corrected_outputs[[methods_list[m]]])
+  if(substr(old_col_names[1],1,1) == "X"){
+    new_col_names = gsub("X","",old_col_names)
+    temp = batch_corrected_outputs[[methods_list[m]]]
+    colnames(temp) = new_col_names
+    batch_corrected_outputs[[methods_list[m]]] = temp
+  }
   write.table(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder,"/protect_",covariate_interest,"/BatchCorrected_",methods_list[m],extra_file_name,".txt"),
               sep = "\t",quote = FALSE)
   saveRDS(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder ,"/protect_",covariate_interest,"/BatchCorrected_",methods_list[m],extra_file_name,".rds"))

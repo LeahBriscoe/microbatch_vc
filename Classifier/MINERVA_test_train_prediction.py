@@ -39,7 +39,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn import model_selection 
 from sklearn.decomposition import PCA
 from sklearn.model_selection import GridSearchCV, cross_val_score, train_test_split
-import statsmodels.formula.api as sm
+import statsmodels.api as sm
 from sklearn.metrics import roc_auc_score
 from collections import Counter
 from timeit import default_timer as timer
@@ -650,12 +650,23 @@ for d in range(len(study_names)): # range(1):#
 # ...
 end = timer()
 print(end - start)
-if not perform_enet:    
-    pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_prediction_grid.pkl", "wb" ) )
+
+if use_validation:
+    if not perform_enet:
+        pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_prediction_grid_VAL.pkl", "wb" ) )
+    else:
+        pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_prediction_enet_grid_VAL.pkl", "wb" ) )
+                
+     
 else:
-    pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_prediction_enet_grid.pkl", "wb" ) )
+
+
+    if not perform_enet:    
+        pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_prediction_grid.pkl", "wb" ) )
+    else:
+        pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_prediction_enet_grid.pkl", "wb" ) )
+                
             
-        
     
 
 

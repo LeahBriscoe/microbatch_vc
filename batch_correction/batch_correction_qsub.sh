@@ -1,9 +1,13 @@
 #!/bin/bash
 
 # examples
-
+# ./batch_correction_qsub.sh CRC_otu limma none
+# ./batch_correction_qsub.sh CRC_thomas_otu limma none
+# ./batch_correction_qsub.sh CRC_thomas_otu bmc none
 #./batch_correction_qsub.sh CRC_thomas_otu ComBat_with_biocovariates_with_seqbatch logscale
 #./batch_correction_qsub.sh CRC_otu raw none
+#./batch_correction_qsub.sh CRC_otu bmc none
+#./batch_correction_qsub.sh CRC_otu limma none
 #./batch_correction_qsub.sh CRC_otu raw clrscale
 #./batch_correction_qsub.sh CRC_k raw none
 #./batch_correction_qsub.sh CRC_k raw none

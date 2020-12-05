@@ -9,9 +9,14 @@ print(args)
 #table(total_metadata$diabetes_self_v2)
 #table(total_metadata$diabetes_lab_v2.x)
 # args = c("kmer", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
-# "CRC", "PhenoCorrect",10,"study",1,1,"bin_crc_adenomaORnormal",0,"clr_scale",0,0,0,1,1)
+# "CRC", "ComBat",10,"study",1,1,"bin_crc_normal",0,"none",0,0,0,1,1)
 # args = c("otu", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+# args = c("otu", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+# "CRC", "ComBat",10,"study",1,1,"bin_crc_normal",0,"none",0,0,0,1,1)
+
 #          "CRC_thomas", "ComBat_with_biocovariates_with_seqbatch",-1,"dataset_name",1,1,"bin_crc_normal",0,"logscale",0,0,0)
+# args = c("kmer", 6, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
+#          "Thomas", "minerva",-1,"dataset_name",1,1,"bin_crc_normal",0,"none",0,0,0)
 
 # args = c("kmer", 5, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc",
 # "AGP_max", "minerva",20,"Instrument",1,1,"bin_antibiotic_last_year",0,"clr_scale",0,0,0,1,1)
@@ -97,7 +102,9 @@ batch_script_folder = paste0(microbatch_folder, '/batch_correction')
 plot_dir =paste0(microbatch_folder,'/plots/',study_name,'_k',kmer_len)
 source(paste0(script_folder,"/utils.R"))
 source(paste0(batch_script_folder,"/batch_correction_source.R"))
-regress_out
+#regress_out
+
+
 # ============================================================================== #
 # define folders
 otu_input_folder = paste0(microbatch_folder,'/data/',study_name, '_otu')
@@ -136,8 +143,9 @@ if(data_type == "kmer"){
   otu_table = readRDS(paste0(otu_input_folder,"/otu_table", file_type,".rds"))
 }
 total_metadata = readRDS(paste0(input_folder,"/metadata.rds"))
-dim(total_metadata)
-
+#table(total_metadata$dataset_name,total_metadata$bin_crc_normal)
+#table(total_metadata$study,total_metadata$bin_crc_normal)
+#table(total_metadata$Instrument,total_metadata$bin_antibiotic_last_year)
 
 if(grepl("reprocess",study_name)){
   collection_date=as.Date(total_metadata$collection_timestamp, format="%Y-%m-%d %H:%M")
@@ -196,11 +204,11 @@ if(subsample_bool){
   }else{
     input_abundance_table = input_abundance_table[,subsample_samples]
     total_metadata = total_metadata[subsample_samples,]
-    
     saveRDS(total_metadata,paste0(output_folder,"/metadata.rds"))
     
     write.table(total_metadata,paste0(output_folder,"/metadata.txt"),sep="\t",quote=FALSE)
     
+      
   }
   
   
@@ -232,10 +240,9 @@ if(grepl("AGP",study_name)){
 batch_labels = as.integer(droplevels(as.factor(total_metadata[,batch_column])))
 
 batch_labels_dummy = to.dummy(batch_labels,"batch")
-
+#table(total_metadata$bin_obese)
 #table(batch_labels)
 #"bmc","ComBat","limma",
-
 
 batch_corrected_outputs = list()
 
@@ -409,6 +416,7 @@ print(dim(input_abundance_table))
 
 
 
+
 for(m in 1:length(methods_list)){
   sv_object_output = c()
   
@@ -426,6 +434,18 @@ for(m in 1:length(methods_list)){
   }else if(methods_list[m] == "raw"){
     
     batch_corrected_output = input_abundance_table
+    pca_res = pca_method(input_abundance_table,clr_transform = FALSE,center_scale_transform = TRUE,num_pcs = 10 )
+    sv_object_output =  pca_res
+    # if(save_PC_scores){
+    #   sv_object_output =  pca_res
+    #   row.names(sv_object_output$sv) = colnames(input_abundance_table)
+    #   
+    #   saveRDS(sv_object_output, paste0(output_folder ,"/protect_",covariate_interest,"/SVs_",methods_list[m],extra_file_name,".rds"))
+    #   
+    #   # write.table(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder,"/",batch_column,"/BatchCorrected_",methods_list[m],extra_file_name,".txt"),
+    #   #             sep = "\t",quote = FALSE)
+    #   
+    # }
     
   }else if(methods_list[m] == "clr"){
     require(compositions)
@@ -438,6 +458,7 @@ for(m in 1:length(methods_list)){
   }else if(methods_list[m] == "ComBat"){
    
     batch_corrected_output = run_ComBat(mat = input_abundance_table, batch_labels)
+    
     
   }else if(methods_list[m] == "ComBatLog"){
     batch_corrected_output = run_ComBat(mat = log(input_abundance_table), batch_labels)
@@ -970,6 +991,7 @@ for(m in 1:length(methods_list)){
               sep = "\t",quote = FALSE)
   saveRDS(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder ,"/protect_",covariate_interest,"/BatchCorrected_",methods_list[m],extra_file_name,".rds"))
   if(save_PC_scores){
+  
     saveRDS(sv_object_output, paste0(output_folder ,"/protect_",covariate_interest,"/SVs_",methods_list[m],extra_file_name,".rds"))
     
     # write.table(batch_corrected_outputs[[methods_list[m]]], paste0(output_folder,"/",batch_column,"/BatchCorrected_",methods_list[m],extra_file_name,".txt"),

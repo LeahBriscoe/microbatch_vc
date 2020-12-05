@@ -428,7 +428,7 @@ for d in range(len(study_names)): # range(1):#
             print(best_train_model.score(X_train,y_train))
 
             # save best params
-            results_dict['train_best_params'][train_it] = best_params
+            results_dict['train_best_params'][train_it] = 1#best_params
             print("finished grid search: " + "train it " + str(train_it) )
             # get predictions on trained model
             
@@ -478,9 +478,26 @@ for d in range(len(study_names)): # range(1):#
             # print("newly trained test mean Rf " + str(np.mean(test_RF)))
             
             all_datasets_dict["dataset" + str(d)] = results_dict  
-            pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_tt_grid.pkl", "wb" ) )
-             
-                
+            print("print all datasets dict")
+            print(all_datasets_dict)
+            #pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_tt_grid.pkl", "wb" ) )
+
+            if use_validation:
+                if not perform_enet:
+                    pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_prediction_grid_VAL.pkl", "wb" ) )
+                else:
+                    pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_prediction_enet_grid_VAL.pkl", "wb" ) )
+                            
+
+            else:
+
+
+                if not perform_enet:    
+                    pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_prediction_grid.pkl", "wb" ) )
+                else:
+                    pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_prediction_enet_grid.pkl", "wb" ) )
+                            
+
                 
             train_it += 1
             test_train_end = timer()
@@ -581,7 +598,7 @@ for d in range(len(study_names)): # range(1):#
                         best_train_model, best_params = read_lin_pc_version(output_folders[d],parameter_dict, train_it, p,X_train, y_train)
                                         
                     # save best params
-                    results_dict["PC" + str(p)]['train_best_params'][train_it] = best_params
+                    results_dict["PC" + str(p)]['train_best_params'][train_it] = 1
                     print("finished grid search: " + "train it " + str(train_it) + ", PC" + str(p))
                     # get predictions on trained model
                     #y_train_pred_prob = best_train_model.predict_proba(X_train_corrected)
@@ -632,7 +649,26 @@ for d in range(len(study_names)): # range(1):#
                     
                     
                     all_datasets_dict["dataset" + str(d)] = results_dict
-                    pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_tt_grid.pkl", "wb" ) )
+                    print("print all datasets dict")
+                    print(all_datasets_dict)
+                    #pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_tt_grid.pkl", "wb" ) )
+
+                    if use_validation:
+                        if not perform_enet:
+                            pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_prediction_grid_VAL.pkl", "wb" ) )
+                        else:
+                            pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_prediction_enet_grid_VAL.pkl", "wb" ) )
+                                    
+     
+                    else:
+
+
+                        if not perform_enet:    
+                            pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_prediction_grid.pkl", "wb" ) )
+                        else:
+                            pickle.dump(all_datasets_dict , open( metadata_folder +"_" + special_name + "_MINERVA_prediction_enet_grid.pkl", "wb" ) )
+                                    
+
                      
                     
                     

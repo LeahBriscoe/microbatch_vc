@@ -49,18 +49,6 @@ common_samples_karl = intersect(row.names(metadata_list[["Karlsson_2013"]]),coln
 metadata_list[["Karlsson_2013"]] = metadata_list[["Karlsson_2013"]][common_samples_karl,]
 kmer_list[['Karlsson_2013']] = kmer_list[['Karlsson_2013']][,common_samples_karl]
 
-
-common_samples_qin = intersect(colnames(kmer_list[["Qin_et_al"]]),metadata_list[["Qin_et_al"]]$run_accession)
-kmer_list[["Qin_et_al"]] = kmer_list[["Qin_et_al"]][,common_samples_qin]
-row.names(metadata_list[["Qin_et_al"]]) = metadata_list[["Qin_et_al"]]$run_accession
-metadata_list[["Qin_et_al"]] = metadata_list[["Qin_et_al"]][common_samples_qin,]
-
-
-metadata_list[["Qin_et_al"]]$run_accession
-metadata_list[["Karlsson_2013"]]$run_accession
-
-metadata_list[["Qin_et_al"]]$bin_t2d = metadata_list[["Qin_et_al"]]$t2d
-metadata_list[["Qin_et_al"]]$study = "Qin_et_al"
 bin_t2d = sapply(metadata_list[["Karlsson_2013"]]$Classification,function(x){
   if(x == "IGT"){
     return(NA)
@@ -75,15 +63,83 @@ metadata_list[["Karlsson_2013"]]$study = "Karlsson_2013"
 metadata_list[["Karlsson_2013"]]$sex = "female"
 metadata_list[["Karlsson_2013"]]$seq_instrument = "Illumina HiSeq 2000"
 metadata_list[["Karlsson_2013"]]$age = metadata_list[["Karlsson_2013"]]$Age..years.
+metadata_list[["Karlsson_2013"]]$bmi = metadata_list[["Karlsson_2013"]]$BMI..kg.m2.
+
+bin_obese <- sapply(metadata_list[["Karlsson_2013"]]$BMI..kg.m2.,function(x){
+  if(is.na(x)){
+    return(NA)
+  }
+  else if(as.numeric(x) >= 30){
+    return(1)
+  }else if(as.numeric(x) < 30){
+    return(0)
+  }
+
+})
+
+metadata_list[["Karlsson_2013"]]$bin_obese = bin_obese
+metadata_list[["Karlsson_2013"]]$bin_statins = metadata_list[["Karlsson_2013"]]$Statins..Y..N.
+
+
+kmer_list[["Karlsson_2013"]][is.na(kmer_list[["Karlsson_2013"]])] = 0
+all(row.names(metadata_list[["Karlsson_2013"]]) == colnames(kmer_list[["Karlsson_2013"]]))
+temp_kmer_output_folder = paste0('/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/bmi_frankenstein_k6')
+dir.create(temp_kmer_output_folder)
+
+saveRDS(kmer_list[["Karlsson_2013"]],paste0(temp_kmer_output_folder,"/Karlsson_kmer_table.rds"))
+saveRDS(metadata_list[["Karlsson_2013"]],paste0(temp_kmer_output_folder,"/Karlsson_metadata.rds"))
+
+
+
+
 ## additional July 2020
-qin_additional = read.csv(paste0(kmer_input_folders[2],"/SraRunTable.csv"),sep=",",row.names = 1,header = TRUE)
-qin_additional = qin_additional[metadata_list[["Qin_et_al"]]$run_accession,]
-metadata_list[["Qin_et_al"]]$age = qin_additional$Age
-metadata_list[["Qin_et_al"]]$seq_instrument = qin_additional$Instrument
-metadata_list[["Qin_et_al"]]$sex = qin_additional$gender
+qin_additional = read.csv(paste0(kmer_input_folders[2],"/metadata_paper.csv"))
+qin_additional$Sample.ID = gsub(" ","-",qin_additional$Sample.ID)
+qin_additional$sample_id = qin_additional$Sample.ID
+#intersect(metadata_list[["Qin_et_al"]]$sample_id,qin_additional$Sample.ID)
+merge_qin = merge(metadata_list[["Qin_et_al"]], qin_additional,by= "sample_id")
+
+common_samples_qin = intersect(colnames(kmer_list[["Qin_et_al"]]),merge_qin$run_accession)
+kmer_list[["Qin_et_al"]] = kmer_list[["Qin_et_al"]][,common_samples_qin]
+row.names(merge_qin) = merge_qin$run_accession
+metadata_list[["Qin_et_al"]] = merge_qin[common_samples_qin,]
+
+qin_additional2 = read.csv(paste0(kmer_input_folders[2],"/SraRunTable.csv"),sep=",",row.names = 1,header = TRUE)
+qin_additional2 = qin_additional[metadata_list[["Qin_et_al"]]$run_accession,]
+qin_additional2[1:4,]
+
+metadata_list[["Qin_et_al"]]$bin_t2d = metadata_list[["Qin_et_al"]]$t2d
+metadata_list[["Qin_et_al"]]$study = "Qin_et_al"
+metadata_list[["Qin_et_al"]]$bmi = metadata_list[["Qin_et_al"]]$BMI..kg.m2.
+
+bin_obese <- sapply(metadata_list[["Qin_et_al"]]$BMI..kg.m2.,function(x){
+  if(is.na(x)){
+    return(NA)
+  }
+  else if(as.numeric(x) >= 30){
+    return(1)
+  }else if(as.numeric(x) < 30){
+    return(0)
+  }
   
+})
+metadata_list[["Qin_et_al"]]$study = ""
+metadata_list[["Qin_et_al"]]$bin_obese = bin_obese 
+metadata_list[["Qin_et_al"]]$age = metadata_list[["Qin_et_al"]]$Age
+metadata_list[["Qin_et_al"]]$seq_instrument = metadata_list[["Qin_et_al"]]$instrument
+metadata_list[["Qin_et_al"]]$sex = metadata_list[["Qin_et_al"]]$Gender
+
+kmer_list[["Qin_et_al"]][is.na(kmer_list[["Qin_et_al"]])] = 0
+all(row.names(metadata_list[["Qin_et_al"]]) == colnames(kmer_list[["Qin_et_al"]]))
+temp_kmer_output_folder = paste0('/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/bmi_frankenstein_k6')
+dir.create(temp_kmer_output_folder)
+
+saveRDS(kmer_list[["Qin_et_al"]],paste0(temp_kmer_output_folder,"/Qin_kmer_table.rds"))
+saveRDS(metadata_list[["Qin_et_al"]],paste0(temp_kmer_output_folder,"/Qin_metadata.rds"))
+
+
   
-wanted_cols = c("bin_t2d","run_accession","study","age","seq_instrument","sex")
+wanted_cols = c("bin_t2d","run_accession","study","age","seq_instrument","sex","bin_obese","bmi")
 
 total_metadata = rbind(metadata_list[["Karlsson_2013"]][,wanted_cols],metadata_list[["Qin_et_al"]][,wanted_cols])
 total_metadata$SampleID = total_metadata$run_accession

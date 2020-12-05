@@ -5,13 +5,19 @@
 # ./grid_search_qsub_step1.sh 2701 CRC_thomas_otu ComBat logscale ComBatlogscale
 # ./grid_search_qsub_step1.sh 5401 CRC_thomas_otu ComBat_with_batch2 logscale ComBatBatch2logscale_LODO
 # ./grid_search_qsub_step1.sh 8101 CRC_thomas_otu ComBat_with_batch2 logscale ComBatBatch2logscale
+# ./grid_search_qsub_step1.sh 1 CRC_thomas_otu raw none dataaug_LODO
+# ./grid_search_qsub_step1.sh 2701 CRC_thomas_otu limma none limma_LODO
+# ./grid_search_qsub_step1.sh 5401 CRC_thomas_otu bmc none bmc_LODO
+
+
 
 
 # ./grid_search_qsub_step1.sh 10801 Thomas_k7 ComBat logscale ComBatlogscale_LODO
 # ./grid_search_qsub_step1.sh 13501 Thomas_k7 ComBat logscale ComBatlogscale
 
-# ./grid_search_qsub_step1.sh 1 CRC_otu bmc none raw
-# ./grid_search_qsub_step1.sh 2700 CRC_otu limma none raw
+# ./grid_search_qsub_step1.sh 10801 CRC_otu bmc none bmc
+# ./grid_search_qsub_step1.sh 13501 CRC_otu limma none limma
+# ./grid_search_qsub_step1.sh 16201 CRC_otu ComBat logscale ComBatlogscale
 
 # ./grid_search_qsub_step1.sh 5401 CRC_thomas_otu limma none limma
 # ./grid_search_qsub_step1.sh 8101 CRC_thomas_otu bmc none bmc
@@ -34,7 +40,10 @@
 
 # ./grid_search_qsub_step1.sh 8101 CRC_otu raw clr_scale dataaug_clrscale - RAN
 # ./grid_search_qsub_step1.sh 10801 CRC_thomas_otu raw clr_scale dataaug_clrscale - RUN
-# ./grid_search_qsub_step1.sh 13501 AGP_complete_otu clr_scale none dataaug - NOT YET
+# ./grid_search_qsub_step1.sh 1 AGP_complete_otu raw clr_scale minervaclrscale
+# ./grid_search_qsub_step1.sh 2700 AGP_complete_otu bmc none bmc
+# ./grid_search_qsub_step1.sh 5400 AGP_complete_otu ComBat logscale ComBat
+# ./grid_search_qsub_step1.sh 8101 AGP_complete_otu limma none limma
 
 
 
@@ -44,6 +53,10 @@
 # ./grid_search_qsub_step1.sh 5401 CRC_otu raw none domaincorr
 # ./grid_search_qsub_step1.sh 8101 CRC_thomas_otu raw none domaincorr
 # ./grid_search_qsub_step1.sh 13501 AGP_complete_otu raw none domaincorr
+
+# ./grid_search_qsub_step1.sh 1 CRC_k7 raw none domaincorr
+# ./grid_search_qsub_step1.sh 2700 Thomas_k7 raw none domaincorr
+# ./grid_search_qsub_step1.sh 8101 AGP_max_k7 raw none domaincorr
 
 #python paraMINERVA_test_train_grid.py /u/home/b/briscoel/project-halperin/MicroBatch CRC_otu rawfilter_TRUE_trans_none BatchCorrected bin_crc_normal 0 0 10 10 domaincorr 4 1 1 CRC 100 entropy 1 0.1 5 1 0 0 study 1
 #qsub -cwd -V -N dataaug -l h_data=7G,time=24:00:00 -b y -t 10848:13500 "./run_array_paraMINERVA_test_train_grid.sh" (first part took 18 hours to do 45 jobs sad)
@@ -114,16 +127,19 @@ for trainit in {0..49};
 
 if [[ "$dataset_input" == *"AGP_max"* ]]; then
 	echo "$first_count_input:$COUNTER"
-	qsub -cwd -V -N $name_input -l h_data=15G,time=24:00:00 -b y -t $first_count_input:$COUNTER "./run_array_paraMINERVA_test_train_grid.sh"
+	qsub -cwd -V -N $name_input -l h_data=15G,time=24:00:00,highp -b y -t $first_count_input:$COUNTER "./run_array_paraMINERVA_test_train_grid.sh"
 
 elif [[ "$dataset_input" == *"AGP_complete"* ]]; then
 	echo "$first_count_input:$COUNTER"
-	qsub -cwd -V -N $name_input -l h_data=8G,time=24:00:00 -b y -t $first_count_input:$COUNTER "./run_array_paraMINERVA_test_train_grid.sh"
+	qsub -cwd -V -N $name_input -l h_data=16G,time=24:00:00 -b y -t $first_count_input:$COUNTER "./run_array_paraMINERVA_test_train_grid.sh"
 
 else
 	echo "$first_count_input:$COUNTER"
 	qsub -cwd -V -N $name_input -l h_data=5G,time=24:00:00 -b y -t $first_count_input:$COUNTER "./run_array_paraMINERVA_test_train_grid.sh"
 fi
+
+#qsub -cwd -V -N bmc -l h_data=10G,time=24:00:00 -b y -t 2703:5399 "./run_array_paraMINERVA_test_train_grid.sh"
+# qsub -cwd -V -N ComBatgrid -l h_data=16G,time=24:00:00 -b y -t 5507:8099 "./run_array_paraMINERVA_test_train_grid.sh"
 
 
 

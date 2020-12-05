@@ -53,7 +53,7 @@
 
 
 use_validation = True  # use validation set and get performance (different from use val which is concerned with tuning)
-
+shap_time = False
 
 
 import sys
@@ -72,6 +72,7 @@ from timeit import default_timer as timer
 import pickle
 import os 
 
+import shap
 
 
 args = sys.argv
@@ -79,7 +80,6 @@ print(args)
 
 
 # In[3]:
-
 
 greater_folder = args[1] # what folder do you save your different datasets in
 study_names = args[2].split("&")  # what is the name of the dataset (tells the program which folder to check)
@@ -749,6 +749,47 @@ for d in range(len(study_names)): # range(1):#
                 else:
                     best_train_model, best_params = read_RF_grid_search_pc_version(output_folders[d],parameter_dict,train_it_input = train_it,pc=p,x=pc_scores_train,y = y_train)
                 
+
+                if shap_time:
+                    # init_op = tf.global_variables_initializer()
+                    # init_op_local = tf.local_variables_initializer
+
+                    # sess = tf.Session()
+                    # sess.run(init_op)
+
+                    # init_g = tf.global_variables_initializer()
+                    # init_l = tf.local_variables_initializer()
+                    # with tf.Session() as sess:
+                    #   sess.run(init_g)
+                    #   sess.run(init_l)
+
+                    session = keras.backend.get_session()
+                    #init = tf.global_variables_initializer()
+                    #session.run(init)
+                    #keras.backend.set_session(session)
+
+                    explainer = shap.TreeExplainer(model,x_train)
+
+                    shap_values = explainer.shap_values(x_test)
+                    #print("SHAP shape")
+                    #print(len(shap_values))
+                    #print(shap_values[0].shape)
+                    #print("SHAP shape 2")
+                    #print(shap_values[1].shape)
+
+                    pickle.dump( shap_values, open( out_folder +  "/" + outfile + "_" +file_output_string +   "_trainit" + str(train_iter) + "_SHAP_values.pkl", "wb" ) )
+                    pickle.dump( x_test, open( out_folder +  "/" + outfile + "_" +file_output_string +   "_trainit" + str(train_iter) + "_SHAP_X.pkl", "wb" ) )
+                    pickle.dump(microbes,open( out_folder +  "/" + outfile + "_" +file_output_string +   "_trainit" + str(train_iter) + "_SHAP_features.pkl", "wb" ) )
+
+                    # print("print np sum shape")
+                    # shap_sum = np.sum(shap_values,axis=0)
+                    # shap_sum_pd = pd.DataFrame(shap_sum)
+                    # shap_sum_pd.columns = list(microbes)
+                    # print(shap_sum_pd.shape)
+                    # shap_sum_pd.to_csv(out_folder + "/" + outfile + "_" + file_output_string+ "_trainit" + str(train_iter) + "SHAP.csv"  )
+
+
+
 
                 # save best params
                 results_dict["PC" + str(p)]['train_best_params'][train_it] = best_params

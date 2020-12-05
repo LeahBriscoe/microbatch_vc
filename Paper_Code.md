@@ -678,3 +678,38 @@ Old Frequency of jobs
 ```
 
 
+CLEAN
+trans=none
+for method in raw; do for sv in 1; do for phen in bin_crc_normal; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 10 -t 100 -hp -v 3.6.0 -arg otu -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg CRC -arg "$method"filter_TRUE_trans_$trans -arg protect_"$phen" -arg BatchCorrected -arg 0 -arg 0 -arg 0; done; done; done
+
+for method in raw; do for sv in 1; do for phen in bin_crc_normal; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 10 -t 100 -hp -v 3.6.0 -arg otu -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg CRC_thomas -arg "$method"filter_TRUE_trans_$trans -arg protect_"$phen" -arg BatchCorrected -arg 0 -arg 0 -arg 0; done; done; done
+
+trans=none
+dlohofor method in raw limma bmc ComBat; do for sv in 1; do for phen in bin_antibiotic_last_year; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 15 -t 24 -v 3.6.0 -arg kmer -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_max -arg "$method"filter_TRUE_trans_$trans -arg protect_"$phen" -arg BatchCorrected -arg 0 -arg 0 -arg 0; done; done; done
+
+
+trans=clr_scale
+for method in minerva; do for sv in 1; do for phen in bin_antibiotic_last_year; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 48 -t 24 -hp -v 3.6.0 -arg kmer -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_max -arg "$method"_first"$sv"filter_TRUE_trans_$trans -arg protect_"$phen" -arg BatchCorrected -arg 0 -arg 0 -arg 0; done; done; done
+
+
+trans=none
+for method in limma bmc ComBat raw; do for sv in 1; do for phen in bin_crc_normal; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 15 -t 24 -v 3.6.0 -arg kmer -arg 6 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg Thomas -arg "$method"filter_TRUE_trans_$trans -arg protect_"$phen" -arg BatchCorrected -arg 0 -arg 0 -arg 0; done; done; done
+
+
+trans=none
+for method in limma bmc ComBat raw; do for sv in 1; do for phen in bin_crc_normal; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 10 -t 24 -v 3.6.0 -arg kmer -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg CRC -arg "$method"filter_TRUE_trans_$trans -arg protect_"$phen" -arg BatchCorrected -arg 0 -arg 0 -arg 0; done; done; done
+
+
+trans=clr_scale
+for method in raw; do for sv in 1; do for phen in bin_crc_normal; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 10 -t 24 -v 3.6.0 -arg kmer -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg CRC -arg "$method"filter_TRUE_trans_$trans -arg protect_"$phen" -arg BatchCorrected -arg 0 -arg 0 -arg 0; done; done; done
+
+trans=clr_scale
+for method in minerva; do for sv in 3; do for phen in bin_crc_normal; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 48 -t 24 -hp -v 3.6.0 -arg kmer -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg CRC -arg "$method"_first"$sv"filter_TRUE_trans_$trans -arg protect_"$phen" -arg BatchCorrected -arg 0 -arg 0 -arg 0; done; done; done
+
+
+
+# DEC 2020
+BatchCorrected_DomainCorrectfilter_TRUE_trans_clr_scale.rds  BatchCorrected_DomainCorrectfilter_TRUE_trans_none.rds 
+
+
+for method in DomainCorrect; do for trans in none clr_scale; do for phen in bin_crc_normal; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 10 -t 24 -v 3.6.0 -arg kmer -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg Thomas -arg "$method"filter_TRUE_trans_"$trans" -arg protect_"$phen" -arg BatchCorrected -arg 0 -arg 0 -arg 0; done; done; done

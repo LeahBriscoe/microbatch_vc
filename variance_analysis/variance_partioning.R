@@ -9,7 +9,17 @@ print(args)
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Hispanic",
 #          "minerva_first1filter_TRUE_trans_clr_scale","protect_diabetes3_v2",
 #          "BatchCorrected",0,1,0)
+# args = c("otu", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
+#          "minerva_first1filter_TRUE_trans_clr_scale","protect_bin_crc_normal",
+#          "BatchCorrected",0,0,0)
+# args = c("otu", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
+#          "minerva_first1filter_TRUE_trans_clr_scale","protect_bin_crc_normal",
+#          "BatchCorrected",0,0,0)
 
+# args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
+#          "minerva_first1filter_TRUE_trans_clr_scale","protect_bin_crc_normal",
+#          "BatchCorrected",0,0,0)
+# 
 # args = c("otu", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_otumatch_noabx",
 #          "raw&bmc&ComBat&limma",'Instrument',"BatchCorrected",1)
 #args[5] = "no_scale_clr&no_scale_no_clr"
@@ -49,10 +59,13 @@ kmer_input_folder = paste0(microbatch_folder,'/data/',study_name,'_k',kmer_len)
 
 if(data_type == "kmer"){
   input_folder = paste0(kmer_input_folder,"/",batch_def_folder)
+  total_metadata = readRDS(paste0(kmer_input_folder,"/metadata.rds"))
+  
 }else{
   input_folder =  paste0(otu_input_folder,"/",batch_def_folder)
+  total_metadata = readRDS(paste0(otu_input_folder,"/metadata.rds"))
+  
 }
-total_metadata = readRDS(paste0(otu_input_folder,"/metadata.rds"))
 # =========================================================================== #
 #getting read depth
 if(grepl("AGP",study_name)){
@@ -123,13 +136,13 @@ if(grepl("AGP",study_name)){
 
 }else if(grepl("thomas",study_name)){
   binary_vars = c("bin_crc_normal","bin_crc_adenomaORnormal","gender")
-  categorical_vars = c("dataset_name","sequencing_platform","host_race")
+  categorical_vars = c("dataset_name")#,"sequencing_platform")
   numeric_vars = c("number_reads","age") #"bmi_corrected",
   
   
 }else if(grepl("CRC",study_name)){
   binary_vars = c("bin_crc_normal","bin_crc_adenomaORnormal","sex")
-  categorical_vars = c("study","seq_meth","country")
+  categorical_vars = c("study","seq_meth","host_race")
   numeric_vars = c("library_size","age") #"bmi_corrected",
   
   
@@ -219,6 +232,13 @@ if(grepl("AGP",study_name)){
   fixed_effects_bio = c("age","sex","bin_t2d")
   
   
+}else if(grepl("thomas",study_name)){
+  
+  random_effects_tech = c("dataset_name")#,"sequencing_platform")
+  random_effects_bio = c("bin_crc_normal","bin_crc_adenomaORnormal","gender") 
+  fixed_effects_tech = c("number_reads")
+  fixed_effects_bio = c("age")#"age","BMI")
+  
 }else if(grepl("CRC",study_name)){
   
   random_effects_tech = c("study","seq_meth") # "center_project_name","collection_days")#"Instrument",
@@ -240,6 +260,7 @@ technical_vars = c(random_effects_tech,fixed_effects_tech)
 biological_vars = c(random_effects_bio,fixed_effects_bio)
 random_effects_vars = c(random_effects_tech,random_effects_bio)
 fixed_effects_vars = c(fixed_effects_tech,fixed_effects_bio)
+
 
 for( r in random_effects_vars){
   total_metadata_mod[,r] = as.character(total_metadata_mod[,r])
@@ -351,6 +372,10 @@ for(i in 1:length(batch_corrected_data_input)){
   # input_metadata_table <- input_metadata_table[noncorrelated_samples,]
   # 
 
+  #table(input_metadata_table[,c(4,5)])
+  #table(input_metadata_table$)
+  #table(total_metadata$sequencing_platform)
+  #sum(is.na(input_abundance_table))
   
   varPartMetaData = fitExtractVarPartModel(formula = formula_input,
                                            exprObj = input_abundance_table, data = data.frame(input_metadata_table))

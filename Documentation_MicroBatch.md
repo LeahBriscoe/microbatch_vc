@@ -24,6 +24,8 @@ qrsh -l h_rt=336:00:00,h_data=8G,highp -pe shared 4
 
 qrsh -l h_rt=336:00:00,h_data=8G,highp
 
+qrsh -l h_rt=24:00:00,h_data=16G,highp
+
 conda activate /u/home/b/briscoel/project-halperin/deblurenv
 
 # to get help, also slow

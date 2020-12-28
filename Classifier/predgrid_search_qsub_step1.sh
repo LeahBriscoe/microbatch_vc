@@ -54,11 +54,11 @@ do
 					echo $COUNTER; 
 				
 					if [[ "$dataset_input" == *"AGP_complete"* ]]; then
-						echo "/u/home/b/briscoel/project-halperin/MicroBatch $dataset_input "$method_input"filter_TRUE_trans_"$trans_input" BatchCorrected bmi_corrected 0 0 10 10 $name_input $minerva_input $trainit 1 $alpha $l1ratio" > pinputs/data_$COUNTER.in; 
+						echo "/u/home/b/briscoel/project-halperin/MicroBatch $dataset_input "$method_input"filter_TRUE_trans_"$trans_input" BatchCorrected bmi_corrected 0 0 10 10 $name_input $minerva_input $trainit 1 $alpha $l1ratio Instrument" > pinputs/data_$COUNTER.in; 
 					fi
 
 					if [[ "$dataset_input" == *"AGP_max"* ]]; then
-						echo "/u/home/b/briscoel/project-halperin/MicroBatch $dataset_input "$method_input"filter_TRUE_trans_"$trans_input" BatchCorrected bmi_corrected 0 0 10 10 $name_input $minerva_input $trainit 1 $alpha $l1ratio" > pinputs/data_$COUNTER.in; 
+						echo "/u/home/b/briscoel/project-halperin/MicroBatch $dataset_input "$method_input"filter_TRUE_trans_"$trans_input" BatchCorrected bmi_corrected 0 0 10 10 $name_input $minerva_input $trainit 1 $alpha $l1ratio Instrument" > pinputs/data_$COUNTER.in; 
 					fi
 				done; 
 			done; 
@@ -66,11 +66,11 @@ do
 		COUNTER=$((COUNTER + 1)); 
 		echo $COUNTER; 
 		if [[ "$dataset_input" == *"AGP_complete"* ]]; then
-			echo "/u/home/b/briscoel/project-halperin/MicroBatch $dataset_input "$method_input"filter_TRUE_trans_"$trans_input" BatchCorrected bmi_corrected 0 0 10 10 $name_input $minerva_input $trainit 0 0 0" > pinputs/data_$COUNTER.in; 
+			echo "/u/home/b/briscoel/project-halperin/MicroBatch $dataset_input "$method_input"filter_TRUE_trans_"$trans_input" BatchCorrected bmi_corrected 0 0 10 10 $name_input $minerva_input $trainit 0 0 0 Instrument" > pinputs/data_$COUNTER.in; 
 		fi
 
 		if [[ "$dataset_input" == *"AGP_max"* ]]; then
-			echo "/u/home/b/briscoel/project-halperin/MicroBatch $dataset_input "$method_input"filter_TRUE_trans_"$trans_input" BatchCorrected bmi_corrected 0 0 10 10 $name_input $minerva_input $trainit 0 0 0" > pinputs/data_$COUNTER.in; 
+			echo "/u/home/b/briscoel/project-halperin/MicroBatch $dataset_input "$method_input"filter_TRUE_trans_"$trans_input" BatchCorrected bmi_corrected 0 0 10 10 $name_input $minerva_input $trainit 0 0 0 Instrument" > pinputs/data_$COUNTER.in; 
 		fi
 	fi
 done;

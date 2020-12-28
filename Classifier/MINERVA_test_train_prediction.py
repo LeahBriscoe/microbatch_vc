@@ -73,6 +73,10 @@ perform_MINERVA = int(args[11])
 
 perform_enet = bool(int(args[12]))
 
+if len(args) > 13:
+    # really just means batch labels
+    lodo_group = args[13]
+
 use_domain_pheno = False # for when running raw to compare to domain pheno
 if data_type == "otu" or data_type == "kmer":
     output_folders = [greater_folder + "/data/" + study_name + "/" for study_name in study_names]

@@ -13,6 +13,9 @@
 # ./predgrid_search_qsub_step1.sh 101 AGP_complete_otu bmc none bmc reg
 #./predgrid_search_qsub_step1.sh 151 AGP_complete_otu ComBat logscale ComBatlogscale reg
 
+# ./predgrid_search_qsub_step1.sh 51 AGP_complete_otu raw none domaincorr
+# ./predgrid_search_qsub_step1.sh 101 AGP_max_k6 raw none domaincorr
+
 first_count_input=$1
 dataset_input=$2
 method_input=$3

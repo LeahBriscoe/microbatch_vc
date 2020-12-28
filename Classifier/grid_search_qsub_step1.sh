@@ -56,7 +56,7 @@
 
 # ./grid_search_qsub_step1.sh 1 CRC_k7 raw none domaincorr
 # ./grid_search_qsub_step1.sh 2700 Thomas_k7 raw none domaincorr
-# ./grid_search_qsub_step1.sh 8101 AGP_max_k7 raw none domaincorr
+# ./grid_search_qsub_step1.sh 1 AGP_max_k6 raw none domaincorr
 
 #python paraMINERVA_test_train_grid.py /u/home/b/briscoel/project-halperin/MicroBatch CRC_otu rawfilter_TRUE_trans_none BatchCorrected bin_crc_normal 0 0 10 10 domaincorr 4 1 1 CRC 100 entropy 1 0.1 5 1 0 0 study 1
 #qsub -cwd -V -N dataaug -l h_data=7G,time=24:00:00 -b y -t 10848:13500 "./run_array_paraMINERVA_test_train_grid.sh" (first part took 18 hours to do 45 jobs sad)

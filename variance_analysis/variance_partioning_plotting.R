@@ -9,19 +9,19 @@ args = commandArgs(trailingOnly=TRUE)
 # args = c("Hispanic_k7", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Hispanic_k7",
 #          "rawfilter_TRUE_trans_clr_scale&minerva_first11filter_TRUE_trans_clr_scale",
 #          'protect_antibiotic',"1","filter_FALSE") #filter_FALSE_filter_FALSE
-args = c("Thomas", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Thomas_k7",
-         "rawfilter_TRUE_trans_none&ComBatfilter_TRUE_trans_none&limmafilter_TRUE_trans_none&bmcfilter_TRUE_trans_none&DomainCorrectfilter_TRUE_trans_none&rawfilter_TRUE_trans_clr_scale&minerva_first3filter_TRUE_trans_clr_scale",
-         'protect_bin_crc_normal',"0","filter_FALSE") #filter_FALSE_filter_FALSE
-
-
+# args = c("Thomas", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Thomas_k7",
+#          "rawfilter_TRUE_trans_none&ComBatfilter_TRUE_trans_none&limmafilter_TRUE_trans_none&bmcfilter_TRUE_trans_none&DomainCorrectfilter_TRUE_trans_none&rawfilter_TRUE_trans_clr_scale&minerva_first3filter_TRUE_trans_clr_scale",
+#          'protect_bin_crc_normal',"0","filter_FALSE") #filter_FALSE_filter_FALSE
+# 
+# 
 
 # args = c("CRC", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "CRC_k7",
-#          "rawfilter_TRUE_trans_none&ComBatfilter_TRUE_trans_none&limmafilter_TRUE_trans_none&bmcfilter_TRUE_trans_none&rawfilter_TRUE_trans_clr_scale&minerva_first3filter_TRUE_trans_clr_scale",
+#          "rawfilter_TRUE_trans_none&ComBatfilter_TRUE_trans_none&limmafilter_TRUE_trans_none&bmcfilter_TRUE_trans_none&DomainCorrectfilter_TRUE_trans_none&rawfilter_TRUE_trans_clr_scale&minerva_first3filter_TRUE_trans_clr_scale",
 #          'protect_bin_crc_normal',"0","filter_FALSE") #filter_FALSE_filter_FALSE
 
-# args = c("AGP_max", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_max_k7",
-#          "rawfilter_TRUE_trans_none&ComBatfilter_TRUE_trans_none&limmafilter_TRUE_trans_none&bmcfilter_TRUE_trans_none&rawfilter_TRUE_trans_clr_scale&minerva_first1filter_TRUE_trans_clr_scale",
-#          'protect_bin_antibiotic_last_year',"0","filter_FALSE") #filter_FALSE_filter_FALSE
+args = c("AGP_max", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_max_k7",
+         "rawfilter_TRUE_trans_none&ComBatfilter_TRUE_trans_none&limmafilter_TRUE_trans_none&bmcfilter_TRUE_trans_none&DomainCorrectfilter_TRUE_trans_none&rawfilter_TRUE_trans_clr_scale&minerva_first1filter_TRUE_trans_clr_scale",
+         'protect_bin_antibiotic_last_year',"0","filter_FALSE") #filter_FALSE_filter_FALSE
 # args = c("Thomas", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Thomas_k7",
 #          "rawfilter_TRUE_trans_scale&minerva_first3filter_TRUE_trans_clr_scale",
 #          'protect_bin_crc_normal',"0","filter_FALSE") #filter_FALSE_filter_FALSE
@@ -448,6 +448,16 @@ p<-p + geom_boxplot() + theme_bw() +
   geom_text(data=a, aes(label=pval), col='red', size=5,position = position_dodge(width=0.9)) 
  # + scale_color_manual(values=c("#999999", "#56B4E9"))
 p  #legend.position = "right",
+
+
+# p<-p + geom_violin(trim=TRUE) + theme_bw() + 
+#   theme(text = element_text(size=15),axis.text.x = element_text(angle = 45, hjust = 1),aspect.ratio=1) +
+#   ggtitle("Variance explained by confounders") +
+#   xlab("Method") + ylab("Proportion variance") +
+#   scale_fill_manual(values=custom_colors) +
+#   geom_text(data=a, aes(label=pval), col='red', size=5,position = position_dodge(width=0.9)) 
+# # + scale_color_manual(values=c("#999999", "#56B4E9"))
+# p 
 
 ggsave(filename = paste0(plot_path,'/Bio_',varpar_types[1],'.pdf'), 
        plot = p )

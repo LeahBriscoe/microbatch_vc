@@ -6,22 +6,26 @@ print(args)
 #          "SVs_minerva_first1filter_TRUE_trans_clr_scale","protect_bin_t2d")
 
 # args = c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
+#          "protect_bin_crc_normal","BatchCorrected_rawfilter_TRUE_trans_clr_scale", "dataset_name",'raw_scale',1)
+# args = c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
+#          "protect_bin_crc_normal","BatchCorrected_rawfilter_TRUE_trans_clr_scale", "bin_crc_normal",'raw_scale',1)
+
+
+# args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Thomas",
 #          "protect_bin_crc_normal","BatchCorrected_rawfilter_TRUE_trans_none", "dataset_name",'raw_scale',1)
-args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Thomas",
-         "protect_bin_crc_normal","BatchCorrected_rawfilter_TRUE_trans_none", "dataset_name",'raw_scale',1)
 
 
 # args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
 #         "protect_bin_crc_normal","BatchCorrected_rawfilter_TRUE_trans_none", "study","raw_scale",1)
-# args = c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
-#          "protect_bin_crc_normal","BatchCorrected_rawfilter_TRUE_trans_none", "study","raw_scale",1)
+args = c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
+         "protect_bin_crc_normal","BatchCorrected_rawfilter_TRUE_trans_none", "study","raw_scale",1)
 
 
 # args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
 #         "protect_bin_antibiotic_last_year","BatchCorrected_rawfilter_TRUE_trans_none", "Instrument","raw_scale",1)
 # args = c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_complete",
 #          "protect_bin_antibiotic_last_year","BatchCorrected_rawfilter_TRUE_trans_none", "Instrument","raw_scale",1)
-# 
+
 
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
 #          "SVs_minerva_first3filter_TRUE_trans_clr_scale","protect_bin_antibiotic_last_year")
@@ -63,10 +67,12 @@ require(varhandle)
 require(variancePartition)
 
 script_folder = paste0(microbatch_folder,'/data_processing')
+
 batch_script_folder = paste0(microbatch_folder, '/batch_correction')
 
 source(paste0(script_folder,"/utils.R"))
 source(paste0(batch_script_folder,"/batch_correction_source.R"))
+
 # ============================================================================== #
 # define input folder
 
@@ -124,8 +130,16 @@ if(grepl("clrscale",key)){
 pca_method_result  = pca_method(bc_data,clr_transform=FALSE,center_scale_transform =scale_bool,10)
   
 postpca_input = data.frame(pca_method_result$pca_score)
-postpca_input$group = total_metadata[,batch_column_name]
+
+#head(total_metadata)
+#postpca_input$group = total_metadata[,batch_column_name]
+#postpca_input$group = total_metadata[,'study_condition']
+
+postpca_input$group = total_metadata$bin_crc
+#postpca_input$group = total_metadata[,'study_condition']
+#postpca_input$group = paste0(total_metadata[,'bin_crc_normal'],total_metadata[,'dataset_name'])
 pca_plot(postpca_input,key,plot_folder)
+
 
 if(data_type == "otu"){
   saveRDS(postpca_input,paste0(figure_folder,"/",study_name,'_otu',"_pca_result.rds"))

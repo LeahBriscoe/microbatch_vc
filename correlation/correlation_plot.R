@@ -22,35 +22,40 @@ do_wilcoxon_bool = FALSE
 
 
 # RAW_NONE SECTION
+args_list = list(c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
+                   "SVs_minerva_first2filter_TRUE_trans_clr_scale","protect_bin_crc_normal",0,"CLR"),
+                 c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
+                   "SVs_rawfilter_TRUE_trans_none","protect_bin_crc_normal",0,"None"))
+# args_list = list(c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
+#                    "SVs_rawfilter_TRUE_trans_none","protect_bin_antibiotic_last_year",0,"None"),
+#                  c("otu", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_complete",
+#                    "SVs_rawfilter_TRUE_trans_none","protect_bin_antibiotic_last_year",0,"None"),
+#                  c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
+#                    "SVs_rawfilter_TRUE_trans_none","protect_bin_crc_normal",0,"None"),
+#                  c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Thomas",
+#                           "SVs_rawfilter_TRUE_trans_none","protect_bin_crc_normal",0,"None"),
+#                  c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
+#                           "SVs_rawfilter_TRUE_trans_none","protect_bin_crc_normal",0,"None"),
+#                 c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
+#                           "SVs_rawfilter_TRUE_trans_none","protect_bin_crc_normal",0,"None"),
+#                  c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
+#                           "SVs_minerva_first2filter_TRUE_trans_clr_scale","protect_bin_crc_normal",0,"CLR"),
+#                  c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Thomas",
+#                           "SVs_minerva_first1filter_TRUE_trans_clr_scale","protect_bin_crc_normal",0,"CLR"),
+#                 c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
+#                           "SVs_minerva_first3filter_TRUE_trans_clr_scale","protect_bin_crc_normal",0,"CLR"),
+#                  c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
+#                           "SVs_minerva_first1filter_TRUE_trans_clr_scale","protect_bin_crc_normal",0,"CLR"),
+#                  c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
+#                           "SVs_minerva_first3filter_TRUE_trans_clr_scale","protect_bin_antibiotic_last_year",0,"CLR"),
+#                  c("otu", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_complete",
+#                           "SVs_minerva_first1filter_TRUE_trans_clr_scale","protect_bin_antibiotic_last_year",0,"CLR"))
+                 
+                 
+# 4: 12
+corr_max= list()
+for( iter in 1:3){
 
-args_list = list(c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
-                   "SVs_rawfilter_TRUE_trans_none","protect_bin_antibiotic_last_year",0,"None"),
-                 c("otu", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_complete",
-                   "SVs_rawfilter_TRUE_trans_none","protect_bin_antibiotic_last_year",0,"None"),
-                 c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
-                   "SVs_rawfilter_TRUE_trans_none","protect_bin_crc_normal",0,"None"),
-                 c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Thomas",
-                          "SVs_rawfilter_TRUE_trans_none","protect_bin_crc_normal",0,"None"),
-                 c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
-                          "SVs_rawfilter_TRUE_trans_none","protect_bin_crc_normal",0,"None"),
-                c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
-                          "SVs_rawfilter_TRUE_trans_none","protect_bin_crc_normal",0,"None"),
-                 c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
-                          "SVs_minerva_first2filter_TRUE_trans_clr_scale","protect_bin_crc_normal",0,"CLR"),
-                 c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Thomas",
-                          "SVs_minerva_first1filter_TRUE_trans_clr_scale","protect_bin_crc_normal",0,"CLR"),
-                c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
-                          "SVs_minerva_first3filter_TRUE_trans_clr_scale","protect_bin_crc_normal",0,"CLR"),
-                 c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
-                          "SVs_minerva_first1filter_TRUE_trans_clr_scale","protect_bin_crc_normal",0,"CLR"),
-                 c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
-                          "SVs_minerva_first3filter_TRUE_trans_clr_scale","protect_bin_antibiotic_last_year",0,"CLR"),
-                 c("otu", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_complete",
-                          "SVs_minerva_first1filter_TRUE_trans_clr_scale","protect_bin_antibiotic_last_year",0,"CLR"))
-                 
-                 
-     
-for( iter in 4:12){
   # args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
   #          "SVs_rawfilter_TRUE_trans_none","protect_bin_antibiotic_last_year",0,"None")
   # args = c("otu", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_complete",
@@ -668,11 +673,60 @@ for( iter in 4:12){
   corrplot(CanCorC_trim,
            p.mat = p_val_cancor,insig = "label_sig",
            sig.level = c(.001, .01, .05), pch.cex = .9,pch.col = "black",
-           tl.col="black",cl.lim=c(0,1))
+           tl.col="black",cl.lim = c(0,1))
   dev.off()
   
   print(CanCorC_trim)
+  #install.packages("corrplot")
+  require(corrplot)
+
   saveRDS( CanCorC_trim[,1:10], paste0(input_folder,"/", trans, "_PC_Cancor.rds"))
+  
+  if(grepl("AGP",study_name)){
+    CanCorC_trim_test = CanCorC_trim
+    CanCorC_trim_test[1,(ncol(CanCorC_trim)-1)] = NA
+    CanCorC_trim_test[2,(ncol(CanCorC_trim))] = NA
+    p_val_cancor_test = p_val_cancor
+    p_val_cancor_test[1,(ncol(CanCorC_trim)-1)] = NA
+    p_val_cancor_test[2,(ncol(CanCorC_trim))] = NA
+    require(corrplot)
+  }
+  else{
+    CanCorC_trim_test = CanCorC_trim
+    CanCorC_trim_test[1,ncol(CanCorC_trim)] = NA
+    p_val_cancor_test = p_val_cancor
+    p_val_cancor_test[1,ncol(CanCorC_trim)] = NA
+    require(corrplot)
+    if(grepl("CRC_thomas",study_name)){
+      CanCorC_trim_test = CanCorC_trim
+      CanCorC_trim_test[1,ncol(CanCorC_trim)] = 0
+      p_val_cancor_test = p_val_cancor
+      p_val_cancor_test[1,ncol(CanCorC_trim)] = 1
+      
+      pdf(paste0(plot_folder,"/","MODallCanCorStars_",sv_file, ".pdf"))
+      corrplot(CanCorC_trim_test,na.label = "X",
+               na.label.col = "grey",
+               p.mat = p_val_cancor_test,insig = "label_sig",
+               sig.level = c(.001, .01, .05), pch.cex = .9,pch.col = "black",
+               tl.col="black",cl.lim=c(0,0.59),is.corr=F)
+      dev.off()
+      
+    }
+  }
+  if(!grepl("CRC_thomas",study_name)){
+    pdf(paste0(plot_folder,"/","MODallCanCorStars_",sv_file, ".pdf"))
+    corrplot(CanCorC_trim_test,na.label = "X",
+             na.label.col = "grey",
+             p.mat = p_val_cancor_test,insig = "label_sig",
+             sig.level = c(.001, .01, .05), pch.cex = .9,pch.col = "black",is.corr=F,
+             tl.col="black")
+    dev.off()
+  }
+  
+  #test  = as.vector(CanCorC_trim)
+  
+  #corr_max[[iter]] = sort(test,decreasing = TRUE)[2:10]
+  
   # tom_otu_clrwavy <- CanCorC_trim[,1:10]
   # tom_otu_wavy <- CanCorC_trim[,1:10]
   # 

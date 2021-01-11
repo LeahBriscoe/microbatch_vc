@@ -15,6 +15,8 @@
 
 # ./predgrid_search_qsub_step1.sh 51 AGP_complete_otu raw none domaincorr
 # ./predgrid_search_qsub_step1.sh 101 AGP_max_k6 raw none domaincorr
+# ./predgrid_search_qsub_step1.sh 152 AGP_max_k5 raw none domaincorr
+# ./predgrid_search_qsub_step1.sh 152 AGP_max_k7 raw none raw
 
 first_count_input=$1
 dataset_input=$2
@@ -79,7 +81,7 @@ done;
 
 if [[ "$dataset_input" == *"AGP_max"* ]]; then
 	echo "$first_count_input:$COUNTER"
-	qsub -cwd -V -N $name_input -l h_data=15G,time=24:00:00 -b y -t $first_count_input:$COUNTER "./run_array_paraMINERVA_test_train_prediction.sh"
+	qsub -cwd -V -N $name_input -l h_data=16G,time=24:00:00 -b y -t $first_count_input:$COUNTER "./run_array_paraMINERVA_test_train_prediction.sh"
 
 elif [[ "$dataset_input" == *"AGP_complete"* ]]; then
 	echo "$first_count_input:$COUNTER"

@@ -1,6 +1,9 @@
 rm(list = ls())
 args = commandArgs(trailingOnly=TRUE)
 print(args)
+# HOFFMAN
+#for method in DomainCorrect; do for trans in none; do for phen in bin_antibiotic_last_year; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 10 -t 24 -v 3.6.0 -arg kmer -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_max -arg "$method"filter_TRUE_trans_"$trans" -arg protect_"$phen" -arg BatchCorrected -arg 0 -arg 0 -arg 0; done; done; done
+
 #args = c("otu", "WR_AD","~/Documents/MicroBatch/", "0-0.5","1-2","01/07/2016","DiseaseState","study")
 # args = c("kmer", 5,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
 #          "minerva_first1filter_TRUE_trans_clr_scale","protect_bmi_corrected","BatchCorrected",
@@ -9,14 +12,19 @@ print(args)
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Hispanic",
 #          "minerva_first1filter_TRUE_trans_clr_scale","protect_diabetes3_v2",
 #          "BatchCorrected",0,1,0)
-# args = c("otu", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
-#          "minerva_first1filter_TRUE_trans_clr_scale","protect_bin_crc_normal",
+# args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Thomas",
+#          "minerva_first2filter_TRUE_trans_clr_scale","protect_bin_crc_normal",
+#          "BatchCorrected",1,0,0)
+
+
+# args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Thomas",
+#          "rawfilter_TRUE_trans_scale","protect_bin_crc_normal",
 #          "BatchCorrected",0,0,0)
 # args = c("otu", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
 #          "minerva_first1filter_TRUE_trans_clr_scale","protect_bin_crc_normal",
 #          "BatchCorrected",0,0,0)
 
-# args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
+# args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
 #          "minerva_first1filter_TRUE_trans_clr_scale","protect_bin_crc_normal",
 #          "BatchCorrected",0,0,0)
 # 
@@ -84,7 +92,7 @@ for(m in 1:length(methods_list)){
   batch_corrected_data[[methods_list[m]]] = readRDS(paste0(input_folder ,"/",prefix_name,"_",methods_list[m],".rds"))
 }
 
-
+#table(total_metadata$antibiotics_current_use)
 # ============================================================================== #
 # quant norm data?
 if(use_quant_norm){
@@ -141,15 +149,30 @@ if(grepl("AGP",study_name)){
   
   
 }else if(grepl("CRC",study_name)){
-  binary_vars = c("bin_crc_normal","bin_crc_adenomaORnormal","sex")
+  binary_vars = c("bin_crc_normal","sex")
   categorical_vars = c("study","seq_meth","host_race")
   numeric_vars = c("library_size","age") #"bmi_corrected",
   
   
 }else if(grepl("Thomas",study_name)){
-  binary_vars = c("gender","LibraryLayout")
-  categorical_vars = c("study","Instrument",'multi_crc_adenoma_normal','CenterName','DNA_extraction_kit')
+  # binary_vars = c("gender","LibraryLayout")
+  # categorical_vars = c("study","Instrument",'multi_crc_adenoma_normal',
+  #                      'CenterName','DNA_extraction_kit')
+  # numeric_vars = c("LibrarySize")#,"age","BMI")
+  
+  binary_vars = c("gender","LibraryLayout","bin_crc_normal")
+  categorical_vars = c("study","Instrument",'country',
+                       'CenterName','DNA_extraction_kit')
   numeric_vars = c("LibrarySize")#,"age","BMI")
+  
+  # binary_vars = c("gender","LibraryLayout","bin_crc_normal")
+  # categorical_vars = c("study","Instrument",'country',
+  #                      'CenterName','DNA_extraction_kit',"CollectionYear")
+  # numeric_vars = c("LibrarySize")#,"age","BMI")
+  
+  
+  
+  
 }else if(grepl("T2D",study_name)){
   binary_vars = c("sex","bin_t2d","seq_instrument")
   categorical_vars = c("study")
@@ -218,9 +241,11 @@ if(grepl("AGP",study_name)){
 
 }else if(grepl("Thomas",study_name)){
   
-  random_effects_tech = c("Instrument",'CenterName',"study",'DNA_extraction_kit',"LibraryLayout") # "center_project_name","collection_days")#"Instrument",
+  random_effects_tech = c("Instrument",'CenterName',"study",
+                          'DNA_extraction_kit',"LibraryLayout",
+                          "gender","country") # "center_project_name","collection_days")#"Instrument",
   
-  random_effects_bio = c('multi_crc_adenoma_normal',"gender") 
+  random_effects_bio = c("bin_crc_normal") 
   fixed_effects_tech = c("LibrarySize")
   fixed_effects_bio = c()#"age","BMI")
 
@@ -242,7 +267,7 @@ if(grepl("AGP",study_name)){
 }else if(grepl("CRC",study_name)){
   
   random_effects_tech = c("study","seq_meth") # "center_project_name","collection_days")#"Instrument",
-  random_effects_bio = c("host_race","bin_crc_normal","bin_crc_adenomaORnormal","sex") 
+  random_effects_bio = c("host_race","bin_crc_normal","sex") 
   fixed_effects_tech = c("library_size")
   fixed_effects_bio = c("age")#,"bmi_corrected")
   
@@ -334,6 +359,8 @@ for(i in 1:length(batch_corrected_data_input)){
   input_abundance_table = input_abundance_table[rowVars(as.matrix(input_abundance_table)) > 10e-9,]
   
   if(filter_low_counts){
+    #rowvar = rowVars(input_abundance_table)
+    
     #filter_at_least_two_samples_sub = (rowSums(input_abundance_table  > 0 ) > 2)
     filter_at_least_two_samples_sub = (rowVars(input_abundance_table) >2e-7 )
     
@@ -376,10 +403,10 @@ for(i in 1:length(batch_corrected_data_input)){
   #table(input_metadata_table$)
   #table(total_metadata$sequencing_platform)
   #sum(is.na(input_abundance_table))
-  
+  t1 = Sys.time()
   varPartMetaData = fitExtractVarPartModel(formula = formula_input,
                                            exprObj = input_abundance_table, data = data.frame(input_metadata_table))
-  
+  print(Sys.time() - t1)
   collect_var_pars_full_BC[[methods_list[i]]] = varPartMetaData
   
   # write.table(as.matrix(varPartMetaData), paste0(input_folder ,"varpart",methods_list[i],".txt"),
@@ -388,7 +415,4 @@ for(i in 1:length(batch_corrected_data_input)){
   saveRDS(varPartMetaData, paste0(input_folder ,"/varpart_quant",use_quant_norm ,"_",methods_list[i],"_filter_", filter_low_counts,".rds"))
   
 }
-
-
-
-
+head(varPartMetaData)

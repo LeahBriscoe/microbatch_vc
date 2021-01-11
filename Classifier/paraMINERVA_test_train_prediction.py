@@ -76,6 +76,8 @@ perform_enet = bool(int(args[13]))
 alpha_input = float(args[14])
 l1ratio_input = float(args[15])
 
+lodo_group = args[16]
+
 if perform_enet:
     file_output_string  = "PREDenet_alpha" + str(alpha_input) +  "_l1ratio" + str(l1ratio_input) + "_trainit" + str(train_it_input)
 else:

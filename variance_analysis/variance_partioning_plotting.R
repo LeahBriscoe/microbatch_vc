@@ -9,30 +9,26 @@ args = commandArgs(trailingOnly=TRUE)
 # args = c("Hispanic_k7", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Hispanic_k7",
 #          "rawfilter_TRUE_trans_clr_scale&minerva_first11filter_TRUE_trans_clr_scale",
 #          'protect_antibiotic',"1","filter_FALSE") #filter_FALSE_filter_FALSE
-args = c("Thomas", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Thomas_k7",
-         "rawfilter_TRUE_trans_none&ComBatfilter_TRUE_trans_none&limmafilter_TRUE_trans_none&bmcfilter_TRUE_trans_none&DomainCorrectfilter_TRUE_trans_none&rawfilter_TRUE_trans_clr_scale&minerva_first2filter_TRUE_trans_clr_scale",
+# args = c("Thomas", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Thomas_k7",
+#          "rawfilter_TRUE_trans_none&DomainCorrectfilter_TRUE_trans_none&ComBatfilter_TRUE_trans_none&limmafilter_TRUE_trans_none&bmcfilter_TRUE_trans_none&minerva_first3filter_TRUE_trans_clr_scale&minerva_first2filter_TRUE_trans_clr_scale",
+#          'protect_bin_crc_normal',"0","filter_FALSE") #filter_FALSE_filter_FALSE
+
+args = c("CRC", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "CRC_k7",
+         "rawfilter_TRUE_trans_none&DomainCorrectfilter_TRUE_trans_none&ComBatfilter_TRUE_trans_none&limmafilter_TRUE_trans_none&bmcfilter_TRUE_trans_none&minerva_first3filter_TRUE_trans_clr_scale&minerva_first1filter_TRUE_trans_clr_scale",
          'protect_bin_crc_normal',"0","filter_FALSE") #filter_FALSE_filter_FALSE
 
-
-
-# args = c("CRC", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "CRC_k7",
-#          "rawfilter_TRUE_trans_none&ComBatfilter_TRUE_trans_none&limmafilter_TRUE_trans_none&bmcfilter_TRUE_trans_none&DomainCorrectfilter_TRUE_trans_none&rawfilter_TRUE_trans_clr_scale&minerva_first3filter_TRUE_trans_clr_scale",
-#          'protect_bin_crc_normal',"0","filter_FALSE") #filter_FALSE_filter_FALSE
-
 # args = c("AGP_max", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "AGP_max_k7",
-#          "rawfilter_TRUE_trans_none&ComBatfilter_TRUE_trans_none&limmafilter_TRUE_trans_none&bmcfilter_TRUE_trans_none&DomainCorrectfilter_TRUE_trans_none&rawfilter_TRUE_trans_clr_scale&minerva_first1filter_TRUE_trans_clr_scale",
+#          "rawfilter_TRUE_trans_none&ComBatfilter_TRUE_trans_none&limmafilter_TRUE_trans_none&bmcfilter_TRUE_trans_none&DomainCorrectfilter_TRUE_trans_none&minerva_first3filter_TRUE_trans_clr_scale&minerva_first1filter_TRUE_trans_clr_scale",
 #          'protect_bin_antibiotic_last_year',"0","filter_FALSE") #filter_FALSE_filter_FALSE
-# args = c("Thomas", 7, "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc", "Thomas_k7",
-#          "rawfilter_TRUE_trans_scale&minerva_first2filter_TRUE_trans_clr_scale",
-#          'protect_bin_crc_normal',"0","filter_FALSE") #filter_FALSE_filter_FALSE
 
-custom_names = c("Uncorrected","ComBat","limma","BMC","DCC","CLR","PC Correction")
-custom_colors = c('#e32f27','#FF9300','#FFE800','#fdd0a2',"#C3FFCE","#72C1FC","#0093FF")[1:length(custom_names)]
+# notes: quant is not good, collectionyear is not good for THomas et al
+custom_names = c("Uncorrected","DCC","ComBat","limma","BMC","Fixed PCA corr.","Tuned PCA corr.")
+custom_colors = c('#e32f27',"#C3FFCE",'#FF9300','#FFE800','#fdd0a2',"#72C1FC","#0093FF")[1:length(custom_names)]
 
 
 # custom_names = custom_names[c(1,7)]
 # custom_colors = custom_colors[c(1,7)]
-  
+
   
 #limne "#0AAA27",
 comparison_list = lapply(2:length(custom_names),function(x){
@@ -111,12 +107,18 @@ if(grepl("AGP",study_name)){
   # fixed_effects_bio = c("bmi_corrected","age_corrected") #"sex",
   # 
   # 
-  random_effects_tech = c("collection_year","Instrument","race.x","bin_bowel_movement") # "center_project_name","collection_days")#"Instrument",
-  random_effects_bio = c("bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year") #"diet_type.x","artificial_sweeteners"
+  # random_effects_tech = c("collection_year","Instrument","race.x","bin_bowel_movement") # "center_project_name","collection_days")#"Instrument",
+  # random_effects_bio = c("bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year") #"diet_type.x","artificial_sweeteners"
+  # 
+  # fixed_effects_tech = c("librarysize","age_corrected")#,"collection_AM")
+  # fixed_effects_bio = c("bmi_corrected") #"sex",
+  # 
+  
+  random_effects_tech = c("collection_year","Instrument","race.x","bin_bowel_movement","bin_alcohol_consumption","bin_omnivore_diet") # "center_project_name","collection_days")#"Instrument",
+  random_effects_bio = c("bin_antibiotic_last_year") #"diet_type.x","artificial_sweeteners"
   
   fixed_effects_tech = c("librarysize","age_corrected")#,"collection_AM")
   fixed_effects_bio = c("bmi_corrected") #"sex",
-  
   
 }else if(grepl("Hispanic",study_name)){
   random_effects_tech = c("collection_year","mastermix_lot..exp.","processing_robot..exp.",
@@ -160,7 +162,7 @@ if(grepl("AGP",study_name)){
   
   
   random_effects_tech = c("study","seq_meth","host_race","sex") # "center_project_name","collection_days")#"Instrument",
-  random_effects_bio = c("bin_crc_normal","bin_crc_adenomaORnormal") 
+  random_effects_bio = c("bin_crc_normal")#,"bin_crc_adenomaORnormal") 
   fixed_effects_tech = c("library_size","age")
   fixed_effects_bio = c()#,"bmi_corrected")
   
@@ -191,12 +193,15 @@ for(s in 1:length(study_list)){
     print( study_methods_list[m])
     
     #m=2
+    #m = 6
     retrieve_varpars[[custom_names[m]]] = readRDS(paste0(input_folder ,"/varpart_quant",use_quant_norm ,"_",study_methods_list[m],"_",last_name, ".rds"))
     #retrieve_varpars[[paste0(study_list[s],study_methods_list[m])]]
   }
   
 }
+
 length(retrieve_varpars)
+
 #colMeans(retrieve_varpars[["AGP_Hfilter_k6scale_clr" ]])
 #colMaxs(as.matrix(retrieve_varpars[["AGP_Hfilter_k6scale_clr" ]]))
 # ============================================================================== #
@@ -259,6 +264,7 @@ for( t in 1:length(varpar_types )){
     
     
   }else if(grepl("Thomas",study_name)){
+    vp$
     vp = vp[order(vp$bin_crc_normal,decreasing = TRUE),]
     top_5 = c( 'CenterName','DNA_extraction_kit',"Instrument","study",'LibrarySize','bin_crc_normal',"country") #"BMI"
     top_5_pretty = c( 'CenterName','DNA Extraction Kit',"Instrument","Study",'LibrarySize','CRC Status',"Country") #"BMI",
@@ -281,24 +287,24 @@ for( t in 1:length(varpar_types )){
     
     
   }else if(grepl("CRC",study_name)){
-    vp = vp[order(vp$bin_crc_adenomaORnormal,decreasing = TRUE),]
-    top_5 = c( "study","seq_meth","library_size","age","sex","host_race","bin_crc_normal","bin_crc_adenomaORnormal") #"BMI"
-    top_5_pretty = c( "Study","Sequencing Method","LibrarySize","Age","Sex","Race","CRC v Normal","CRC v Normal/Adenoma")  #"BMI",
+    vp = vp[order(vp$bin_crc_normal,decreasing = TRUE),]
+    top_5 = c( "study","seq_meth","library_size","age","sex","host_race","bin_crc_normal") #"BMI"
+    top_5_pretty = c( "Study","Sequencing Method","LibrarySize","Age","Sex","Race","CRC v Normal")  #"BMI",
     
-    top3 = c( "study","seq_meth","library_size","age","sex","host_race","bin_crc_normal","bin_crc_adenomaORnormal") #"BMI"
-    top3_pretty = c( "Study","Sequencing Method","LibrarySize","Age","Sex","Race","CRC v Normal","CRC v Normal/Adenoma")  #"BMI",
+    top3 = c( "study","seq_meth","library_size","age","sex","host_race","bin_crc_normal") #"BMI"
+    top3_pretty = c( "Study","Sequencing Method","LibrarySize","Age","Sex","Race","CRC v Normal")  #"BMI",
     
     custom_title = "Gibbons et al. 7-mer"
   }
 
   
   
-  
-  ggsave(filename = paste0(plot_path,'/barplots_kmer_variance_',varpar_types[t],'.pdf'), 
-         plot = plotPercentBars( vp[1:20,]) )
-  ggsave(filename = paste0(plot_path,'/plot_kmer_variance_partition_',varpar_types[t],'.pdf'),
-         plot = plotVarPart( vp ))
-  
+  # 
+  # ggsave(filename = paste0(plot_path,'/barplots_kmer_variance_',varpar_types[t],'.pdf'), 
+  #        plot = plotPercentBars( vp[1:20,]) )
+  # ggsave(filename = paste0(plot_path,'/plot_kmer_variance_partition_',varpar_types[t],'.pdf'),
+  #        plot = plotVarPart( vp ))
+  # 
   vp5 = vp[,top_5] 
 
   p <- plotVarPart(vp5) + theme(text = element_text(size=16),axis.text.x= element_text(size=14),plot.title = element_text(size=17)) +
@@ -433,24 +439,37 @@ annotate <- function(test_vec){
   result[1] = ""
   return(result)
 }
+
 full_annotate <- function(var_par_df,plot_df, category ){
   # var_par_df = var_pars_tech_bio
   # category= "bio_over_tech"
   # plot_df= to_plot
-  
+  # 
   num_methods = length(var_par_df)
   
   w_vec = sapply(1:num_methods ,function(x){
-    w_test = wilcox.test(var_par_df[[1]][,category], 
-                         var_par_df[[x]][,category])
+    if(x != 6){
+      w_test = wilcox.test(var_par_df[[1]][,category], 
+                           var_par_df[[x]][,category])
+    }else{
+      w_test = wilcox.test(var_par_df[[2]][,category], 
+                           var_par_df[[x]][,category])
+    }
+    
     print(w_test$p.value)
     return(w_test$p.value)
     
   })
+ 
+  
   direction = sapply(1:num_methods ,function(x){
     if(x == 1){
       return(0)
-    }else if(mean(var_par_df[[1]][,category]) < 
+    }else if(x==6 & mean(var_par_df[[2]][,category]) < 
+             mean(var_par_df[[x]][,category])){
+      return(1)
+      
+    }else if(x!=6 & mean(var_par_df[[1]][,category]) < 
              mean(var_par_df[[x]][,category])){
       return(1)
     }else{
@@ -458,6 +477,8 @@ full_annotate <- function(var_par_df,plot_df, category ){
     }
     
   })
+  
+  
   if(category == "bio_over_tech"){
     a <- aggregate(bio_over_tech ~  L1 ,plot_df, function(i) round(mean(i)))
     a$bio_over_tech =range(to_plot$bio_over_tech)[2] + 5
@@ -482,13 +503,21 @@ full_annotate <- function(var_par_df,plot_df, category ){
 
 
 # ============================================================================== #
+#aggregate(var_pars_tech_bio ~  L1 ,to_plot, function(i) round(mean(i)))
+#aggregate(to_plot$bio_variability_explained  ~  L1 ,to_plot, function(i) round(mean(i),10))
+# aggregate(to_plot$bio_over_tech  ~  L1 ,to_plot, function(i) round(mean(i),3))
+(2^(-4.093))/(2^( -2.912))
+# aggregate(to_plot$bio_variability_explained  ~  L1 ,to_plot, function(i) round(mean(i),10))
+# # ratio_raw = to_plot %>% filter(L1 == "Uncorrected") %>% select(bio_over_tech)
+# # ratio_method = to_plot %>% filter(L1 == "PC Correction") %>% select(bio_over_tech)
 
+          
 a = full_annotate(var_pars_tech_bio,to_plot, category =  "bio_variability_explained")
 
 if(grepl("CRC_k",study_name)){
   a$bio_variability_explained =0.17
 }else if(grepl("AGP",study_name)){
-  a$bio_variability_explained =0.065
+  a$bio_variability_explained =0.05
 }else if(grepl("Thomas",study_name)){
   a$bio_variability_explained =0.14
 }
@@ -502,12 +531,13 @@ if(grepl("AGP",study_name)){
 p<-ggplot(to_plot ,aes(x=L1,y=bio_variability_explained,fill=L1)) + ggtitle("Bio") 
 
 p<-p + geom_boxplot() + theme_bw() + 
-  theme(text = element_text(size=15),axis.text.x = element_text(angle = 45, hjust = 1),aspect.ratio=1) +
+  theme(text = element_text(size=15),axis.text.x = element_text(angle = 45, hjust = 1,size=15),
+        axis.text.y = element_text(size=15),aspect.ratio=1,legend.position = "none") +
   ggtitle(paste0("Variance explained by \n",specific_phenotype)) +
   xlab("Method") + ylab("Proportion variance") +
   scale_fill_manual(values=custom_colors) +
-  geom_text(data=a, aes(label=pval_up), col='red', size=5,position = position_dodge(width=0.9))  + 
-  geom_text(data=a, aes(label=pval_down), col='grey', size=5,position = position_dodge(width=0.9)) 
+  geom_text(data=a, aes(label=pval_up), col='red', size=7,position = position_dodge(width=0.9))  + 
+  geom_text(data=a, aes(label=pval_down), col='grey', size=7,position = position_dodge(width=0.9)) 
 
  # + scale_color_manual(values=c("#999999", "#56B4E9"))
 p  #legend.position = "right",
@@ -593,16 +623,15 @@ a = full_annotate(var_pars_tech_bio,to_plot, category =  "bio_over_tech")
 
 p<-ggplot(to_plot ,aes(x=L1,y=bio_over_tech,fill=L1))  
 p<-p + geom_boxplot() + theme_bw() + 
-  theme(text = element_text(size=15),axis.text.x = element_text(angle = 45, hjust = 1),aspect.ratio=1) +
+  theme(text = element_text(size=15),axis.text.x = element_text(angle = 45, hjust = 1,size=15),
+        axis.text.y = element_text(size=15),aspect.ratio=1,legend.position = "none") +
   ggtitle("Ratio Variance Explained by\nPhenotype:Confounders") +
   xlab("Method") + ylab("Log ratio of proportion variance ") +
   scale_fill_manual(values=custom_colors) +
-  geom_text(data=a, aes(label=pval_up), col='red', size=5,position = position_dodge(width=0.9))  + 
-  geom_text(data=a, aes(label=pval_down), col='grey', size=5,position = position_dodge(width=0.9)) 
+  geom_text(data=a, aes(label=pval_up), col='red', size=7,position = position_dodge(width=0.9))  + 
+  geom_text(data=a, aes(label=pval_down), col='grey', size=7,position = position_dodge(width=0.9)) 
 
 #+ scale_color_manual(values=c("#999999", "#56B4E9"))
-p
-
 
 ggsave(filename = paste0(plot_path,'/Ratio_',varpar_types[1],'.pdf'), 
        plot = p )

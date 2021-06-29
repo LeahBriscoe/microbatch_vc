@@ -742,5 +742,13 @@ for method in raw; do for trans in clr_scale; do for phen in bin_crc_normal; do 
 
 for method in ComBat bmc raw DomainCorrect limma; do for trans in none; do for phen in bin_crc_normal; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 10 -t 24 -v 3.6.0 -arg kmer -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg CRC -arg "$method"filter_TRUE_trans_"$trans" -arg protect_"$phen" -arg BatchCorrected -arg 0 -arg 0 -arg 0; done; done; done
 
-for method in raw minerva_first1; do for trans in clr_scale; do for phen in bin_crc_normal; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 10 -t 24 -v 3.6.0 -arg kmer -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg CRC-arg "$method"filter_TRUE_trans_"$trans" -arg protect_"$phen" -arg BatchCorrected -arg 0 -arg 0 -arg 0; done; done; done
+for method in minerva_first3; do for trans in clr_scale; do for phen in bin_antibiotic_last_year; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 10 -t 24 -v 3.6.0 -arg kmer -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_max -arg "$method"filter_TRUE_trans_"$trans" -arg protect_"$phen" -arg BatchCorrected -arg 0 -arg 0 -arg 0; done; done; done
+
+
+
+bin_antibiotic_last_year; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 10 -t 24 -v 3.6.0 -arg kmer -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg AGP_max -arg "$method"filter_TRUE_trans_"$trans" -arg protect_"$phen" -arg BatchCorrected -arg 0 -arg 0 -arg 0; done; done; done
+
+
+for method in minerva_first3; do for trans in clr_scale; do for phen in bin_crc_normal; do /u/local/apps/submit_scripts/R_job_submitter.sh -n variance_partioning.R -m 10 -t 24 -v 3.6.0 -arg kmer -arg 7 -arg /u/home/b/briscoel/project-halperin/MicroBatch -arg Thomas -arg "$method"filter_TRUE_trans_"$trans" -arg protect_"$phen" -arg BatchCorrected -arg 0 -arg 0 -arg 0; done; done; done
+
 ```

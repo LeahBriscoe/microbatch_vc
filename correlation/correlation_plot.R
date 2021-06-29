@@ -22,39 +22,35 @@ do_wilcoxon_bool = FALSE
 
 
 # RAW_NONE SECTION
-args_list = list(c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
-                   "SVs_minerva_first2filter_TRUE_trans_clr_scale","protect_bin_crc_normal",0,"CLR"),
+args_list = list(c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
+                   "SVs_minerva_first1filter_TRUE_trans_clr_scale","protect_bin_crc_normal",0,"CLR"),
+                 c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
+                   "SVs_rawfilter_TRUE_trans_none","protect_bin_crc_normal",0,"None"),
+                  c("otu", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_complete",
+                   "SVs_rawfilter_TRUE_trans_none","protect_bin_antibiotic_last_year",0,"None"),
                  c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
-                   "SVs_rawfilter_TRUE_trans_none","protect_bin_crc_normal",0,"None"))
+                   "SVs_rawfilter_TRUE_trans_none","protect_bin_crc_normal",0,"None"),
+                 c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
+                   "SVs_minerva_first2filter_TRUE_trans_clr_scale","protect_bin_crc_normal",0,"CLR"),
+                 c("otu", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_complete",
+                   "SVs_minerva_first1filter_TRUE_trans_clr_scale","protect_bin_antibiotic_last_year",0,"CLR"))
 # args_list = list(c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
 #                    "SVs_rawfilter_TRUE_trans_none","protect_bin_antibiotic_last_year",0,"None"),
-#                  c("otu", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_complete",
-#                    "SVs_rawfilter_TRUE_trans_none","protect_bin_antibiotic_last_year",0,"None"),
-#                  c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
-#                    "SVs_rawfilter_TRUE_trans_none","protect_bin_crc_normal",0,"None"),
+#                  c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
+#                    "SVs_minerva_first3filter_TRUE_trans_clr_scale","protect_bin_antibiotic_last_year",0,"CLR"),
 #                  c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Thomas",
 #                           "SVs_rawfilter_TRUE_trans_none","protect_bin_crc_normal",0,"None"),
-#                  c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
-#                           "SVs_rawfilter_TRUE_trans_none","protect_bin_crc_normal",0,"None"),
-#                 c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
-#                           "SVs_rawfilter_TRUE_trans_none","protect_bin_crc_normal",0,"None"),
-#                  c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
-#                           "SVs_minerva_first2filter_TRUE_trans_clr_scale","protect_bin_crc_normal",0,"CLR"),
 #                  c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Thomas",
 #                           "SVs_minerva_first1filter_TRUE_trans_clr_scale","protect_bin_crc_normal",0,"CLR"),
 #                 c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
 #                           "SVs_minerva_first3filter_TRUE_trans_clr_scale","protect_bin_crc_normal",0,"CLR"),
-#                  c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
-#                           "SVs_minerva_first1filter_TRUE_trans_clr_scale","protect_bin_crc_normal",0,"CLR"),
-#                  c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
-#                           "SVs_minerva_first3filter_TRUE_trans_clr_scale","protect_bin_antibiotic_last_year",0,"CLR"),
-#                  c("otu", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_complete",
-#                           "SVs_minerva_first1filter_TRUE_trans_clr_scale","protect_bin_antibiotic_last_year",0,"CLR"))
-                 
-                 
+#                 c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
+#                   "SVs_rawfilter_TRUE_trans_none","protect_bin_crc_normal",0,"None"))
+# 
+#                  
 # 4: 12
 corr_max= list()
-for( iter in 1:3){
+for( iter in c(1:1)){
 
   # args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
   #          "SVs_rawfilter_TRUE_trans_none","protect_bin_antibiotic_last_year",0,"None")
@@ -325,7 +321,7 @@ for( iter in 1:3){
       
       
     }else{
-      binary_vars = c("bin_crc_normal","bin_crc_adenomaORnormal","sex")
+      binary_vars = c("bin_crc_normal","sex")
       categorical_vars = c("study","seq_meth","host_race")
       numeric_vars = c("library_size","age")#,"bmi_corrected")
     }
@@ -423,7 +419,7 @@ for( iter in 1:3){
       
     }else{
       random_effects_tech = c("study","seq_meth") # "center_project_name","collection_days")#"Instrument",
-      random_effects_bio = c("host_race","bin_crc_normal","bin_crc_adenomaORnormal","sex") 
+      random_effects_bio = c("host_race","bin_crc_normal","sex") 
       fixed_effects_tech = c("library_size")
       fixed_effects_bio = c("age")#,"bmi_corrected")
     }
@@ -538,9 +534,9 @@ for( iter in 1:3){
                                      input_sv_table)
       
     }else{
-      colnames(input_metadata_table) = c("Race","CRCvsNormal","CRCvsAdenomaOrNormal",
-                                         "Sex", "Age","Study","SeqMeth","LibrarySize" )
-      input_metadata_pc = data.frame(input_metadata_table[,c("CRCvsAdenomaOrNormal", "Sex", "Age","Race", "Study","SeqMeth","LibrarySize")],
+      colnames(input_metadata_table) = c("Race","HasColorectalCancer",
+                                         "Sex", "Age","Dataset","SeqMethod","LibrarySize" )
+      input_metadata_pc = data.frame(input_metadata_table[,c("HasColorectalCancer", "Sex", "Age","Race", "Dataset","SeqMethod","LibrarySize")],
                                      input_sv_table)
     }
     
@@ -576,6 +572,9 @@ for( iter in 1:3){
   }else{
     CanCorC_trim = CanCorC[1:(nrow(CanCorC)-ncol(input_sv_table)),c(((nrow(CanCorC)-ncol(input_sv_table))+1):ncol(CanCorC),1)]
   }
+  
+
+  
   corrplot(CanCorC_trim,tl.col="black",cl.lim=c(0,1))
   #plotCorrMatrix(C[1:(nrow(C)-14),((nrow(C)-14)+1):ncol(C)],sort=FALSE)
   dev.off()
@@ -594,9 +593,15 @@ for( iter in 1:3){
     colnames(input_metadata_table) = c("HasColorectalCancer:", "Sex:", "Age:","BMI:","SeqInstrument:", "SeqCenter:","Dataset:","DNA_ExtractionKit:","Paired_vs_Unpaired_Seq:","Country:","LibrarySize:")
     input_metadata_pc = data.frame(input_metadata_table[,c("HasColorectalCancer:", "Sex:", "BMI:","Age:","Country:","DNA_ExtractionKit:","LibrarySize:","Dataset:")],
                                    input_sv_table)
-  }else{
-    input_metadata_pc = data.frame(input_metadata_table,
+    
+    
+  }else if(grepl("CRC",study_name) & ! grepl("thomas",study_name)){
+    colnames(input_metadata_table) = c("Race","HasColorectalCancer", "Sex", "Age","Dataset","SeqMethod", "LibrarySize")
+
+    input_metadata_pc = data.frame(input_metadata_table[,c("HasColorectalCancer", "Sex","Age","Race","LibrarySize","SeqMethod","Dataset")],
                                    input_sv_table)
+    
+  
   }
   
   input_metadata_pc_formula = as.formula(paste0(" ~ ",paste(colnames(input_metadata_pc ), collapse = " + ")))
@@ -618,14 +623,17 @@ for( iter in 1:3){
     }else{
       added_cols = c(5)
     }
+    
   }else{
     added_cols = c(2)
   }
-  colnames(C)
+  print("AT ADDED COLUMNS")
+  print(colnames(C))
+  
   corrplot(C[2:(nrow(C)-ncol(input_sv_table)),c(((nrow(C)-ncol(input_sv_table))+1):ncol(C),added_cols)])
   dev.off()
   
-  
+  #?cor.test
   new_C = C[2:(nrow(C)-ncol(input_sv_table)),c(((nrow(C)-ncol(input_sv_table))+1):ncol(C),added_cols)]
   
   p_val_matrix = new_C
@@ -661,12 +669,13 @@ for( iter in 1:3){
     dim(sub_mat)
     name = gsub(pattern = "\\.","", s)
     if(name  == "CRCvsNormal"){
-      name = "CRCvsAdenomaOrNormal"
+      name = "CRCvsNormal"
     }
     if(name == "DNAExtractionKit" | name == "DNA_ExtractionKit"){
       name = "DNA.Extraction.Kit"
     }
     print(name)
+    dim(p_val_cancor)
     p_val_cancor[name,1:(10 + length(added_cols))] = colMins(sub_mat)
   }
   pdf(paste0(plot_folder,"/","allCanCorStars_",sv_file, ".pdf"))
@@ -677,51 +686,127 @@ for( iter in 1:3){
   dev.off()
   
   print(CanCorC_trim)
+  write.csv(CanCorC_trim,paste0(plot_folder,"/","allCanCorStars_",sv_file, ".csv"))
   #install.packages("corrplot")
   require(corrplot)
 
   saveRDS( CanCorC_trim[,1:10], paste0(input_folder,"/", trans, "_PC_Cancor.rds"))
   
+  # row.names(CanCorC_trim_test) = c("Has Colorectal Cancer", "Sex", "BMI","Age" , "Country", 
+  #                                  "DNA Extraction Kit","Library Size","Dataset" )
+  row.names(CanCorC_trim)[which(row.names(CanCorC_trim) == "HasColorectalCancer")] = "Has Colorectal Cancer"
+  colnames(CanCorC_trim)[which(colnames(CanCorC_trim) == "HasColorectalCancer")] = "Has Colorectal Cancer"
+  row.names(CanCorC_trim)[which(row.names(CanCorC_trim) == "AntibioticLastYear")] = "Antibiotic Last Year"
+  colnames(CanCorC_trim)[which(colnames(CanCorC_trim) == "AntibioticLastYear")] = "Antibiotic Last Year"
+  row.names(CanCorC_trim)[which(row.names(CanCorC_trim) == "DNAExtractionKit")] = "DNA Extraction Kit"
+  row.names(CanCorC_trim)[which(row.names(CanCorC_trim) == "DNA.Extraction.Kit")] = "DNA Extraction Kit"
+  
+  row.names(CanCorC_trim)[which(row.names(CanCorC_trim) == "BowelMovementQuality")] = "Bowel Movement Quality"
+  row.names(CanCorC_trim)[which(row.names(CanCorC_trim) == "AlcoholConsumption")] = "Alcohol Consumption"
+  row.names(CanCorC_trim)[which(row.names(CanCorC_trim) == "OmnivoreDiet")] = "Omnivore Diet"
+  row.names(CanCorC_trim)[which(row.names(CanCorC_trim) == "CollectionYear")] = "Collection Year"
+  row.names(CanCorC_trim)[which(row.names(CanCorC_trim) == "LibrarySize")] = "Library Size"
+  if( data_type == "kmer"){
+    max_val = 0.96
+  }else{
+    max_val = 0.871
+  }
+  
   if(grepl("AGP",study_name)){
     CanCorC_trim_test = CanCorC_trim
-    CanCorC_trim_test[1,(ncol(CanCorC_trim)-1)] = NA
-    CanCorC_trim_test[2,(ncol(CanCorC_trim))] = NA
+    CanCorC_trim_test[1,(ncol(CanCorC_trim)-1)] = 0
+    CanCorC_trim_test[2,(ncol(CanCorC_trim))] =0
     p_val_cancor_test = p_val_cancor
-    p_val_cancor_test[1,(ncol(CanCorC_trim)-1)] = NA
-    p_val_cancor_test[2,(ncol(CanCorC_trim))] = NA
+    p_val_cancor_test[1,(ncol(CanCorC_trim)-1)] = 1
+    p_val_cancor_test[2,(ncol(CanCorC_trim))] = 1
     require(corrplot)
-  }
-  else{
-    CanCorC_trim_test = CanCorC_trim
-    CanCorC_trim_test[1,ncol(CanCorC_trim)] = NA
-    p_val_cancor_test = p_val_cancor
-    p_val_cancor_test[1,ncol(CanCorC_trim)] = NA
-    require(corrplot)
-    if(grepl("CRC_thomas",study_name)){
-      CanCorC_trim_test = CanCorC_trim
-      CanCorC_trim_test[1,ncol(CanCorC_trim)] = 0
-      p_val_cancor_test = p_val_cancor
-      p_val_cancor_test[1,ncol(CanCorC_trim)] = 1
-      
-      pdf(paste0(plot_folder,"/","MODallCanCorStars_",sv_file, ".pdf"))
-      corrplot(CanCorC_trim_test,na.label = "X",
-               na.label.col = "grey",
-               p.mat = p_val_cancor_test,insig = "label_sig",
-               sig.level = c(.001, .01, .05), pch.cex = .9,pch.col = "black",
-               tl.col="black",cl.lim=c(0,0.59),is.corr=F)
-      dev.off()
-      
-    }
-  }
-  if(!grepl("CRC_thomas",study_name)){
+    #max(CanCorC_trim_test,na.rm = TRUE)
     pdf(paste0(plot_folder,"/","MODallCanCorStars_",sv_file, ".pdf"))
     corrplot(CanCorC_trim_test,na.label = "X",
              na.label.col = "grey",
              p.mat = p_val_cancor_test,insig = "label_sig",
-             sig.level = c(.001, .01, .05), pch.cex = .9,pch.col = "black",is.corr=F,
-             tl.col="black")
+             sig.level = c(.001, .01, .05), pch.cex = .9,pch.col = "black",
+             tl.col="black",cl.lim=c(0,max_val),is.corr=F,tl.cex = 1.4,
+             cl.cex=1.2,cl.length = 6,cl.align.text = "c",cl.ratio=0.2)
     dev.off()
   }
+
+  else{
+    CanCorC_trim_test = CanCorC_trim
+    CanCorC_trim_test[1,ncol(CanCorC_trim)] = 0
+    p_val_cancor_test = p_val_cancor
+    p_val_cancor_test[1,ncol(CanCorC_trim)] = 1
+    require(corrplot)
+    
+    pdf(paste0(plot_folder,"/","MODallCanCorStars_",sv_file, ".pdf"))
+    corrplot(CanCorC_trim_test,na.label = "X",
+             na.label.col = "grey",
+             p.mat = p_val_cancor_test,insig = "label_sig",
+             sig.level = c(.001, .01, .05), pch.cex = .9,pch.col = "black",
+             tl.col="black",cl.lim=c(0,max_val),is.corr=F,tl.cex = 1.4,
+             cl.cex=1.2,cl.length = 6,cl.align.text = "c",cl.ratio=0.2)
+    dev.off()
+  }
+}
+?corrplot
+    
+    # if(grepl("CRC_thomas",study_name)){
+    #   CanCorC_trim_test = CanCorC_trim
+    #   CanCorC_trim_test[1,ncol(CanCorC_trim)] = 0
+    #   p_val_cancor_test = p_val_cancor
+    #   p_val_cancor_test[1,ncol(CanCorC_trim)] = 1
+    #   
+    #   pdf(paste0(plot_folder,"/","MODallCanCorStars_",sv_file, ".pdf"))
+    #   corrplot(CanCorC_trim_test,na.label = "X",
+    #            na.label.col = "grey",
+    #            p.mat = p_val_cancor_test,insig = "label_sig",
+    #            sig.level = c(.001, .01, .05), pch.cex = .9,pch.col = "black",
+    #            tl.col="black",cl.lim=c(0,0.59),is.corr=F,tl.cex = 1.4)
+    #   dev.off()
+    #   
+    # }else if(grepl("Thomas",study_name)){
+    #   CanCorC_trim_test = CanCorC_trim
+    #   CanCorC_trim_test[1,ncol(CanCorC_trim)] = 0
+    #   p_val_cancor_test = p_val_cancor
+    #   p_val_cancor_test[1,ncol(CanCorC_trim)] = 1
+    #   
+    #   pdf(paste0(plot_folder,"/","MODallCanCorStars_",sv_file, ".pdf"))
+    #   corrplot(CanCorC_trim_test,na.label = "X",
+    #            na.label.col = "grey",
+    #            p.mat = p_val_cancor_test,insig = "label_sig",
+    #            sig.level = c(.001, .01, .05), pch.cex = .9,pch.col = "black",
+    #            tl.col="black",cl.lim=c(0,0.6),is.corr=F,tl.cex = 1.4)
+    #   dev.off()
+    #   
+    # }else if(grepl("CRC",study_name) & data_type == "kmer"){
+    #   CanCorC_trim_test = CanCorC_trim
+    #   CanCorC_trim_test[1,ncol(CanCorC_trim)] = 0
+    #   p_val_cancor_test = p_val_cancor
+    #   p_val_cancor_test[1,ncol(CanCorC_trim)] = 1
+    #   
+    #   pdf(paste0(plot_folder,"/","MODallCanCorStars_",sv_file, ".pdf"))
+    #   corrplot(CanCorC_trim_test,na.label = "X",
+    #            na.label.col = "grey",
+    #            p.mat = p_val_cancor_test,insig = "label_sig",
+    #            sig.level = c(.001, .01, .05), pch.cex = .9,pch.col = "black",
+    #            tl.col="black",cl.lim=c(0,0.61),is.corr=F,tl.cex = 1.4)
+    #   dev.off()
+      
+      
+  # if(!grepl("CRC_thomas",study_name) & !grepl("Thomas",study_name) & !(grepl("CRC",study_name) & data_type == "kmer")){
+  #   pdf(paste0(plot_folder,"/","MODallCanCorStars_",sv_file, ".pdf"))
+  #   #CanCorC_trim_test_orig= CanCorC_trim_test
+  #   
+  #   corrplot(CanCorC_trim_test,na.label = "X",
+  #            na.label.col = "grey",
+  #            p.mat = p_val_cancor_test,insig = "label_sig",
+  #            sig.level = c(.001, .01, .05), pch.cex = .9,pch.col = "black",is.corr=F,
+  #            tl.col="black",tl.cex = 1.4) 
+  #   
+  #   dev.off()
+  # }
+  # 
+  
   
   #test  = as.vector(CanCorC_trim)
   
@@ -744,4 +829,4 @@ for( iter in 1:3){
   # p
   # ggsave(paste0(plot_folder,"/","CorrDist_AllVars.pdf"),plot=p)
   
-}
+

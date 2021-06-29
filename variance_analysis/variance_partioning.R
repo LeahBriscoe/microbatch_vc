@@ -224,11 +224,17 @@ for(n in numeric_vars){
 # ============================================================================== #
 # define fixed and random
 if(grepl("AGP",study_name)){
-  random_effects_tech = c("collection_year","Instrument") # "center_project_name","collection_days")#"Instrument",
-  random_effects_bio = c("race.x","bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year","bin_bowel_movement") #"diet_type.x","artificial_sweeteners"
+  # random_effects_tech = c("collection_year","Instrument") # "center_project_name","collection_days")#"Instrument",
+  # random_effects_bio = c("race.x","bin_alcohol_consumption","bin_omnivore_diet","bin_antibiotic_last_year","bin_bowel_movement") #"diet_type.x","artificial_sweeteners"
+  # 
+  # fixed_effects_tech = c("librarysize")#,"collection_AM")
+  # fixed_effects_bio = c("bmi_corrected","age_corrected") #"sex",
   
-  fixed_effects_tech = c("librarysize")#,"collection_AM")
-  fixed_effects_bio = c("bmi_corrected","age_corrected") #"sex",
+  random_effects_tech = c("collection_year","Instrument","race.x","bin_alcohol_consumption","bin_omnivore_diet","bin_bowel_movement") # "center_project_name","collection_days")#"Instrument",
+  random_effects_bio = c("bin_antibiotic_last_year") #"diet_type.x","artificial_sweeteners"
+  
+  fixed_effects_tech = c("librarysize","age_corrected")#,"collection_AM")
+  fixed_effects_bio = c("bmi_corrected") #"sex",
   
 }else if(grepl("Hispanic",study_name)){
   random_effects_tech = c("collection_year","mastermix_lot..exp.","processing_robot..exp.",

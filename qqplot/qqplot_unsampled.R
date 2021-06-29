@@ -2,7 +2,7 @@ rm(list = ls())
 args = commandArgs(trailingOnly=TRUE)
 print(args)
 
-
+# 
 # args = c("otu", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
 #          "rawfilter_TRUE_trans_none&rawfilter_TRUE_trans_clr_scale","protect_bin_crc_normal",
 #          "BatchCorrected")
@@ -13,18 +13,18 @@ print(args)
 # args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
 #          "rawfilter_TRUE_trans_none&rawfilter_TRUE_trans_clr_scale","protect_bin_crc_normal",
 #          "BatchCorrected")
-# args = c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
-#          "rawfilter_TRUE_trans_none&rawfilter_TRUE_trans_clr_scale","protect_bin_crc_normal",
-#          "BatchCorrected")
+args = c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
+         "rawfilter_TRUE_trans_none&rawfilter_TRUE_trans_clr_scale","protect_bin_crc_normal",
+         "BatchCorrected")
 # 
 
-args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
-          "rawfilter_TRUE_trans_none&rawfilter_TRUE_trans_clr_scale","protect_bin_antibiotic_last_year",
-         "BatchCorrected")
+# args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
+#           "rawfilter_TRUE_trans_none&rawfilter_TRUE_trans_clr_scale","protect_bin_antibiotic_last_year",
+#          "BatchCorrected")
 # args = c("otu", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_complete",
 #          "rawfilter_TRUE_trans_none&rawfilter_TRUE_trans_clr_scale","protect_bin_antibiotic_last_year",
 #         "BatchCorrected")
-# 
+
 
 # ============================================================================== #
 # user input
@@ -43,6 +43,7 @@ require(matrixStats)
 require(dplyr)
 require(varhandle)
 require(variancePartition)
+require(reshape2)
 
 script_folder = paste0(microbatch_folder,'/data_processing')
 batch_script_folder = paste0(microbatch_folder, '/batch_correction')
@@ -87,64 +88,32 @@ set.seed(30)
 possible_feats =  intersect(row.names(batch_corrected_data[[1]]),row.names(batch_corrected_data[[2]]))
 num_draw = 100
 draw_random = sample(possible_feats,size=num_draw)
+drawn_data = list()
+drawn_data[[1]] = batch_corrected_data_scale[[1]][draw_random ,]
+drawn_data[[2]] = batch_corrected_data_scale[[2]][draw_random ,]
+#require(graphics)
+for(m in 1:length(methods_list)){
 
-#draw_random =[draw_random]
-library(ggplot2)
-library(reshape2)
-for(m in 2:length(methods_list)){
-  pre_melt =batch_corrected_data_scale[[methods_list[m]]][draw_random,]
-  if(data_type == "otu"){
-    row.names(pre_melt) = paste0("OTU_",c(1:nrow(pre_melt)))
-  }
-  melt_5_features = melt(pre_melt[1:5,])
-  melt_10_features = melt(pre_melt)
-  colnames(melt_5_features) = c("Feature","Sample","Value")
-  colnames(melt_10_features) = c("Feature","Sample","Value")
-  # p <- ggplot(melt_5_features, aes(sample = Value, group = Feature, color = Feature)) +
-  #   ggtitle(paste0("Drawn: 5 features")) +
-  #   geom_point(stat = 'qq') + stat_qq_line() + theme_bw() +
-  #   theme(aspect.ratio=1,text = element_text(size=18),axis.text.x = element_text(size=15),axis.text.y = element_text(size=15))+
-  #   theme(axis.title.x = element_text(colour = "blue"),
-  #         axis.title.y = element_text(colour = "red"))+
-  #   xlab("Theoretical Quantiles") + ylab("Sample Quantiles")
-  # 
-  # ggsave(p,filename = paste0(plot_folder,"/","QQ_",methods_list[m], ".pdf"))      
-  # 
-  # t1 = Sys.time()
-  # p <- ggplot(melt_10_features, aes(sample = Value)) +
-  #   ggtitle(paste0("Drawn: ", num_draw," features")) +
-  #   geom_point(stat = 'qq') + stat_qq_line() + theme_bw() +
-  #   theme(aspect.ratio=1,text = element_text(size=18),axis.text.x = element_text(size=15),axis.text.y = element_text(size=15)) + 
-  #   geom_text(x=2, y=-1, label=paste0("Median: ", 0),size=10,colour="blue") + 
-  #   geom_text(x=-1, y=2, label=paste0("Median: ", round(median(melt_10_features$Value),2)),size=10,colour="red") + 
-  #   theme(axis.title.x = element_text(colour = "blue"),
-  #         axis.title.y = element_text(colour = "red"))+
-  #   xlab("Theoretical Quantiles") + ylab("Sample Quantiles")
-  # ggsave(p,filename = paste0(plot_folder,"/","QQconcat_",methods_list[m], ".jpg"))   
-  # print(Sys.time() - t1)
-  
-  #head(melt_10_features)
-  #dev.off()
-  t1 = Sys.time()
-  pdf(paste0(plot_folder,"/","QQconcat_",methods_list[m], ".pdf"))
-  #par(omi = c(0,0,0,0), mgp = c(0,0,0), mar = c(0,1,0,0))
-  par(mar = c(5.1, 5.1, 4.1, 2.1))
-  #?par
-  qqp <- qqnorm(melt_10_features$Value, pch = 16, frame = FALSE,main="",cex.lab=1.75, cex.axis=1.5)
-  qqline(melt_10_features$Value, col = "black", lwd = 1)
-  r2 = cor(qqp$x,qqp$y)^2
-  mylabel = bquote(italic(R)^2 == .(format(r2, digits = 3)))
-  if(grepl("AGP_complete",study_name)  | (grepl("AGP_complete",study_name) & grepl("none",methods_list[m]))) {
-    text(x = -1, y =20, labels = mylabel,cex=2)
-  }else if(grepl("AGP_complete",study_name) & grepl("none",methods_list[m])){
-    text(x = -1, y =5, labels = mylabel,cex=2)
+  melted =  melt(drawn_data[[m]])
+  colnames(melted) = c("Feature","Sample","Value")
+  t1= Sys.time()
+  qqnorm_1 = qqnorm(as.numeric(melted$Value )) # started 2:55
+  buffer = 0.2*max(qqnorm_1$y)
+  jpeg( paste0(plot_folder,"/","QQconcat_",methods_list[m], ".jpg"))
+  if(m ==1){
+    plot(qqnorm_1$x,qqnorm_1$y,ylab = "sample",xlab= "theoretical",
+         ylim = c((-1*buffer),(max(qqnorm_1$y) + buffer)),
+         cex.axis=1.5,cex.lab=2,pch=16)
   }else{
-    text(x = -1, y =3, labels = mylabel,cex=2)
+    plot(qqnorm_1$x,qqnorm_1$y,ylab = "sample",xlab= "theoretical",
+         cex.axis=1.5,cex.lab=2,pch=16)
   }
   
+  qqline(as.numeric(melted$Value ))
+  text(1.5, y = (-1*buffer*0.5), labels = paste0("Median: ",0),cex=2)
+  text(-1.5, y = (1*buffer*0.5), labels = paste0("Median: ",round(median(melted$Value),2)),cex=2)
+  #grid(nx = 8, ny = 8, col = "lightgray", lty = "solid")
+  print(Sys.time()-t1)
   dev.off()
-  print(Sys.time() - t1)
-
 }
-
 

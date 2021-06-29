@@ -6,26 +6,24 @@ print(args)
 #          "SVs_minerva_first1filter_TRUE_trans_clr_scale","protect_bin_t2d")
 
 # args = c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
-#          "protect_bin_crc_normal","BatchCorrected_rawfilter_TRUE_trans_clr_scale", "dataset_name",'raw_scale',1)
-# args = c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC_thomas",
-#          "protect_bin_crc_normal","BatchCorrected_rawfilter_TRUE_trans_clr_scale", "bin_crc_normal",'raw_scale',1)
-
-
-# args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Thomas",
 #          "protect_bin_crc_normal","BatchCorrected_rawfilter_TRUE_trans_none", "dataset_name",'raw_scale',1)
+# #
+
+args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"Thomas",
+         "protect_bin_crc_normal","BatchCorrected_rawfilter_TRUE_trans_clr_scale", "dataset_name",'raw_scale',1)
 
 
 # args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
-#         "protect_bin_crc_normal","BatchCorrected_rawfilter_TRUE_trans_none", "study","raw_scale",1)
-args = c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
-         "protect_bin_crc_normal","BatchCorrected_rawfilter_TRUE_trans_none", "study","raw_scale",1)
-
+#         "protect_bin_crc_normal","BatchCorrected_rawfilter_TRUE_trans_clr_scale", "study","raw_scale",1)
+# args = c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"CRC",
+#          "protect_bin_crc_normal","BatchCorrected_rawfilter_TRUE_trans_none", "study","raw_clrscale",1)
+# 
 
 # args = c("kmer", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
-#         "protect_bin_antibiotic_last_year","BatchCorrected_rawfilter_TRUE_trans_none", "Instrument","raw_scale",1)
+#         "protect_bin_antibiotic_last_year","BatchCorrected_rawfilter_TRUE_trans_clr_scale", "Instrument","raw_scale",1)
 # args = c("otu", 7,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_complete",
-#          "protect_bin_antibiotic_last_year","BatchCorrected_rawfilter_TRUE_trans_none", "Instrument","raw_scale",1)
-
+#          "protect_bin_antibiotic_last_year","BatchCorrected_rawfilter_TRUE_trans_none", "Instrument","raw",1)
+# 
 
 # args = c("kmer", 6,'/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc',"AGP_max",
 #          "SVs_minerva_first3filter_TRUE_trans_clr_scale","protect_bin_antibiotic_last_year")
@@ -119,23 +117,29 @@ print(Sys.time())
 intersect_samples = intersect(colnames(bc_data),row.names(total_metadata))
 total_metadata = total_metadata[intersect_samples,]
  
-if(grepl("clrscale",key)){
-  bc_data = t(clr(t(bc_data)))
-  bc_data = data.frame(bc_data)
-  bc_data = as.matrix(bc_data)
-  
-}
+# if(grepl("clrscale",key)){
+#   bc_data = t(clr(t(bc_data)))
+#   bc_data = data.frame(bc_data)
+#   bc_data = as.matrix(bc_data)
+#   
+# }
 
 
 pca_method_result  = pca_method(bc_data,clr_transform=FALSE,center_scale_transform =scale_bool,10)
-  
+eigens = sqrt(pca_method_result$svd_result$d)
+round(eigens/sum(eigens),2)
+sum(eigens[1:2]/sum(eigens))
+
+
+
 postpca_input = data.frame(pca_method_result$pca_score)
 
 #head(total_metadata)
 #postpca_input$group = total_metadata[,batch_column_name]
 #postpca_input$group = total_metadata[,'study_condition']
-
-postpca_input$group = total_metadata$bin_crc
+postpca_input$Study = total_metadata$dataset_name
+postpca_input$Condition = total_metadata$study_condition
+head(postpca_input)
 #postpca_input$group = total_metadata[,'study_condition']
 #postpca_input$group = paste0(total_metadata[,'bin_crc_normal'],total_metadata[,'dataset_name'])
 pca_plot(postpca_input,key,plot_folder)

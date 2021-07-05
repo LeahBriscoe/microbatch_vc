@@ -62,7 +62,7 @@ pca_plot <- function(df,meta,title,group_column,coord1,coord2){
 
 
 percentile_norm <- function(df_otu,df_meta,replace_zeroes,case_class,control_class){
-  # 
+  require(dplyr)
   # df_otu = subset_df_otu_rel_ab
   # df_meta = subset_df_meta
   # replace_zeroes = FALSE
@@ -118,3 +118,52 @@ percentile_norm <- function(df_otu,df_meta,replace_zeroes,case_class,control_cla
   colnames(concat_dat) <- colnames(dat)
   return(concat_dat*100)
 }
+
+
+correct_limma <- function(mat,batch_labels,batch_labels2 = NULL){
+  require(limma)
+  #?removeBatchEffect
+  input = removeBatchEffect( x=mat , batch= batch_labels,batch2 = batch_labels2)
+  return(input)
+}
+correct_bmc <- function(mat,batch_labels){
+  
+  
+  require(dplyr)
+  corrected_mat = mat
+  unique_batches= unique(batch_labels)
+  for( b in 1:length(unique_batches)){
+    samples = colnames(mat)[batch_labels == unique_batches[b]]
+    batch_mat = mat[,samples]
+    corrected_mat[,samples] = sweep(mat[,samples],MARGIN = 1, rowMeans(batch_mat))
+  }
+  
+  return(corrected_mat)
+  
+}
+correct_ComBat <- function(mat, batch_labels,model_matrix=NULL){
+  require(sva)
+  
+  
+  #mat <- data$df_otu_corrected
+  #range(mat)
+  # make continuous
+  combat_predata = mat #log(mat + 1) #mat #
+  input = ComBat( dat=combat_predata, batch = batch_labels,mod = model_matrix)
+  return(input)
+}
+
+correct_DCC <- function(mat, batch_labels){
+  batch_labels_factor = factor(batch_labels)
+  batch_mat = model.matrix(~batch_labels_factor )
+  return(t(resid(lm(t(mat) ~ batch_mat))))
+  
+}
+
+
+#output_folder = paste0(output_folder, "_",methods_list[m])
+#dir.create(output_folder)
+#saveRDS(new_metadata,paste0(output_folder,"/metadata.rds"))
+#write.table(new_metadata,paste0(output_folder,"/metadata.txt"),sep="\t",quote=FALSE)
+
+

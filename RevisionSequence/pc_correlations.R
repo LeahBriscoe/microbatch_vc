@@ -1,6 +1,6 @@
 args = commandArgs(trailingOnly=TRUE)
 print(args)
-
+#args = "Thomasr_complete_otu" 
 main_dir ="/u/home/b/briscoel/project-halperin/MicroBatch/data/"
 script_folder= "/u/home/b/briscoel/project-halperin/MicroBatch/RevisionSequence/"
 
@@ -27,3 +27,9 @@ pca_score2 = pca_method(feature_table, num_pcs = num_pcs_calc)
 print("dim pca scores")
 print(dim(pca_score2))
 saveRDS(pca_score2,paste0(data_dir,"/pca_score_rel.rds"))
+
+feature_table= readRDS(paste0(data_dir,"/feature_table_rel_clr.rds"))
+pca_score = pca_method(feature_table, num_pcs = num_pcs_calc)
+print("dim pca scores")
+print(dim(pca_score2))
+saveRDS(pca_score,paste0(data_dir,"/pca_score_rel_clr.rds"))

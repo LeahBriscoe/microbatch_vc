@@ -1,8 +1,8 @@
 args = commandArgs(trailingOnly=TRUE)
-local = FALSE
+local = TRUE
 if(local){
-  args = c("Thomasr_complete_otu","rel_clr_scale","dataset_name")
-  
+  #args = c("Thomasr_complete_otu","rel_clr_scale","dataset_name")
+  args = c("AGPr_complete_otu","rel_clr","Instrument")
 }
 print(args)
 
@@ -21,7 +21,7 @@ trans = args[2] #"rel"
 group_column = args[3] # "Instrument"
 data_dir = paste0(main_dir,folder,"/")
 metadata_table = read.csv(paste0(data_dir,"metadata.txt"), sep = "\t",stringsAsFactors = FALSE,header=TRUE,row.names=1)
-
+table(metadata_table$bin_antibiotic_last_year)
 # FUNCTIONS
 source(paste0(script_folder,"/correction_source.R"))
 
@@ -32,14 +32,17 @@ num_pcs_calc = 15
 
 pca_score = readRDS(paste0(data_dir,"/pca_score_", trans,".rds"))
 colnames(pca_score)  = paste0("PC",c(1:ncol(pca_score)))
-metadata_table = metadata_table[row.names(pca_score),]
+
+#metadata_table = metadata_table[row.names(pca_score),]
 print(dim(pca_score))
 print(dim(metadata_table))
 
-
+#row.names(metadata_table)
 # MAKE PCA PLOT
 
-#p <- pca_plot(pca_score,metadata_table, title = "PC 1 and 2",group_column=group_column,coord1=1,coord2=2)
+
+#p <- pca_plot(pca_score,metadata_table, title = "PC 1 and 2",group_column=group_column,coord1=3,coord2=4)
+#p <- p + ylim(-10,50)
 #ggsave(p,file=paste0(data_dir,"/pca_plot_",trans, "_", group_column,".pdf"),device ="pdf")
 
 ### MAKE PCA COrrelation plot
@@ -50,11 +53,24 @@ if(folder == "Thomasr_complete_otu"){
   main_phenotype = 'bin_crc_adenomaORnormal'
   
 }
+
+if(folder == "AGPr_complete_otu"){
+  covariates = c("bin_antibiotic_last_year","age_corrected","bmi_corrected","race.x", "bin_alcohol_consumption",
+                 "bin_omnivore_diet","bin_bowel_movement","Instrument","collection_year")
+  main_phenotype = "bin_antibiotic_last_year"
+  
+
+  new_pheno = sapply(metadata_pc$bin_antibiotic_last_year,function(x){
+    if(is.na(x)){return(NA)}
+    if(x == "Yes"){return(1)}
+    if(x == "No"){return(0)}
+    
+  })
+  metadata_pc$bin_antibiotic_last_year = new_pheno
+}
 #print(colnames(metadata_table))
 metadata_pc = data.frame(metadata_table[,covariates],
                          pca_score)
-print("dim(metadatapc")
-print(dim(metadata_pc))
 
 
 pc_formula = as.formula(paste0(" ~ ",colnames(metadata_pc), collapse = " + "))
@@ -80,8 +96,9 @@ for(r in 1:nrow(CanCorC )){
    
     all_cors = c()
     all_pvals = c()
+    head(r_input)
     for( cl2 in 2:ncol(r_input)){
-      
+      #head(metadata_pc)
       cor = cor(r_input[,cl2],metadata_pc[row.names(r_input),cname],use = "pairwise.complete.obs", method = "pearson")
       cor_test = cor.test(r_input[,cl2],metadata_pc[row.names(r_input),cname],method = "pearson")
       all_pvals = c(all_pvals,cor_test$p.value)

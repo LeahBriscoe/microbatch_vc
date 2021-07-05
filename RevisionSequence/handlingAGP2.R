@@ -3,10 +3,19 @@
 
 main_dir ="/u/home/b/briscoel/project-halperin/MicroBatch/data/"
 
+
+
+# main_dir ="/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/data/"
+# folder ="AGPr_complete_otu" 
+# data_dir = paste0(main_dir,folder,"/")
+# metadata = read.csv(paste0(data_dir,"metadata.txt"), sep = "\t",stringsAsFactors = FALSE,header=TRUE,row.names=1)
+# table(metadata$bin_bowel_movement)
+# 
+
 folder ="AGPr_max_k7" # "AGPr_complete_otu" #
 old_folder ="AGP_max_k7" #"AGP_complete_otu" # 
 datype = "kmer" #"otu" 
-data_dir = paste0(main_dir,folder,"/")
+
 old_data_dir = paste0(main_dir,old_folder,"/")
 metadata = read.csv(paste0(data_dir,"metadata.txt"), sep = "\t",stringsAsFactors = FALSE,header=TRUE,row.names=1)
 data_table = readRDS(paste0(old_data_dir,datype,"_table.rds"))

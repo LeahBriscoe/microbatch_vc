@@ -36,7 +36,7 @@ if(folder == "Thomasr_complete_otu"){
   
 }
 
-if(folder == "AGPr_complete_otu"){
+if(grepl("AGP",folder)){
   new_pheno = sapply(metadata_table$bin_antibiotic_last_year,function(x){
     if(is.na(x)){return(NA)}
     if(x == "Yes"){return(1)}
@@ -64,6 +64,9 @@ if(folder == "Gibbonsr_complete_otu"){
   dataset_phenotype = metadata_table$bin_crc_normal
   
 }
+
+
+
 
 
 pseudocount  = min(feature_table[feature_table!= 0])*0.65

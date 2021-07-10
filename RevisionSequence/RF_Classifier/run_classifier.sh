@@ -1,7 +1,8 @@
 #!/bin/bash
 . /u/local/Modules/default/init/modules.sh
 module load python/anaconda3
-python MINERVA_test_train_prediction.py $1 $2 $3 $4 $5 $6 $7 $8 $9 ${10} ${11}
 
-python classifier.py --folder $1 --trans $2 --correction $3 --lodo $4 --phenotype $5 --n_estimators $6 --criterion $7 --max_depth $8 --min_samples_split $9 --min_samples_leaf ${10} --max_features ${11}
+while read -r arg_1 arg_2 arg_3 arg_4 arg_5 arg_6 arg_7 arg_8 arg_9 arg_10 arg_11; do
+	python classifier.py --folder $arg_1 --trans $arg_2 --correction $arg_3 --lodo $arg_4 --phenotype $arg_5 --n_estimators $arg_6 --criterion $arg_7 --max_depth $arg_8 --min_samples_split $arg_9 --min_samples_leaf $arg_10 --max_features $arg_11;
+done < inputs/data_$SGE_TASK_ID.in
 

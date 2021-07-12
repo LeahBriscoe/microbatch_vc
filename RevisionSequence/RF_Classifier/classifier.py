@@ -1,4 +1,4 @@
-# python classifier.py --folder Thomasr_complete_otu --trans rel --correction nocorrection --lodo 1 --phenotype bin_crc_normal --n_estimators 100 --criterion entropy --max_depth 3 --min_samples_split 2 --min_samples_leaf 5 --max_features 0.3
+# python classifier.py --folder Thomasr_complete_otu --trans rel --correction nocorrection --lodo 1 --phenotype bin_crc_normal --n_estimators 100 --criterion entropy --max_depth None --min_samples_split 2 --min_samples_leaf 5 --max_features auto
 
 
 # python classifier.py --folder Thomasr_complete_otu --trans rel --correction nocorrection --lodo 0 --phenotype bin_crc_normal --n_estimators 100 --criterion gini --max_depth 1 --min_samples_split 5 --min_samples_leaf 1 --max_features 0.1
@@ -32,7 +32,7 @@ if local:
 	script_folder = "/Users/leahbriscoe/Documents/MicroBatch/microbatch_vc/RevisionSequence/"
 
 groups = {"AGPr_complete_otu":"Instrument","Thomasr_complete_otu":"dataset_name","AGPr_max_k7":"Instrument", "AGPr_max_k5":"Instrument", \
-"AGPr_max_k6":"Instrument"}
+"AGPr_max_k6":"Instrument", "Gibbonsr_complete_otu":"study", "Thomasr_max_k6":"dataset_name","Thomasr_max_k7":"dataset_name"}
 
 parser.add_argument('--folder', help='Name of dataset folder',type=str)
 parser.add_argument('--trans', help='Which transformation of data',type=str)
@@ -42,10 +42,10 @@ parser.add_argument('--phenotype', help='What phenotype are you predicting',type
 
 parser.add_argument('--n_estimators', help='What is the minimum allele frequency for non mothers', type = int)
 parser.add_argument('--criterion', help='Strain for this job', type = str)
-parser.add_argument('--max_depth', help='Study to study',type=int)
+parser.add_argument('--max_depth', help='Study to study',type=str)
 parser.add_argument('--min_samples_split', help='End index', type = int)
 parser.add_argument('--min_samples_leaf', help='Minimum read depth for a valid allele frequency',type = int)
-parser.add_argument('--max_features', help='Max features per tree', type = float)
+parser.add_argument('--max_features', help='Max features per tree', type = str)
 args=parser.parse_args()
 print(args)
 
@@ -58,13 +58,16 @@ lodo = bool(args.lodo)
 phenotype = args.phenotype
 param_n_estimators = args.n_estimators
 param_criterion = args.criterion
-param_max_depth = args.max_depth
+if args.max_depth == "None":
+	param_max_depth = None
+else:
+	param_max_depth = int(args.max_depth)
 param_min_samples_split = args.min_samples_split
 param_min_samples_leaf = args.min_samples_leaf
-param_max_features = args.max_features
-print("param_max_features " + str(param_max_features ))
-print( param_max_features  + 1)
-
+if args.max_features== "auto":
+	param_max_features = args.max_features
+else:
+	param_max_features = float(args.max_features)
 
 
 data_dir = main_dir + folder + "/"
@@ -192,27 +195,17 @@ for train_index, test_index in splitter:
 	print("DIM train")
 	print(X_train.shape)
 
-	# clf = RandomForestClassifier(random_state=0,n_estimators = param_n_estimators, criterion = param_criterion, max_depth = param_max_depth, 
-	# 	min_samples_split = param_min_samples_split, min_samples_leaf = param_min_samples_leaf, max_features = param_max_features)
-
-	# print("collections")
-	# #print(Counter(list(y_train)))
-	# print(y_train)
-	# clf.fit(X_train, y_train)
-
-
-
-	##TEST ONLY
-	clf = RandomForestClassifier(random_state=0,n_estimators = param_n_estimators, criterion = param_criterion, 
+	clf = RandomForestClassifier(random_state=0,n_estimators = param_n_estimators, criterion = param_criterion, max_depth = param_max_depth, 
 		min_samples_split = param_min_samples_split, min_samples_leaf = param_min_samples_leaf, max_features = param_max_features)
 
 	print("collections")
 	#print(Counter(list(y_train)))
 	print(y_train)
 	clf.fit(X_train, y_train)
-	print(clf.get_params())
+
 	test = [(est.get_depth(), est.tree_.max_depth, est.max_depth) for est in clf.estimators_]
 	print(test)
+
 	
 	## TESTONLY 
 
@@ -223,6 +216,7 @@ for train_index, test_index in splitter:
 
 
 print(results_dict)	
+
 
 
 output_string  = "_lodo_" + str(lodo) + "_nest_" + str(param_n_estimators) + "_crit_" + str(param_criterion) + "_maxd_" + str(param_max_depth) +  "_miss_" + str(param_min_samples_split) + \

@@ -25,11 +25,11 @@ phen_input=$5
 COUNTER=$first_count_input-1
 echo $COUNTER
 for nest in 100 1000 1500; 
-	do for crit in entropy gini; 
-		do for maxd in 1 2 3; 
+	do for crit in entropy; 
+		do for maxd in None; 
 			do for miss in 2 5 10;
 				do for misl in 1 5 10;
-					do for maf in 0.1 0.3 0.5; 
+					do for maf in auto; 
 						do 
 							COUNTER=$((COUNTER + 1)); 
 							echo $COUNTER; 
@@ -45,11 +45,15 @@ for nest in 100 1000 1500;
 
 if [[ "$dataset_input" == *"AGPr_max_k5"* || "$dataset_input" == *"AGPr_max_k6"* ]] ; then
 	echo "$first_count_input:$COUNTER"
-	qsub -cwd -V -o misc -e misc -N RF -l h_data=15G,time=24:00:00,highp -b y -t $first_count_input:$COUNTER "./run_classifier.sh"
+	qsub -cwd -V -o misc -e misc -N RF -l h_data=15G,time=48:00:00,highp -b y -t $first_count_input:$COUNTER "./run_classifier.sh"
 
 elif [[ "$dataset_input" == *"AGPr_"* ]]; then
 	echo "$first_count_input:$COUNTER"
-	qsub -cwd -V -o misc -e misc -N RF -l h_data=20G,time=24:00:00,highp -b y -t $first_count_input:$COUNTER "./run_classifier.sh"
+	qsub -cwd -V -o misc -e misc -N RF -l h_data=24G,time=48:00:00,highp -b y -t $first_count_input:$COUNTER "./run_classifier.sh"
+
+elif [[ "$dataset_input" == *"Thomasr_max"* ]]; then
+	echo "$first_count_input:$COUNTER"
+	qsub -cwd -V -o misc -e misc -N RF -l h_data=18G,time=24:00:00 -b y -t $first_count_input:$COUNTER "./run_classifier.sh"
 
 else
 	echo "$first_count_input:$COUNTER"

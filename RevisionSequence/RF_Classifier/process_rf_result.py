@@ -1,7 +1,7 @@
 
-##python process_rf_result.py --folder Thomasr_complete_otu --trans rel --correction nocorrection --lodo 0 --phenotype bin_crc_normal
-##python process_rf_result.py --folder Thomasr_complete_otu --trans rel --correction clr_pcacounts --lodo 0 --phenotype bin_crc_normal
-##python process_rf_result.py --folder Thomasr_complete_otu --trans rel --correction clr_pca --lodo 0 --phenotype bin_crc_normal
+##python process_rf_result.py --folder Thomasr_complete_otu --trans rel --correction nocorrection --lodo 1 --phenotype bin_crc_normal
+##python process_rf_result.py --folder Thomasr_complete_otu --trans rel --correction clr_pca4counts --lodo 1 --phenotype bin_crc_normal
+##python process_rf_result.py --folder Thomasr_complete_otu --trans rel --correction clr_scale_pca --lodo 1--phenotype bin_crc_normal
 ##python process_rf_result.py --folder AGPr_complete_otu --trans rel --correction bmc --lodo 0 --phenotype bin_antibiotic_last_year
 
 import argparse,sys
@@ -44,17 +44,33 @@ if local:
 
 
 
+studies_dict = {"Thomasr_complete_otu": ['FengQ_2015','HanniganGD_2017', 'ThomasAM_2018a', 'ThomasAM_2018b', 'VogtmannE_2016', 'YuJ_2015', 'ZellerG_2014']}
 data_dir = main_dir + folder + "/"
 out_dir = data_dir + "RF/"
 
-metrics = pd.DataFrame(columns=["nest", "crit","maxd","miss","misl","maf","val_auc","val_f1","test_auc","test_f1"]) 
+metrics_dict = dict()
+if lodo:
+	for s in studies_dict[folder]:
+		metrics_dict[s] = pd.DataFrame(columns=["nest", "crit","maxd","miss","misl","maf","val_auc","val_f1","test_auc","test_f1"]) 
+
+else:
+	for s in range(5):
+		metrics_dict[s] = pd.DataFrame(columns=["nest", "crit","maxd","miss","misl","maf","val_auc","val_f1","test_auc","test_f1"]) 
+
+
+#metrics = pd.DataFrame(columns=["nest", "crit","maxd","miss","misl","maf","val_auc","val_f1","test_auc","test_f1"]) 
+
+
+
+
+
 
 for nest in [100,1000, 1500]: 
-	for crit in ["entropy", "gini"] : 
-		for maxd in [1,2, 3]: 
+	for crit in ["entropy"] : 
+		for maxd in ["None"]: 
 			for miss in [2 , 5,  10]:
 				for misl in [1, 5, 10]:
-					for maf in [0.1, 0.3, 0.5]: 
+					for maf in ["auto"]: 
 						output_string  = "_lodo_" + str(lodo) + "_nest_" + str(nest) + "_crit_" + str(crit) + "_maxd_" + str(maxd) + "_miss_" + str(miss) + \
 						"_misl_" + str(misl) + "_maf_" + str(maf) 
 						file_path = out_dir  + "GRID_" + trans + "_" + correction  + output_string  + ".pkl"
@@ -63,30 +79,34 @@ for nest in [100,1000, 1500]:
 						else:
 							
 							model_result = pickle.load( open( file_path ,"rb"))
+							#print(model_result)
+							#sys.exit()
 
 							if lodo:
-								lodo_dict = {"nest":nest,"crit":crit,"maxd":maxd,"miss":miss,"misl":misl, \
-									"maf":maf,"val_auc":np.mean(model_result['val_auc']),"val_f1":np.mean(model_result['val_f1']), \
-									"test_auc":np.mean(model_result['test_auc']),"test_f1":np.mean(model_result['test_f1'])}
+								
 								for test in range(len(model_result["test_dataset"])):
-									lodo_dict["AUC" + model_result["test_dataset"][test] ] = model_result['test_auc'][test]
-									lodo_dict["F1" + model_result["test_dataset"][test] ] = model_result['test_f1'][test]
-
-								metrics = metrics.append(lodo_dict,ignore_index=True)
-
-
+									metrics_dict[model_result["test_dataset"][test]] = metrics_dict[model_result["test_dataset"][test]].append({"nest":nest,"crit":crit,"maxd":maxd,"miss":miss,"misl":misl, \
+									"maf":maf,"val_auc":model_result['val_auc'][test],"val_f1":model_result['val_f1'][test],
+									"test_auc": model_result['test_auc'][test],"test_f1":model_result['test_f1'][test]},ignore_index=True)
 							else:
-								reg_dict = {"nest":nest,"crit":crit,"maxd":maxd,"miss":miss,"misl":misl, \
-									"maf":maf,"val_auc":np.mean(model_result['val_auc']),"val_f1":np.mean(model_result['val_f1']), "test_auc":np.mean(model_result['test_auc']),"test_f1":np.mean(model_result['test_f1']) }
-
 								for test in range(len(model_result["test_auc"])):
-									reg_dict["AUC_" + str(test) ] = model_result['test_auc'][test]
-									reg_dict["F1"+ str(test) ] = model_result['test_f1'][test]
+									metrics_dict[test] = metrics_dict[test].append({"nest":nest,"crit":crit,"maxd":maxd,"miss":miss,"misl":misl, \
+									"maf":maf,"val_auc":model_result['val_auc'][test],"val_f1":model_result['val_f1'][test],
+									"test_auc": model_result['test_auc'][test],"test_f1":model_result['test_f1'][test]},ignore_index=True)
 
-								metrics = metrics.append(reg_dict,ignore_index=True)
-print(metrics)
-best_model_index = list(metrics["val_auc"]).index(max(list(metrics["val_auc"])))
-print("best_model_index" + str(best_model_index))
-print(metrics.iloc[best_model_index])
+									
 
-metrics.to_csv(data_dir + "GRID_OUTPUT_" + trans + "_" + correction  + "_lodo_" + str(lodo)  + ".csv",index=False)
+final_metrics = pd.DataFrame(columns=["fold", "nest", "crit","maxd","miss","misl","maf","val_auc","val_f1","test_auc","test_f1"]) 
+
+print(metrics_dict)
+for k in metrics_dict.keys():
+	best_model_index = list(metrics_dict[k]["val_auc"]).index(max(list(metrics_dict[k]["val_auc"])))
+	temp = metrics_dict[k].iloc[best_model_index]
+	#temp.insert(0,"fold",k, True)
+	temp.set_value("fold",k)
+	final_metrics = final_metrics.append(temp)
+
+
+print(final_metrics)
+
+final_metrics.to_csv(data_dir + "GRID_OUTPUT_" + trans + "_" + correction  + "_lodo_" + str(lodo)  + ".csv",index=False)

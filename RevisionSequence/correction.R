@@ -1,6 +1,6 @@
 args = commandArgs(trailingOnly=TRUE)
 local = FALSE
-round_time = TRUE
+round_time = FALSE
 require(dplyr)
 if(local){
   args = c("Thomasr_complete_otu","rel",2,"limma")

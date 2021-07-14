@@ -1,8 +1,8 @@
 args = commandArgs(trailingOnly=TRUE)
 local = TRUE
 if(local){
-  #args = c("Thomasr_complete_otu","rel_clr_scale","dataset_name")
-  args = c("AGPr_complete_otu","rel_clr","Instrument")
+  args = c("Thomasr_complete_otu","rel","dataset_name")
+  #args = c("AGPr_complete_otu","rel_clr","Instrument")
 }
 print(args)
 
@@ -49,8 +49,8 @@ print(dim(metadata_table))
 library(corrplot)
 library(variancePartition)
 if(folder == "Thomasr_complete_otu"){
-  covariates = c('bin_crc_adenomaORnormal',"age","BMI","dataset_name","gender",'DNA_extraction_kit','country')
-  main_phenotype = 'bin_crc_adenomaORnormal'
+  covariates = c('bin_crc_normal',"age","BMI","dataset_name","gender",'DNA_extraction_kit','country')
+  main_phenotype = 'bin_crc_normal'
   
 }
 
@@ -60,13 +60,13 @@ if(folder == "AGPr_complete_otu"){
   main_phenotype = "bin_antibiotic_last_year"
   
 
-  new_pheno = sapply(metadata_pc$bin_antibiotic_last_year,function(x){
+  new_pheno = sapply(metadata_table$bin_antibiotic_last_year,function(x){
     if(is.na(x)){return(NA)}
     if(x == "Yes"){return(1)}
     if(x == "No"){return(0)}
     
   })
-  metadata_pc$bin_antibiotic_last_year = new_pheno
+  metadata_table$bin_antibiotic_last_year = new_pheno
 }
 #print(colnames(metadata_table))
 metadata_pc = data.frame(metadata_table[,covariates],
@@ -109,11 +109,26 @@ for(r in 1:nrow(CanCorC )){
   }
 }
 max_val = 1
+new_rn =  gsub("crc_normal","crc/normal", row.names(CanCorC) )
+new_rn = gsub("_"," ", new_rn)
+new_rn = gsub("bin ", "", new_rn)
+new_rn = gsub(" corrected","",new_rn)
+if(grepl("AGP",folder)){
+  new_rn = gsub(".x","",new_rn)
+}
+
+new_rn = gsub("Instrument","sequencing instrument",new_rn)
+row.names(CanCorC) = new_rn
+plot_object = list(CanCorC = CanCorC,p_val_matrix = p_val_matrix )
+#saveRDS(plot_object,paste0(data_dir,"/","CanCorPlotObj_",trans, ".rds"))
+#plot_object = readRDS(paste0(data_dir,"/","CanCorPlotObj_",trans, ".rds"))
+
+
 pdf(paste0(data_dir,"/","CanCor_",trans, ".pdf"))
-corrplot(CanCorC,na.label = "X",
+corrplot(plot_object$CanCorC,na.label = "X",
          na.label.col = "grey",
-         p.mat = p_val_matrix,insig = "label_sig",
+         p.mat = plot_object$p_val_matrix,insig = "label_sig",
          sig.level = c(.001, .01, .05), pch.cex = .9,pch.col = "black",
-         tl.col="black",cl.lim=c(0,max_val),is.corr=F,tl.cex = 1.4,
-         cl.cex=1.2,cl.length = 6,cl.align.text = "c",cl.ratio=0.2)
+         tl.col="black",cl.lim=c(0,max_val),is.corr=F,tl.cex = 1,
+         cl.cex=1,cl.length = 6,cl.align.text = "c",cl.ratio=0.2)
 dev.off()

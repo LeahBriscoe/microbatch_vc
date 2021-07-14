@@ -95,9 +95,6 @@ n_repeats = 1
 random.seed(567)
 rskf = model_selection.RepeatedStratifiedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=123)
 logo = LeaveOneGroupOut()
-parameter_dict = {'n_estimators':[param_n_estimators],'criterion': [param_criterion],\
-'min_samples_leaf': [param_min_samples_leaf],'max_features':[param_max_features],\
-'min_samples_split': [param_min_samples_split],'max_depth':[param_max_depth]}
 
 # ## CHECK
 print("before filter")
@@ -120,13 +117,7 @@ feature_table = feature_table[~na_mask,:] # get rid of samples with na labels
 labels = labels[~na_mask]
 metadata_table = metadata_table.loc[~na_mask,:]  
 print(Counter(labels))
-## BINARIZE
-if phenotype == "bin_antibiotic_last_year":
-	labels = np.array([1 if lab=="Yes" else 0 for lab in labels])
-
-if (phenotype == "bin_crc_normal") & (("Gibbons" in folder) | ("Thomasr_max" in folder) ):
-	labels = np.array([1 if lab=="CRC" else 0 for lab in labels])
-
+## clean metadata
 
 print(Counter(labels))
 #### CHECK
@@ -138,7 +129,6 @@ print(metadata_table.shape)
 
 #### CROSS VALIDTION
 
-rskf = model_selection.RepeatedStratifiedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=123)
 if lodo:
 	logo = LeaveOneGroupOut()
 
@@ -171,14 +161,7 @@ else:
 	results_dict["val_shape"] = []  
 	results_dict["test_shape"] = []  
 for train_index, test_index in splitter: 
-	# results_dict[train_iter] = dict()
-	# results_dict[train_iter]['train_best_params'] = dict()
-	# results_dict[train_iter]['train_auc_trained'] = []
-	# results_dict[train_iter]['mean_train_cv_auc'] = []
-	# results_dict[train_iter]['mean_test_cv_auc'] = []
-	# results_dict[train_iter]['test_auc_trained'] = []
-	# results_dict[train_iter]['val_auc_trained']= [] 
-	# results_dict[train_iter]["number samples"] = []  
+
 
 	X_train, X_test = feature_table[train_index,], feature_table[test_index,]
 
@@ -200,16 +183,9 @@ for train_index, test_index in splitter:
 	print("DIM train")
 	print(X_train.shape)
 
-	clf = RandomForestClassifier(random_state=0,n_estimators = param_n_estimators, criterion = param_criterion, max_depth = param_max_depth, 
-		min_samples_split = param_min_samples_split, min_samples_leaf = param_min_samples_leaf, max_features = param_max_features)
-
-	print("collections")
-	#print(Counter(list(y_train)))
-	print(y_train)
-	clf.fit(X_train, y_train)
-
-	test = [(est.get_depth(), est.tree_.max_depth, est.max_depth) for est in clf.estimators_]
-	print(test)
+	
+    clf =  LinearRegression().fit(data, labels)
+    
 
 	
 	## TESTONLY 

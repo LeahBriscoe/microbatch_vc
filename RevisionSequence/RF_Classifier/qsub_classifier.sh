@@ -51,13 +51,17 @@ elif [[ "$dataset_input" == *"AGPr_"* ]]; then
 	echo "$first_count_input:$COUNTER"
 	qsub -cwd -V -o misc -e misc -N RF -l h_data=24G,time=48:00:00,highp -b y -t $first_count_input:$COUNTER "./run_classifier.sh"
 
-elif [[ "$dataset_input" == *"Thomasr_max"* ]]; then
+elif [[ "$dataset_input" == *"Thomasr_max_k7"* ]]; then
 	echo "$first_count_input:$COUNTER"
-	qsub -cwd -V -o misc -e misc -N RF -l h_data=18G,time=24:00:00 -b y -t $first_count_input:$COUNTER "./run_classifier.sh"
+	qsub -cwd -V -o misc -e misc -N RF -l h_data=16G,time=24:00:00 -b y -t $first_count_input:$COUNTER "./run_classifier.sh"
+
+elif [[ "$dataset_input" == *"Thomasr_max_k6"* ]]; then
+	echo "$first_count_input:$COUNTER"
+	qsub -cwd -V -o misc -e misc -N RF -l h_data=14G,time=24:00:00 -b y -t $first_count_input:$COUNTER "./run_classifier.sh"
 
 else
 	echo "$first_count_input:$COUNTER"
-	qsub -cwd -V -o misc -e misc -N RF -l h_data=5G,time=24:00:00 -b y -t $first_count_input:$COUNTER "./run_classifier.sh"
+	qsub -cwd -V -o misc -e misc -N RF -l h_data=5G,time=24:00:00,highp -b y -t $first_count_input:$COUNTER "./run_classifier.sh"
 fi
 
 

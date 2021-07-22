@@ -7,11 +7,10 @@
 # python classifier.py --folder Thomasr_complete_otu --trans rel --correction nocorrection --lodo 1 --phenotype bin_crc_normal --n_estimators 100 --criterion entropy --max_depth 1 --min_samples_split 5 --min_samples_leaf 1 --max_features 0.1
 # python classifier.py --folder AGPr_max_k5 --trans rel --correction clr_pca2counts --lodo 0 --phenotype bin_antibiotic_last_year --n_estimators 100 --criterion entropy --max_depth 1 --min_samples_split 5 --min_samples_leaf 1 --max_features 0.1
 
-# python classifier.py --folder AGPr_complete_otu --trans rel --correction nocorrection --lodo 0 --phenotype bin_antibiotic_last_year --n_estimators 100 --criterion entropy --max_depth 1 --min_samples_split 5 --min_samples_leaf 1 --max_features 0.1
-
+# python regression.py --folder AGPr_max_k5 --trans rel --correction nocorrection --lodo 0 --phenotype bmi_corrected 
 
 import argparse,sys
-import classifier_utils
+
 import data_utils
 import os
 import pandas as pd
@@ -44,12 +43,7 @@ parser.add_argument('--correction', help='Which correction method',type=str)
 parser.add_argument('--lodo', help='Whether to use lodo (1 or 0)',type=int)
 parser.add_argument('--phenotype', help='What phenotype are you predicting',type =str)
 
-parser.add_argument('--n_estimators', help='What is the minimum allele frequency for non mothers', type = int)
-parser.add_argument('--criterion', help='Strain for this job', type = str)
-parser.add_argument('--max_depth', help='Study to study',type=str)
-parser.add_argument('--min_samples_split', help='End index', type = int)
-parser.add_argument('--min_samples_leaf', help='Minimum read depth for a valid allele frequency',type = int)
-parser.add_argument('--max_features', help='Max features per tree', type = str)
+
 args=parser.parse_args()
 print(args)
 
@@ -60,22 +54,10 @@ trans = args.trans #"rel"
 correction = args.correction
 lodo = bool(args.lodo)
 phenotype = args.phenotype
-param_n_estimators = args.n_estimators
-param_criterion = args.criterion
-if args.max_depth == "None":
-	param_max_depth = None
-else:
-	param_max_depth = int(args.max_depth)
-param_min_samples_split = args.min_samples_split
-param_min_samples_leaf = args.min_samples_leaf
-if args.max_features== "auto":
-	param_max_features = args.max_features
-else:
-	param_max_features = float(args.max_features)
 
 
 data_dir = main_dir + folder + "/"
-out_dir = data_dir + "RF/"
+out_dir = data_dir + "PRED/"
 if not os.path.isdir(out_dir):
 	os.makedirs(out_dir)
 	print("created folder : ", out_dir)
@@ -95,7 +77,7 @@ else:
 n_splits = 5
 n_repeats = 10
 random.seed(567)
-rskf = model_selection.RepeatedStratifiedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=123)
+rskf = model_selection.RepeatedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=123)
 logo = LeaveOneGroupOut()
 parameter_dict = {'n_estimators':[param_n_estimators],'criterion': [param_criterion],\
 'min_samples_leaf': [param_min_samples_leaf],'max_features':[param_max_features],\
@@ -116,25 +98,13 @@ print(len(metadata_table[phenotype]))
 ### PREPARE FOR PREDICION
 feature_table = np.array(feature_table).transpose()
 labels = np.array(metadata_table[phenotype])
-if "Kaplan" in folder:
-	labels = np.array([np.nan if lab=="not provided" else int(lab) for lab in labels])
-print(labels)
+
 
 na_mask = pd.isna(labels)
 feature_table = feature_table[~na_mask,:] # get rid of samples with na labels
 labels = labels[~na_mask]
 metadata_table = metadata_table.loc[~na_mask,:]  
-print(Counter(labels))
-## BINARIZE
-if phenotype == "bin_antibiotic_last_year":
-	labels = np.array([1 if lab=="Yes" else 0 for lab in labels])
 
-if (phenotype == "bin_crc_normal") & (("Gibbonsr_complete" in folder) | ("Thomasr_max" in folder) ):
-	labels = np.array([1 if lab=="CRC" else 0 for lab in labels])
-
-
-print(Counter(labels))
-#### CHECK
 print("after filter")
 print(feature_table.shape)
 print(len(labels))
@@ -191,14 +161,7 @@ for train_index, test_index in splitter:
 	y_train, y_test = labels[train_index], labels[test_index]
 
 	## SUBSAMNPLE
-	if phenotype in ["diabetes_self_v2","bin_antibiotic_last_year"]:
-		print("impose balance")
-		print(Counter(y_train))
-
-
-		X_train,y_train = classifier_utils.balanced_subsample(X_train,y_train,subsample_size=1.0)
-		print("after impose balance")
-		print(Counter(y_train))
+	
 
 	#sys.exit()
 	X_train, X_val, y_train, y_val = train_test_split(X_train, y_train,test_size=0.30, random_state=1) 
@@ -217,34 +180,48 @@ for train_index, test_index in splitter:
 	print("DIM train")
 	print(X_train.shape)
 
-	clf = RandomForestClassifier(random_state=0,n_estimators = param_n_estimators, criterion = param_criterion, max_depth = param_max_depth, 
-		min_samples_split = param_min_samples_split, min_samples_leaf = param_min_samples_leaf, max_features = param_max_features)
-
+	clf =  LinearRegression()
 	print("collections")
 	#print(Counter(list(y_train)))
 	print(y_train)
 	clf.fit(X_train, y_train)
 
-	test = [(est.get_depth(), est.tree_.max_depth, est.max_depth) for est in clf.estimators_]
-	print(test)
 
 	
 	## TESTONLY 
-
-	results_dict['val_auc'].append(roc_auc_score(y_val, clf.predict_proba(X_val)[:, 1]))
-	results_dict['test_auc'].append(roc_auc_score(y_test, clf.predict_proba(X_test)[:, 1]))
-	results_dict['val_f1'].append(f1_score(y_val, clf.predict(X_val)))
-	results_dict['test_f1'].append(f1_score(y_test, clf.predict(X_test)))
+	if lodo:
+		print("get test dataset name if lodo")
+		results_dict["test_dataset"].append(metadata_table.iloc[test_index][groups[folder]][0])
+	results_dict['val_score'].append(clf.score(X_val,y_val))
+	results_dict['test_score'].append(clf.score(X_test,y_test))
+	results_dict['val_pearson'].append(np.corrcoef(y_val, clf.predict(X_val)))
+	results_dict['test_pearson'].append(np.corrcoef(y_test, clf.predict(X_test)))
 
 
 print(results_dict)	
 
 
 
-output_string  = "_lodo_" + str(lodo) + "_nest_" + str(param_n_estimators) + "_crit_" + str(param_criterion) + "_maxd_" + str(param_max_depth) +  "_miss_" + str(param_min_samples_split) + \
-"_misl_" + str(param_min_samples_leaf) + "_maf_" + str(param_max_features) 
+output_string  = "_linreg_" 
 
-pickle.dump(results_dict , open( out_dir  + "GRID_" + trans + "_" + correction  + output_string  + ".pkl", "wb" ) )
+metrics_dict = pd.DataFrame(columns=["test_dataset", "val_score","val_pearson","test_score","test_pearson"]) 
+
+
+
+for k in range(len(results_dict['test_pearson'])):
+	if lodo:
+
+		metrics_dict= metrics_dict.append({"test_dataset":results_dict["test_dataset"][k], "val_score":results_dict['val_score'][k],
+			"test_score":results_dict['test_score'][k],"val_pearson":results_dict['val_pearson'][k],
+			"test_pearson":results_dict['test_pearson'][k]},ignore_index=True)
+	else:
+
+		metrics_dict= metrics_dict.append({"test_dataset":k, "val_score":results_dict['val_score'][k],
+			"test_score":results_dict['test_score'][k],"val_pearson":results_dict['val_pearson'][k],
+			"test_pearson":results_dict['test_pearson'][k]},ignore_index=True)
+print(metrics_dict)
+
+final_metrics.to_csv(data_dir + "PRED_OUTPUT_" + trans + "_" + correction  + "_lodo_" + str(lodo)  + ".csv",index=False)
 
 
 

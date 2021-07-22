@@ -51,13 +51,21 @@ methods=(clr_pca1roundcounts clr_pca1 clr_pca2roundcounts clr_pca2 clr_pca3round
 indexs=(30 60 90 120 150 180 210 240 270 300 330)
 methods=(bmc combat percentilenorm limma DCC nocorrection clr_pca1counts clr_pca2counts clr_pca3counts clr_pca4counts clr_pca5counts)
 
-indexs=(330)
-methods=(clr_pca5counts)
+indexs=(90)
+methods=(clr)
 for i in "${!indexs[@]}"; do 
-	index=$((${indexs[$i]} + 400));
+	index=$((${indexs[$i]} + 800));
 	method="${methods[$i]}"
 	./qsub_classifier.sh $index Thomasr_max_k7 $method 0 bin_crc_normal
 done;
+
+
+
+metric=val_auc
+for method in nocorrection bmc combat limma DCC clr_pca1counts clr_pca2counts clr_pca3counts clr_pca4counts clr_pca5counts clr; do python process_rf_result.py --folder Thomasr_max_k7 --trans rel --correction $method --lodo 0 --phenotype bin_crc_normal --metric $metric; done
+
+
+
 ```
 
 ## Process
@@ -71,7 +79,7 @@ for p in 1 2 3; do python process_rf_result.py --folder Thomasr_complete_otu --t
 
 for method in nocorrection; do python process_rf_result.py --folder Thomasr_complete_otu --trans rel --correction $method --lodo 0 --phenotype bin_crc_normal; done
 
-for method in bmc combat limma DCC clr_pca1counts clr_pca2counts clr_pca3counts clr_pca4counts clr_pca5counts; do python process_rf_result.py --folder Thomasr_complete_otu --trans rel --correction $method --lodo 0 --phenotype bin_crc_normal; done
+for method in nocorrection bmc combat limma DCC clr_pca1counts clr_pca2counts clr_pca3counts clr_pca4counts clr_pca5counts; do python process_rf_result.py --folder Thomasr_max_k7 --trans rel --correction $method --lodo 0 --phenotype bin_crc_normal --metric val_auc; done
 
 
 ```
@@ -107,17 +115,19 @@ for data in 5 6 7 8; do /u/local/apps/submit_scripts/R_job_submitter.sh -n pc_co
 
 
 =====
-for data in 7; do for method in DCC; do /u/local/apps/submit_scripts/R_job_submitter.sh -n correction.R -m 20 -t 24 -hp -v 3.6.0 -arg AGPr_max_k$data -arg rel -arg 2 -arg $method; done; done
+for data in 5; do for method in combat limma bmc DCC; do /u/local/apps/submit_scripts/R_job_submitter.sh -n correction.R -m 8 -t 24 -hp -v 3.6.0 -arg AGPr_max_k$data -arg rel -arg 2 -arg $method; done; done
 
 for data in 5 6 7; do for p in 1 2 3 4 5; do for trans in rel_clr; do /u/local/apps/submit_scripts/R_job_submitter.sh -n correction.R -m 18 -hp -t 24 -v 3.6.0 -arg AGPr_max_k"$data" -arg $trans -arg $p -arg pca; done; done; done
 
+
+for data in 1; do for p in 1 2 3 4 5; do for trans in rel_clr; do /u/local/apps/submit_scripts/R_job_submitter.sh -n correction.R -m 18 -hp -t 24 -v 3.6.0 -arg AGPr_complete_otu -arg $trans -arg $p -arg pca; done; done; done
 
 
 
 
 =====
 
-for data in 5 6 7; do for method in combat; do /u/local/apps/submit_scripts/R_job_submitter.sh -n correction.R -m 20 -hp -t 24 -v 3.6.0 -arg AGPr_max_k$data -arg rel -arg 2 -arg $method; done; done
+for data in  7; do for method in combat; do /u/local/apps/submit_scripts/R_job_submitter.sh -n correction.R -m 20 -hp -t 24 -v 3.6.0 -arg AGPr_max_k$data -arg rel -arg 2 -arg $method; done; done
 
 for data in 7; do for method in bmc combat percentilenorm limma pca; do /u/local/apps/submit_scripts/R_job_submitter.sh -n correction.R -m 20 -t 24 -v 3.6.0 -arg AGPr_max_k$data -arg rel -arg 2 -arg $method; done; done
 
@@ -136,33 +146,49 @@ methods=(bmc combat percentilenorm limma clr_pca clr_pcacounts clr_scale_pca)
 indexs=(30)
 methods=(clr_pca)
 
-indexs=(30 60 90 120 150 180 210 240 270 300 330)
-methods=(nocorrection bmc combat percentilenorm limma DCC clr_pca1counts clr_pca2counts clr_pca3counts clr_pca4counts clr_pca5counts)
-
-indexs=(30 60)
-methods=(nocorrection combat)
+indexs=(30 60 90 120 150 180 210 240 270)
+methods=(nocorrection bmc limma DCC clr_pca1counts clr_pca2counts clr_pca3counts clr_pca4counts clr_pca5counts)
 for i in "${!indexs[@]}"; do 
-	index=$((${indexs[$i]} + 2000));
-	method="${methods[$i]}"
-	./qsub_classifier.sh $index AGPr_max_k7 $method 0 bin_antibiotic_last_year
+	index=$((${indexs[$i]} + 800));
+	method="${methods[$i]}";
+	./qsub_classifier.sh $index AGPr_max_k5 $method 0 bin_antibiotic_last_year;
 done;
 
 
 
-
+metric=val_auc
+for method in nocorrection bmc combat limma DCC clr_pca1counts clr_pca2counts clr_pca3counts clr_pca4counts clr_pca5counts; do python process_rf_result.py --folder AGPr_max_k6 --trans rel --correction $method --lodo 0 --phenotype bin_antibiotic_last_year --metric $metric; done
 
 
 ```
 
 # Gibbons jobs
-
+bmc limma combat DCC
 ```
- /u/local/apps/submit_scripts/R_job_submitter.sh -n transformations.R -m 8 -t 24 -hp -v 3.6.0 -arg Gibbonsr_complete_otu
- 
-  
-for k in 5; do /u/local/apps/submit_scripts/R_job_submitter.sh -n correction.R -m 4 -t 24 -v 3.6.0 -arg Gibbonsr_complete_otu -arg rel_clr -arg $k -arg pca; done
+for k in 5 6 7 8; do /u/local/apps/submit_scripts/R_job_submitter.sh -n transformations.R -m 16 -t 24 -hp -v 3.6.0 -arg Gibbonsr_max_k"$k"; done
 
-for method in bmc; do /u/local/apps/submit_scripts/R_job_submitter.sh -n correction.R -m 6 -t 24 -v 3.6.0 -arg Gibbonsr_complete_otu -arg rel -arg 2 -arg $method; done
+for k in 5 6 7; do /u/local/apps/submit_scripts/R_job_submitter.sh -n pc_correlations.R -m 12 -t 24 -hp -v 3.6.0 -arg Gibbonsr_max_k"$k";  done
+
+for k in 8; do /u/local/apps/submit_scripts/R_job_submitter.sh -n pc_correlations.R -m 16 -t 24 -hp -v 3.6.0 -arg Gibbonsr_max_k"$k";  done
+
+ ## all methods
+  
+
+
+Rscript correction.R Gibbonsr_max_k5 rel 2 combat
+
+for k in 6 7; do for method in combat; do /u/local/apps/submit_scripts/R_job_submitter.sh -n correction.R -m 12 -t 24 -v 3.6.0 -arg Gibbonsr_max_k"$k" -arg rel -arg $k -arg $method; done; done
+
+for k in 8; do for method in combat; do /u/local/apps/submit_scripts/R_job_submitter.sh -n correction.R -m 16 -t 24 -v 3.6.0 -arg Gibbonsr_max_k"$k" -arg rel -arg 2 -arg $method; done; done
+
+
+
+# pc methods
+
+for k in 5 6 7; do /u/local/apps/submit_scripts/R_job_submitter.sh -n correction.R -m 4 -t 24 -v 3.6.0 -arg Gibbonsr_max_k"$k" -arg rel -arg $k -arg pca; done
+
+
+for k in 8; for method in bmc; do /u/local/apps/submit_scripts/R_job_submitter.sh -n correction.R -m 16 -t 24 -v 3.6.0 -arg Gibbonsr_max_k"$k" -arg rel -arg 2 -arg pca; done; done
 
  
  Rscript correction.R Gibbonsr_complete_otu rel 2 DCC
@@ -189,12 +215,97 @@ for i in "${!indexs[@]}"; do
 done;
 
 
-for method in nocorrection bmc combat limma DCC clr_pca1counts clr_pca2counts clr_pca3counts clr_pca4counts clr_pca5counts; do python process_rf_result.py --folder Gibbonsr_complete_otu --trans rel --correction $method --lodo 0 --phenotype bin_crc_normal; done
+metric=val_auc
+for method in nocorrection bmc combat limma DCC clr_pca1counts clr_pca2counts clr_pca3counts clr_pca4counts clr_pca5counts; do python process_rf_result.py --folder Thomasr_max_k6 --trans rel --correction $method --lodo 0 --phenotype bin_crc_normal --metric $metric; done
 
 
-for method in clr_pca1 clr_pca2 clr_pca3 clr_pca4 clr_pca5; do python process_rf_result.py --folder Gibbonsr_complete_otu --trans rel --correction $method --lodo 1 --phenotype bin_crc_normal; done
+metric=val_auc
+for method in nocorrection bmc combat limma DCC clr_pca1counts clr_pca2counts clr_pca3counts clr_pca4counts clr_pca5counts; do python process_rf_result.py --folder Thomasr_max_k6 --trans rel --correction $method --lodo 0 --phenotype bin_crc_normal --metric $metric; done
 
 
 
 
  ```
+ 
+ 
+ needed:
+ all Pca methods for AGP_otu
+ 
+ all mehods for AGP_max_k5
+ all metiods for AGP+max_k6
+  all metiods for AGP+max_k7
+  
+  remmebr lodo
+  
+  
+indexs=(30 60 90 120 150 180 210 240 270 300 330)
+methods=(nocorrection bmc combat percentilenorm limma DCC clr_pca1counts clr_pca2counts clr_pca3counts clr_pca4counts clr_pca5counts)
+for i in "${!indexs[@]}"; do 
+	index=$((${indexs[$i]} + 800));
+	method="${methods[$i]}"
+	./qsub_classifier.sh $index AGPr_max_k5 $method 0 bin_antibiotic_last_year
+done;
+
+
+## KAPLAN
+
+```
+for k in 7 8; do /u/local/apps/submit_scripts/R_job_submitter.sh -n transformations.R -m 20 -t 24 -hp -v 3.6.0 -arg Kaplanr_max_k"$k"; done
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n transformations.R -m 20 -t 24 -hp -v 3.6.0 -arg Kaplanr_complete_otu
+
+for k in 7 8; do /u/local/apps/submit_scripts/R_job_submitter.sh -n pc_correlations.R -m 20 -t 24 -hp -v 3.6.0 -arg Kaplanr_max_k"$k"; done
+
+/u/local/apps/submit_scripts/R_job_submitter.sh -n pc_correlations.R -m 16 -t 24 -hp -v 3.6.0 -arg Kaplanr_complete_otu
+
+Rscript pc_correlations.R Kaplanr_complete_otu
+NOTE:8698987
+
+for method in bmc limma combat DCC; do /u/local/apps/submit_scripts/R_job_submitter.sh -n correction.R -m 6 -t 24 -v 3.6.0 -arg Kaplanr_complete_otu -arg rel -arg 2 -arg $method; done
+NOTE: 8699247 - 50
+
+
+
+
+for k in 5 6; do for method in bmc limma combat DCC; do /u/local/apps/submit_scripts/R_job_submitter.sh -n correction.R -m 16 -hp -t 24 -v 3.6.0 -arg Kaplanr_max_k"$k" -arg rel -arg 2 -arg $method; done; done
+
+for k in 7; do for method in bmc limma combat DCC; do /u/local/apps/submit_scripts/R_job_submitter.sh -n correction.R -m 20 -t 24 -hp -v 3.6.0 -arg Kaplanr_max_k"$k" -arg rel -arg 2 -arg $method; done; done
+
+
+------
+for p in 1 2 3 4 5; do for trans in rel_clr; do /u/local/apps/submit_scripts/R_job_submitter.sh -n correction.R -m 16 -hp -t 24 -v 3.6.0 -arg Kaplanr_complete_otu -arg $trans -arg $p -arg pca; done; done;
+NOTE:8699259 to 63
+
+
+for k in 5 6; do for p in 1 2 3 4 5; do for trans in rel_clr; do /u/local/apps/submit_scripts/R_job_submitter.sh -n correction.R -m 16 -hp -t 24 -v 3.6.0 -arg Kaplanr_max_k"$k" -arg $trans -arg $p -arg pca; done; done; done
+
+for k in 7; do for p in 1 2 3 4 5; do for trans in rel_clr; do /u/local/apps/submit_scripts/R_job_submitter.sh -n correction.R -m 20 -hp -t 24 -v 3.6.0 -arg Kaplanr_max_k"$k" -arg $trans -arg $p -arg pca; done; done; done
+
+
+
+NOTE: two anove: 8698969 to 8698985
+
+```
+
+
+### prediction
+```
+diabetes_self_v2
+
+indexs=(30 60 90 120 150 180 210 240 270 300 330)
+methods=(bmc combat percentilenorm limma DCC nocorrection clr_pca1counts clr_pca2counts clr_pca3counts clr_pca4counts clr_pca5counts)
+for i in "${!indexs[@]}"; do 
+	index=${indexs[$i]}
+	method="${methods[$i]}"
+	./qsub_classifier.sh $index Kaplanr_max_k6 $method 0 diabetes_self_v2
+done;
+```
+
+### process prediction
+
+metric=val_auc
+for method in nocorrection bmc combat limma DCC clr_pca1counts clr_pca2counts clr_pca3counts clr_pca4counts clr_pca5counts; do python process_rf_result.py --folder Thomasr_max_k6 --trans rel --correction $method --lodo 0 --phenotype bin_crc_normal --metric $metric; done
+
+metric=val_auc
+for method in nocorrection bmc combat limma DCC clr_pca1counts clr_pca2counts clr_pca3counts clr_pca4counts clr_pca5counts; do python process_rf_result.py --folder Kaplanr_max_k6 --trans rel --correction $method --lodo 1 --phenotype diabetes_self_v2 --metric $metric; done
+ 

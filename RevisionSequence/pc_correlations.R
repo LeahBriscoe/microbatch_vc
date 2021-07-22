@@ -17,12 +17,16 @@ source(paste0(script_folder,"/correction_source.R"))
 num_pcs_calc = 15
 
 feature_table= readRDS(paste0(data_dir,"/feature_table_rel_clr_scale.rds"))
+
 pca_score = pca_method(feature_table, num_pcs = num_pcs_calc)
 print("dim pca scores")
 print(dim(pca_score))
 saveRDS(pca_score,paste0(data_dir,"/pca_score_rel_clr_scale.rds"))
 print(pca_score[1:4,1:4])
 feature_table= readRDS(paste0(data_dir,"/feature_table_rel.rds"))
+print("Sum NA")
+print(sum(is.na(feature_table)))
+print(sum(is.na(colSums(feature_table))))
 pca_score2 = pca_method(feature_table, num_pcs = num_pcs_calc)
 print("dim pca scores")
 print(dim(pca_score2))

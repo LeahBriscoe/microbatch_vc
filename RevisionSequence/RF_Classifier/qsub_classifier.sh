@@ -43,7 +43,11 @@ for nest in 100 1000 1500;
 	done;
 
 
-if [[ "$dataset_input" == *"AGPr_max_k5"* || "$dataset_input" == *"AGPr_max_k6"* ]] ; then
+if [[ "$dataset_input" == *"AGPr_max_k5"* ]] ; then
+	echo "$first_count_input:$COUNTER"
+	qsub -cwd -V -o misc -e misc -N RF -l h_data=8G,time=24:00:00 -b y -t $first_count_input:$COUNTER "./run_classifier.sh"
+
+elif [[ "$dataset_input" == *"AGPr_max_k6"* ]] ; then
 	echo "$first_count_input:$COUNTER"
 	qsub -cwd -V -o misc -e misc -N RF -l h_data=15G,time=48:00:00,highp -b y -t $first_count_input:$COUNTER "./run_classifier.sh"
 
@@ -51,13 +55,23 @@ elif [[ "$dataset_input" == *"AGPr_"* ]]; then
 	echo "$first_count_input:$COUNTER"
 	qsub -cwd -V -o misc -e misc -N RF -l h_data=24G,time=48:00:00,highp -b y -t $first_count_input:$COUNTER "./run_classifier.sh"
 
-elif [[ "$dataset_input" == *"Thomasr_max_k7"* ]]; then
+elif [[ "$dataset_input" == *"k5"* ]]; then
 	echo "$first_count_input:$COUNTER"
-	qsub -cwd -V -o misc -e misc -N RF -l h_data=16G,time=24:00:00 -b y -t $first_count_input:$COUNTER "./run_classifier.sh"
+	qsub -cwd -V -o misc -e misc -N RF -l h_data=6G,time=24:00:00,highp -b y -t $first_count_input:$COUNTER "./run_classifier.sh"
 
-elif [[ "$dataset_input" == *"Thomasr_max_k6"* ]]; then
+
+elif [[ "$dataset_input" == *"k7"* ]]; then
 	echo "$first_count_input:$COUNTER"
-	qsub -cwd -V -o misc -e misc -N RF -l h_data=14G,time=24:00:00 -b y -t $first_count_input:$COUNTER "./run_classifier.sh"
+	qsub -cwd -V -o misc -e misc -N RF -l h_data=16G,time=24:00:00,highp -b y -t $first_count_input:$COUNTER "./run_classifier.sh"
+
+
+elif [[ "$dataset_input" == *"k8"* ]]; then
+	echo "$first_count_input:$COUNTER"
+	qsub -cwd -V -o misc -e misc -N RF -l h_data=20G,time=24:00:00,highp -b y -t $first_count_input:$COUNTER "./run_classifier.sh"
+
+elif [[ "$dataset_input" == *"k6"* ]]; then
+	echo "$first_count_input:$COUNTER"
+	qsub -cwd -V -o misc -e misc -N RF -l h_data=14G,time=24:00:00,highp -b y -t $first_count_input:$COUNTER "./run_classifier.sh"
 
 else
 	echo "$first_count_input:$COUNTER"

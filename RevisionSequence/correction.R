@@ -36,6 +36,12 @@ if(folder == "Thomasr_complete_otu"){
   
 }
 
+if(grepl("Kaplan",folder)){
+  dataset_batch = metadata_table$mastermix_lot..exp.
+  dataset_phenotype = metadata_table$diabetes_self_v2
+  
+}
+
 if(grepl("Thomasr_max_",folder)){
   dataset_batch = metadata_table$dataset_name
   
@@ -76,6 +82,13 @@ if(folder == "Gibbonsr_complete_otu"){
   
   dataset_batch = metadata_table$study
   dataset_phenotype = metadata_table$bin_crc_normal
+  
+}
+if(grepl("Gibbonsr_max", folder)){
+  dataset_batch = metadata_table$study
+  dataset_phenotype = metadata_table$bin_crc_normal
+  
+  print(table(dataset_batch))
   
 }
 
@@ -136,7 +149,8 @@ if(correction == "DCC"){
 }
 
 if(correction == "combat"){
-  feature_table = correct_ComBat(mat = log(feature_table+pseudocount),batch_labels = dataset_batch)
+
+  feature_table = correct_ComBat(mat = as.matrix(log(feature_table+pseudocount)),batch_labels = dataset_batch)
   feature_table_counts = exp(feature_table) #, t(feature_table_orig))
   
   if(round_time){
@@ -168,6 +182,11 @@ if(correction == "limma"){
   
 }
 if(correction == "bmc"){
+  print("dim feature_table")
+  print(dim(feature_table))
+  print("dim metadata")
+  print(dim(metadata_table))
+  #print(intersect(colnames(feature_table))
   feature_table = correct_bmc(mat = feature_table,batch_labels = dataset_batch)
 }
 saveRDS(feature_table,paste0(data_dir,"/feature_table_",trans,"_",correction,".rds"))

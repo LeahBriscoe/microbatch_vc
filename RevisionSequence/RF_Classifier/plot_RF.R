@@ -3,17 +3,23 @@ local = TRUE
 
 require(dplyr)
 if(local){
-  args = c("Gibbonr_complete_otu","rel","False","F1")
+  args = c("Kaplanr_complete_otu","rel","True","AUC")
   
 }
 margins_list = list()
 margins_list[["Gibbonsr_complete_otu"]] =c(16,17)
-margins_list[["Thomasr_complete_otu"]] =c(15,10)
+margins_list[["Thomasr_complete_otu"]] =c(15,13)
+margins_list[["Thomasr_max_k7"]] =c(15,13)
+margins_list[["AGPr_complete_otu"]] =c(5,13)
+margins_list[["Kaplanr_complete_otu"]] =c(5,13)
 
 
 notecex_list= list()
 notecex_list[["Gibbonsr_complete_otu"]] = 1
 notecex_list[["Thomasr_complete_otu"]] = 1
+notecex_list[["Thomasr_max_k7"]] = 1
+notecex_list[["AGPr_complete_otu"]] = 1
+notecex_list[["Kaplanr_complete_otu"]] = 1
 print(args)
 
 
@@ -33,20 +39,30 @@ meas = args[4]
 data_dir = paste0(main_dir,folder,"/")
 corrections_list = list()
 # "bmc", "combat", "percentilenorm", "limma", "DCC", a
-pca_methods = c(paste0("clr_pca",c(1:5),"counts")) #,paste0("clr_pca",c(1:5)))
+pca_methods = c(paste0("clr_pca",c(c(3:5)),"counts")) #,paste0("clr_pca",c(1:5)))
 #   c("clr_scale_pca",
 # "clr_pca1roundcounts", "clr_pca1", "clr_pca2roundcounts", "clr_pca2", "clr_pca3roundcounts", "clr_pca3")
-other_methods = c("nocorrection","DCC","combat", "limma","bmc" )
+other_methods = c("nocorrection","DCC","limma","bmc","clr" ) # "combat", 
 corrections_vec = c(other_methods, pca_methods)
 #c("nocorrection","bmc","clr_pca")#"clr_pcacounts","clr_scale_pca","clr_pca")
 for(cori in 1:length(corrections_vec)){
-  metrics =  read.csv(paste0(data_dir, "GRID_OUTPUT_" ,trans, "_" , corrections_vec[cori] , "_lodo_" , lodo  , ".csv"), header=TRUE)
-  corrections_list[[corrections_vec[cori]]] = metrics
-  max_index = which.max(metrics$val_auc)
-  if(cori == 1){
-    corrections_df = metrics[max_index,]
+  metrics_pre =  read.csv(paste0(data_dir, "GRID_", meas,"_OUTPUT_" ,trans, "_" , corrections_vec[cori] , "_lodo_" , lodo  , ".csv"), header=TRUE)
+  corrections_list[[corrections_vec[cori]]] = metrics_pre
+  if(meas == "AUC"){
+    mean_val_auc = mean(metrics_pre$val_auc)
+    
   }else{
-    corrections_df = rbind(corrections_df, metrics[max_index,] )
+    mean_val_auc = mean(metrics_pre$val_f1)
+    
+  }
+  metrics = data.frame(t(metrics_pre$test_auc))
+  colnames(metrics) =paste0(meas,"_",metrics_pre$fold)
+  metrics$mean_val_auc = mean_val_auc
+ 
+  if(cori == 1){
+    corrections_df = metrics
+  }else{
+    corrections_df = rbind(corrections_df, metrics)
   }
 }
 corrections_df$corrections = corrections_vec
@@ -55,21 +71,16 @@ corrections_df$corrections = corrections_vec
 ### INSPECT VAL AUC only keep pca result with highest val
 if(any(grepl("pca", corrections_vec))){
   corrections_temp = corrections_df %>% filter(grepl("pca",corrections))
-  if(meas == "AUC"){
-    
-    pca_method_best = corrections_temp$corrections[which.max(unlist(corrections_temp %>% select(val_auc)))]
-  }else{
-    
-    pca_method_best = corrections_temp$corrections[which.max(unlist(corrections_temp %>% select(val_f1)))]
-  }
+  pca_method_best = corrections_temp$corrections[which.max(unlist(corrections_temp %>% select(mean_val_auc)))]
+  
   
 }
+print(pca_method_best)
 
-
-corrections_vec = c(other_methods, "clr_pca3counts", pca_method_best)
+corrections_vec = c(other_methods,  "clr_pca3counts", pca_method_best)
 corrections_df = corrections_df %>% filter(corrections %in% corrections_vec)
 
-
+#install.packages("gplots")
 require(gplots)
 
 
@@ -78,10 +89,16 @@ require(gplots)
 if(lodo == "True"){
   AUC_results = corrections_df[,grepl(meas,colnames(corrections_df))]
   row.names(AUC_results) = corrections_vec
-  row.names(AUC_results) = c("Uncorrected","DCC","ComBat","limma","BMC","Fixed PCA Correction","Tuned PCA Correction")
+  row.names(AUC_results) = c("Uncorrected","DCC","limma","BMC","Fixed PCA Correction","Tuned PCA Correction") #"ComBat",
   AUC_results$Average = rowMeans(AUC_results)
   input = as.matrix(AUC_results)
-  colnames(input) = gsub(meas, "", colnames(input))
+  colnames(input) = gsub(paste0(meas,"_"), "", colnames(input))
+  
+  
+  if(grepl("Thomas",folder )){
+    input = input[,c("FengQ_2015", "ThomasAM_2018b",  "ZellerG_2014", "YuJ_2015" ,  "ThomasAM_2018a" , "VogtmannE_2016"  ,"HanniganGD_2017","Average"  )]
+  }
+  
   colnames(input) = gsub("_", " ", colnames(input))
   colnames(input) = gsub("crc ", "", colnames(input))
   firstup <- function(x) {
@@ -90,7 +107,7 @@ if(lodo == "True"){
   }
   
   colnames(input) = sapply(colnames(input),firstup)
-  #input = input[,c("FengQ_2015", "ThomasAM_2018b",  "ZellerG_2014", "YuJ_2015" ,  "ThomasAM_2018a" , "VogtmannE_2016"  ,"HanniganGD_2017","Average"  )]
+  
   input_str = apply(input,2, function(x){sprintf("%.2f",round(x,2))})
   
   
@@ -115,7 +132,7 @@ if(lodo == "False"){
   colnames(input) = gsub(meas, "", colnames(input))
   input_str = apply(input,2, function(x){sprintf("%.2f",round(x,2))})
   pdf(paste0(data_dir,"/",meas,"_Heatmap_",trans, ".pdf"))
-  heatmap.2(input, trace="none", density="none", col=colorRampPalette(c("white", "blue")), cexRow=1, cexCol=1, margins = c(20,13),
+  heatmap.2(input, trace="none", density="none", col=colorRampPalette(c("white", "blue")), cexRow=1, cexCol=1, margins = c(5,13),
             Rowv = FALSE, Colv =  "Rowv",cellnote=input_str,notecol="black")
   dev.off()
 }
@@ -128,10 +145,11 @@ my_comparisons  = list()
 for(cv in 1:(length(row.names(AUC_results))-1)){
   my_comparisons[[cv]] = c(row.names(AUC_results)[1],row.names(AUC_results)[cv+1])
 }
-require(reshape2)
+require("reshape2")
 to_plot = melt(input) %>% filter(Var2 != "Average")
 require(ggplot2)
 library(ggpubr)
+#install.packages("ggpubr")
 custom_colors = c('#e32f27',"#C3FFCE",'#FF9300','#FFE800','#fdd0a2',"#72C1FC","#0093FF")
 
 

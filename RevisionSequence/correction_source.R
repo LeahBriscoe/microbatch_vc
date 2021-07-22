@@ -148,8 +148,8 @@ correct_ComBat <- function(mat, batch_labels,model_matrix=NULL){
   #mat <- data$df_otu_corrected
   #range(mat)
   # make continuous
-  combat_predata = mat #log(mat + 1) #mat #
-  input = ComBat( dat=combat_predata, batch = batch_labels,mod = model_matrix)
+  #log(mat + 1) #mat #
+  input = ComBat( dat=mat, batch = batch_labels,mod = model_matrix)
   return(input)
 }
 
